@@ -5,7 +5,7 @@ import listPlugin from '@fullcalendar/list';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid'; // a plugin!
 
-export interface Test01PageProps {}
+// export interface Test01PageProps {}
 
 export default function App() {
   const events12 = [
@@ -70,12 +70,12 @@ export default function App() {
     },
 
     // 🎄 12/24–25：聖誕跨夜活動（跨日事件）
-    // {
-    //   title: '聖誕燈節夜拍',
-    //   start: '2025-12-24T19:00:00',
-    //   end: '2025-12-25T01:00:00',
-    //   color: '#DCBB87',
-    // },
+    {
+      title: '聖誕燈節夜拍',
+      start: '2025-12-24T19:00:00',
+      end: '2025-12-25T01:00:00',
+      color: '#DCBB87',
+    },
 
     // 🎅 12/24 當日滿滿行程（觸發 +more）
     {
