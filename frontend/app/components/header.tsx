@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 // icon 使用 lucide-react 套件，這是需要 npm i 的
 import { Menu, X } from 'lucide-react';
 
@@ -29,18 +29,23 @@ export default function Header({}: HeaderProps) {
         className="
       w-full bg-[#1F2E3C] 
       px-[64px] py-[16px]
-      flex items-center gap-[48px]"
+      flex items-center gap-[48px]
+      relative
+      shadow-[0_4px_8px_rgba(0,0,0,0.3)]"
       >
-        <Image
-          src="/logo-white.svg"
-          alt="Stelwing Logo"
-          width={125}
-          height={48}
-        />
-        <div className="nav-wrapper flex-1 flex justify-between">
+        <Link href="/">
+          <Image
+            src="/logo-white.svg"
+            alt="Stelwing Logo"
+            width={125}
+            height={48}
+            className="cursor-pointer"
+          />
+        </Link>
 
-          {/* 五大功能橫向電腦版：預設隱藏，出現時使用 flex */}
-          <nav className="hidden md:flex gap-[36px]">
+        {/* 橫向電腦版：預設隱藏，出現時使用 flex */}
+        <div className="nav-bar hidden flex-1 md:flex justify-between">
+          <nav className="flex gap-[36px]">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -62,6 +67,42 @@ export default function Header({}: HeaderProps) {
             </Link>
           </div>
         </div>
+
+        {/* 手機漢堡版：在小螢幕時隱藏 */}
+        <div className="nav-hamburger md:hidden flex-1 flex justify-end">
+          <button className="text-white" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* 漢堡選單內容 */}
+        {isOpen && (
+          <div
+            className="
+          md:hidden py-4
+          absolute top-full left-0 w-full 
+          bg-[#1F2E3C] 
+          flex flex-col items-center"
+          >
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-white hover:text-[#DCBB87] py-2"
+                onClick={() => setIsOpen(false)} // 點擊後自動收起
+              >
+                {item.name}
+              </Link>
+            ))}
+            <Link
+              href="/member-center"
+              className="text-white hover:text-[#DCBB87] py-2"
+              onClick={() => setIsOpen(false)}
+            >
+              會員中心
+            </Link>
+          </div>
+        )}
       </header>
     </>
   );
