@@ -63,18 +63,18 @@ body {
 }
 
 .sw-h6 {
-  font-size: 18px;   /* 小型標題，用於內文中的標示文字 */
+  font-size: 16px;   /* 小型標題，用於內文中的標示文字 */
   font-weight: 600;
 }
 
 /* 內文字級（Paragraph Styles） */
 .sw-p1 {
-  font-size: 16px;       /* 一般段落文字大小 */
+  font-size: 14px;       /* 一般段落文字大小 */
   line-height: 1.6;
 }
 
 .sw-p2 {
-  font-size: 14px;       /* 較次要的說明文字 */
+  font-size: 12px;       /* 較次要的說明文字 */
   color: #4B5563;        /* 偏灰色，降低比重 */
   line-height: 1.6;
 }
@@ -86,78 +86,108 @@ body {
 }
 
 
-/* ==== Buttons ==== */
+/* ==== Buttons Base ==== */
 .sw-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 10px 18px;
-  font-size: 14px;
   user-select: none;
-  border: 1px solid transparent;
+  padding: 8px 20px;
+  font-size: 14px;
+  border: 1px solid var(--sw-grey);
+  border-radius: 8px;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.2s ease;
 }
 
-/* ========== 🟡 金色系列 ========== */
+/* 通用 Hover 動畫 */
+.sw-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.sw-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) inset;
+}
+
+.sw-btn:focus-visible {
+  outline: 2px solid var(--sw-accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------- */
+/* 🟡 金色系列 (Luxury Gold Tone) */
+/* ---------------------------------- */
 
 /* 主按鈕：全圓膠囊 */
 .sw-btn--gold-primary {
   background: var(--sw-accent);
-  color: var(--sw-primary);
+  color: var(--sw-black);
   border-color: var(--sw-accent);
   border-radius: 9999px;
 }
 
-/* 方形按鈕：8px 圓角 */
+/* Hover：略亮、有金屬光感 */
+.sw-btn--gold-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+}
+
+/* 方形按鈕 */
 .sw-btn--gold-square {
   background: var(--sw-accent);
-  color: var(--sw-primary);
+  color: var(--sw-black);
   border-color: var(--sw-accent);
   border-radius: 8px;
+}
+.sw-btn--gold-square:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 3px 6px rgba(255, 215, 0, 0.25);
 }
 
 /* 停用 */
 .sw-btn--gold-disabled {
   background: var(--sw-accent);
-  color: var(--sw-primary);
-  border-color: var(--sw-accent);
+  color: var(--sw-black);
   opacity: 0.5;
   cursor: not-allowed;
-  border-radius: 8px;
 }
 
-/* ========== ⚪ 灰色系列 ========== */
+/* ---------------------------------- */
+/* ⚪ 灰色系列 (Neutral Comfort Tone) */
+/* ---------------------------------- */
 
 /* 主按鈕：全圓膠囊 */
 .sw-btn--grey-primary {
   background: var(--sw-grey);
-  color: var(--sw-primary);
+  color: var(--sw-black);
   border-color: var(--sw-grey);
   border-radius: 9999px;
 }
 
-/* 方形按鈕：8px 圓角 */
+/* Hover：略暗、加輕陰影 */
+.sw-btn--grey-primary:hover:not(:disabled) {
+  filter: brightness(0.93);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 方形按鈕 */
 .sw-btn--grey-square {
   background: var(--sw-grey);
-  color: var(--sw-primary);
+  color: var(--sw-black);
   border-color: var(--sw-grey);
   border-radius: 8px;
+}
+.sw-btn--grey-square:hover:not(:disabled) {
+  filter: brightness(0.93);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 /* 停用 */
 .sw-btn--grey-disabled {
   background: var(--sw-grey);
-  color: var(--sw-primary);
-  border-color: var(--sw-grey);
+  color: var(--sw-black);
   opacity: 0.5;
   cursor: not-allowed;
-  border-radius: 8px;
-}
-
-/* ========== 共用 Hover 效果 ========== */
-.sw-btn:hover:not(:disabled) {
-  filter: brightness(0.97);
-  transform: translateY(-1px);
 }

@@ -65,6 +65,9 @@ export default function DemoPage() {
           <button className="sw-btn sw-btn--grey-disabled" disabled>
             灰色停用
           </button>
+
+          {/* 線框版 */}
+          <button className="sw-btn">線框版</button>
         </div>
       </section>
     </main>
