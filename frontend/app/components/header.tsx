@@ -1,10 +1,7 @@
 'use client';
 
-<<<<<<< HEAD
 import clsx from 'clsx';
-import { ChevronDown, Globe, Plane } from 'lucide-react';
-=======
->>>>>>> origin/lei
+import { ChevronDown, Globe, Menu, Plane, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -30,20 +27,20 @@ export default function Header({}: HeaderProps) {
   // 這裡是 Header 的畫面
   return (
     <>
-<<<<<<< HEAD
       <header className={clsx('bg-[var(--sw-primary)] h-[64px]')}>
         {/* 固定高度 + 垂直置中，左右兩邊都對齊 */}
         <div className="mx-auto w-full h-full px-[64px] flex items-center justify-between gap-[48px]">
           {/* 左：Logo + 主導覽 */}
           <div className="flex items-center gap-[48px]">
-            <Image
-              src="/logo-white.svg"
-              alt="Stelwing Logo"
-              width={125}
-              height={48}
-              className="block"
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/logo-white.svg"
+                alt="Stelwing Logo"
+                width={125}
+                height={48}
+                className="cursor-pointer"
+              />
+            </Link>
 
             {/* 五大功能：統一高度、leading 置零，視覺對齊右側 */}
             <nav className="hidden md:flex items-center gap-[36px]">
@@ -58,39 +55,6 @@ export default function Header({}: HeaderProps) {
               ))}
             </nav>
           </div>
-=======
-      <header
-        className="
-      w-full bg-[#1F2E3C] 
-      px-[64px] py-[16px]
-      flex items-center gap-[48px]
-      relative
-      shadow-[0_4px_8px_rgba(0,0,0,0.3)]"
-      >
-        <Link href="/">
-          <Image
-            src="/logo-white.svg"
-            alt="Stelwing Logo"
-            width={125}
-            height={48}
-            className="cursor-pointer"
-          />
-        </Link>
-
-        {/* 橫向電腦版：預設隱藏，在中螢幕時以 flex 出現*/}
-        <div className="nav-bar hidden flex-1 md:flex justify-between">
-          <nav className="flex gap-[36px]">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-white hover:text-[#DCBB87]"
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
->>>>>>> origin/lei
 
           {/* 右：語系 + 會員登入 */}
           <div className="flex items-center gap-[24px]">
