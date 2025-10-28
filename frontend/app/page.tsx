@@ -1,12 +1,12 @@
 'use client';
 
-export interface AppPageProps {}
+// export interface AppPageProps {}
 
-export default function AppPage({}: AppPageProps) {
+export default function AppPage() {
   return (
     <>
       <div className="flex flex-col items-center">
-        <div className='w-full flex flex-col items-center relative'>
+        <div className="w-full flex flex-col items-center relative">
           <section className="banner h-[393px] w-full bg-[#1F2E3C]"></section>
           <section className="booking-flight h-[233px] w-[1140px] bg-[#DCBB87] absolute bottom-0 translate-y-1/2"></section>
         </div>

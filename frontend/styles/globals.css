@@ -1,34 +1,183 @@
+/* app/globals.css */
 @import "tailwindcss";
 
+/* ==== Tokens (精簡) ==== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --sw-primary: #1f2e3c; /* 深藍主色 */
+  --sw-accent: #d9b37b; /* 金色 */
+  --sw-grey: #c5c9cd;
+  --sw-white: #ffffff;
+  --sw-black: #000000;
+
+  --background: var(--sw-white);
+  --foreground: var(--sw-primary);
+
+  --sw-r-sm: 8px;
+  --sw-r-md: 12px;
+  --sw-r-lg: 16px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ==== Reset ==== */
 *,
 ::before,
 ::after {
   box-sizing: border-box;
 }
-
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 0;
-  padding: 0;
+  font-family:
+    "Noto Sans TC",
+    "思源黑體",
+    system-ui,
+    -apple-system,
+    "PingFang TC",
+    "Microsoft JhengHei",
+    sans-serif;
+  line-height: 1.6;
+}
+
+/* =========================
+   ✍️ 文字系統（Typography）
+   ========================= */
+
+/* 標題階層（Heading Styles） */
+.sw-h1 {
+  font-size: clamp(
+    40px,
+    6vw,
+    72px
+  ); /* 自適應 H1 標題字級（最大72px，最小40px） */
+  font-weight: 800; /* 粗體強調主標題 */
+  line-height: 1.15; /* 緊密行高讓標題更集中 */
+}
+
+.sw-h2 {
+  font-size: clamp(34px, 4.5vw, 60px); /* H2 次標題 */
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sw-h3 {
+  font-size: 48px; /* 第三級標題，用於章節或區塊標題 */
+  font-weight: 700;
+}
+
+.sw-h4 {
+  font-size: 36px; /* 常用於區段小標題或段落開頭 */
+  font-weight: 700;
+}
+
+.sw-h5 {
+  font-size: 24px; /* 次要標題，例如卡片標題或小區塊 */
+  font-weight: 700;
+}
+
+.sw-h6 {
+  /* 黃蕾動過：18 改 16 */
+  font-size: 16px; /* 小型標題，用於內文中的標示文字 */
+  font-weight: 600;
+}
+
+/* 內文字級（Paragraph Styles） */
+.sw-p1 {
+  font-size: 16px; /* 一般段落文字大小 */
+  line-height: 1.6;
+}
+
+.sw-p2 {
+  font-size: 14px; /* 較次要的說明文字 */
+  color: #4b5563; /* 偏灰色，降低比重 */
+  line-height: 1.6;
+}
+
+/* 補充文字（Caption / 註解） */
+.sw-caption {
+  font-size: 12px; /* 小字型標註 */
+  color: #6b7280; /* 更淺灰色，常用於副標或提示文字 */
+}
+
+/* ==== Buttons ==== */
+.sw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 10px 18px;
+  font-size: 14px;
+  user-select: none;
+  /* border: 1px solid transparent; */
+}
+
+/* ========== 🟡 金色系列 ========== */
+
+/* 主按鈕：全圓膠囊 */
+.sw-btn--gold-primary {
+  background: var(--sw-accent);
+  color: var(--sw-primary);
+  border-color: var(--sw-accent);
+  border-radius: 9999px;
+}
+
+/* 方形按鈕：8px 圓角 */
+.sw-btn--gold-square {
+  background: var(--sw-accent);
+  color: var(--sw-primary);
+  border-color: var(--sw-accent);
+  border-radius: 8px;
+}
+
+/* 停用 */
+.sw-btn--gold-disabled {
+  background: var(--sw-accent);
+  color: var(--sw-primary);
+  border-color: var(--sw-accent);
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-radius: 8px;
+}
+
+/* ========== ⚪ 灰色系列 ========== */
+
+/* 主按鈕：全圓膠囊 */
+.sw-btn--grey-primary {
+  background: var(--sw-grey);
+  color: var(--sw-primary);
+  border-color: var(--sw-grey);
+  border-radius: 9999px;
+}
+
+/* 方形按鈕：8px 圓角 */
+.sw-btn--grey-square {
+  background: var(--sw-grey);
+  color: var(--sw-primary);
+  border-color: var(--sw-grey);
+  border-radius: 8px;
+}
+
+/* 停用 */
+.sw-btn--grey-disabled {
+  background: var(--sw-grey);
+  color: var(--sw-primary);
+  border-color: var(--sw-grey);
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-radius: 8px;
+}
+
+/* ========== 共用 Hover 效果 ========== */
+.sw-btn:hover:not(:disabled) {
+  filter: brightness(0.97);
+  transform: translateY(-1px);
+}
+
+.bg-ticket {
+  background: linear-gradient(180deg, #E1E2E2 0%, #E1E2E2 8%, white 8%, white 100%);
 }
