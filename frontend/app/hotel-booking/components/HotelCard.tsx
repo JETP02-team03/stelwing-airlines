@@ -1,8 +1,22 @@
 'use client';
 
+// ==================== 飯店卡片組件 ====================
+// 顯示單一飯店的卡片，整張卡片都是圖片背景
+
+// 引入需要的東西
 import { MapPin, Star } from 'lucide-react'; // 圖示
 import { HotelCardData } from '../interfaces/HotelCardData'; // 資料類型
 
+/**
+ * HotelCard 組件
+ *
+ * 功能：
+ * - 顯示飯店圖片作為背景
+ * - 顯示評分、名稱、位置、價格
+ * - 所有文字都在圖片上，有陰影和遮罩確保清晰
+ *
+ * @param {HotelCardData} hotel - 飯店資料
+ */
 export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
   // 點擊事件
   const handleClick = () => {
