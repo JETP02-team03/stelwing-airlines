@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { DateRange } from './components/Calendar';
-import Calendar from './components/Calendar';
+import Calendar, { DateRange } from './components/Calendar';
 import HotelCard from './components/HotelCard';
 import { HotelCardData } from './interfaces/HotelCardData';
 
@@ -13,9 +12,9 @@ export default function Page() {
       id: 1,
       name: 'Toyoko Inn Narita Airport',
       location: 'Tokyo, Japan',
-      distance: '距離市中心 2 公里',
+      distance: '距離市中心 0.1 公里',
       rating: 4.6,
-      price: 2000,
+      price: 3500,
       currency: 'NT$',
       priceUnit: '每晚',
       image: '/images/hotel/room1.jpeg',
@@ -26,7 +25,7 @@ export default function Page() {
       location: 'Tokyo, Japan',
       distance: '距離機場約 0.3公里',
       rating: 4.9,
-      price: 4500,
+      price: 5500,
       currency: 'NT',
       priceUnit: '每晚',
       image: '/images/hotel/room2.jpeg',
@@ -35,7 +34,7 @@ export default function Page() {
       id: 3,
       name: 'Hotel Mystays Premier Narita',
       location: 'Tokyo, Japan',
-      distance: '距離機場約 0.2公里',
+      distance: '第二航廈・機場內',
       rating: 4.7,
       price: 3800,
       currency: 'NT',
@@ -46,20 +45,20 @@ export default function Page() {
       id: 4,
       name: 'Garden Hotel Narita',
       location: 'Tokyo, Japan',
-      distance: '第二航廈・機場內',
+      distance: '距離機場約 0.2公里',
       rating: 4.8,
-      price: 2500,
+      price: 4500,
       currency: 'NT',
       priceUnit: '每晚',
       image: '/images/hotel/room4.jpeg',
     },
     {
       id: 5,
-      name: 'Garden Hotel Narita',
+      name: 'Narita Tobu Hotel Airport',
       location: 'Tokyo, Japan',
       distance: '第二航廈・機場內',
       rating: 4.8,
-      price: 2500,
+      price: 3000,
       currency: 'NT',
       priceUnit: '每晚',
       image: '/images/hotel/room5.jpeg',
