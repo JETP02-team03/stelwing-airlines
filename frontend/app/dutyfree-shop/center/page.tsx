@@ -1,8 +1,8 @@
 'use client';
-import { DFPickupModal } from './components/DFPickupModal';
-import { DFStatusTag } from './components/DFStatusTag';
-import { ImageWithFallback } from './components/figma/ImageWithFallback';
-import { Button } from './components/ui/button';
+import { DFPickupModal } from '../components/DFPickupModal';
+import { DFStatusTag } from '../components/DFStatusTag';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { Button } from '../components/ui/button';
 
 interface CartItem {
   id: string;

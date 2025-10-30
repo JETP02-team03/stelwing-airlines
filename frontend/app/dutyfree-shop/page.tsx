@@ -45,7 +45,7 @@ function WhitePic() {
         <img
           alt="Login visual"
           className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-          src="/mainWhite.jpg"
+          src="/images/dutyfree/mainWhite.jpg"
         />
       </div>
     </div>
@@ -77,7 +77,7 @@ function Pic() {
         <img
           alt="Left visual"
           className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-          src="/mainLeft.jpg"
+          src="/images/dutyfree/mainLeft.jpg"
         />
       </div>
       <div
@@ -87,7 +87,7 @@ function Pic() {
         <img
           alt="Right visual"
           className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-          src="/mainRight.jpg"
+          src="/images/dutyfree/mainRight.jpg"
         />
       </div>
     </div>
