@@ -1,14 +1,17 @@
 'use client';
 
 export interface Trip {
-  id: number; // 必填：用於 key
-  userId: number; // 必填：可以追蹤誰的行程
+  id: string; // 必填：用於 key
+  userId: string; // 必填：可以追蹤誰的行程
   title: string; // 必填：行程標題
   destination: string | null; // 選填或 null：行程目的地
-  startDate: string; // 選填或 null：開始日期
-  endDate: string; // 選填或 null：結束日期
+  startDate: string; // 必填：開始日期
+  startTimezone: string; // 必填：開始日期時區
+  endDate: string; // 必填：結束日期
+  endTimezone: string; // 必填：結束日期時區
   note: string | null; // 選填或 null：備註
   coverImage: string | null; // 選填或 null：封面圖片
+  status: string; //程式帶：旅程進行狀態
   collaborators?: any[]; // 選填：合作人列表
   isDeleted?: number; // 選填：是否刪除
   createdAt?: string; // 選填
@@ -19,6 +22,18 @@ export interface Trip {
 export interface TripCardProps {
   trip: Trip;
 }
+
+const STATUS_BACKGROUND_COLORS: Record<string, string> = {
+  待啟程: '--sw-grey', // 灰
+  進行中: '--sw-accent', // 金
+  已結束: '--sw-primary', // 藍
+};
+
+const STATUS_TEXT_COLORS: Record<string, string> = {
+  待啟程: '--sw-black', // 灰
+  進行中: '--sw-black', // 金
+  已結束: '--sw-white', // 藍
+};
 
 export default function TripCard({ trip }: TripCardProps) {
   return (
@@ -60,8 +75,14 @@ export default function TripCard({ trip }: TripCardProps) {
                     border-l border-dashed border-(--sw-primary)
                     "
         >
-          <div className="bg-(--sw-accent) py-2 px-8 rounded-lg">
-            <h6 className="sw-h6">待啟程</h6>
+          <div
+            className="py-2 px-8 rounded-lg"
+            style={{
+              backgroundColor: `var(${STATUS_BACKGROUND_COLORS[trip.status]})`,
+              color: `var(${STATUS_TEXT_COLORS[trip.status]})`,
+            }}
+          >
+            <h6 className="sw-h6">{trip.status}</h6>
           </div>
         </div>
         {/* 第 4 塊：按鈕操作 */}
@@ -69,10 +90,10 @@ export default function TripCard({ trip }: TripCardProps) {
           className="px-4 flex items-center gap-2 
                     border-l border-dashed border-(--sw-primary)"
         >
-          <button className="border border-solid border-(--sw-grey) py-2 px-8 rounded-lg">
+          <button className="sw-btn border border-solid border-(--sw-grey)">
             <h6 className="sw-h6">查看詳細行程</h6>
           </button>
-          <button className="border border-solid border-(--sw-grey) py-2 px-8 rounded-lg">
+          <button className="sw-btn border border-solid border-(--sw-grey)">
             <h6 className="sw-h6">刪除整個行程</h6>
           </button>
         </div>

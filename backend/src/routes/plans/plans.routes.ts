@@ -40,7 +40,7 @@ router.get("/", async (req: Request, res: Response) => {
 
 // | POST | /api/plans | 新增旅程 |
 router.post("/", async (req: Request, res: Response) => {
-  const userId = 1; //之後改為從 JWT 取 userID
+  const userId = 2; //之後改為從 JWT 取 userID
 
   if (!userId) return res.status(404).json({ message: "沒有提供User ID" })
 

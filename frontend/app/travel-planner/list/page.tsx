@@ -1,123 +1,123 @@
 'use client';
 
+// @ts-expect-error 我不寫就跳錯我只好加啊氣死
+import { DateTime } from 'luxon';
 import TripCard from '../components/tripCard';
 // export interface ListPageProps {}
 
 export default function ListPage() {
   const mockTrips = [
     {
-      id: 1,
-      userId: 123,
-      title: '巴黎浪漫七日遊',
-      destination: 'France - Paris',
-      startDate: '2025-10-20T09:00:00Z',
-      endDate: '2025-10-26T18:00:00Z',
-      note: '巴黎鐵塔、羅浮宮、凡爾賽宮都要走一遍，\n記得帶雨具，天氣可能多變。',
+      id: '1',
+      userId: '1',
+      title: '12 月東京旅：一般',
+      destination: '日本：東京、輕井澤、富士山、鐮倉',
+      startDate: '2025-12-12T00:00:00.000Z',
+      startTimezone: 'Asia/Taipei',
+      endDate: '2025-12-27T00:00:00.000Z',
+      endTimezone: 'Asia/Taipei',
+      note: '',
       coverImage: '',
-      collaborators: [],
       isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
+      createdAt: '2025-10-30T07:35:38.608Z',
+      updatedAt: '2025-10-30T07:35:38.608Z',
     },
     {
-      id: 2,
-      userId: 123,
-      title: '紐約城市探索',
-      destination: 'USA - New York',
-      startDate: '2025-11-05T09:00:00Z',
-      endDate: '2025-11-12T18:00:00Z',
-      note: '自由女神像、第五大道購物、百老匯音樂劇。\n地鐵複雜，建議事先查好路線。',
+      id: '2',
+      userId: '1',
+      title: '12 月東京旅：雨備',
+      destination: '日本：東京、輕井澤、富士山、鐮倉',
+      startDate: '2025-12-12T00:00:00.000Z',
+      startTimezone: 'Asia/Taipei',
+      endDate: '2025-12-27T00:00:00.000Z',
+      endTimezone: 'Asia/Taipei',
+      note: '雨天就去迪士尼',
       coverImage: '',
-      collaborators: [],
       isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
+      createdAt: '2025-10-30T07:35:38.608Z',
+      updatedAt: '2025-10-30T07:35:38.608Z',
     },
     {
-      id: 3,
-      userId: 123,
-      title: '東京深度旅遊',
-      destination: 'Japan - Tokyo',
-      startDate: '2025-10-25T09:00:00Z',
-      endDate: '2025-10-31T18:00:00Z',
-      note: '淺草寺、秋葉原、銀座購物、涉谷拍照打卡，\n每晚嘗試不同拉麵店。',
+      id: '3',
+      userId: '1',
+      title: '加拿大躲熊熊',
+      destination: '溫哥華',
+      startDate: '2025-10-31T00:00:00.000Z',
+      startTimezone: 'America/Vancouver',
+      endDate: '2025-11-05T00:00:00.000Z',
+      endTimezone: 'America/Vancouver',
+      note: '此時此刻應該尚未開始',
       coverImage: '',
-      collaborators: [],
       isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
+      createdAt: '2025-10-30T07:35:38.608Z',
+      updatedAt: '2025-10-30T07:35:38.608Z',
     },
     {
-      id: 4,
-      userId: 123,
-      title: '倫敦週末快閃',
-      destination: 'UK - London',
-      startDate: '2025-10-18T09:00:00Z',
-      endDate: '2025-10-20T18:00:00Z',
-      note: '倫敦眼、大笨鐘、泰晤士河遊船，\n行程緊湊，需提早訂票。',
+      id: '4',
+      userId: '1',
+      title: '10 月泰國清邁',
+      destination: '清邁',
+      startDate: '2025-10-03T00:00:00.000Z',
+      startTimezone: 'Asia/Taipei',
+      endDate: '2025-10-05T00:00:00.000Z',
+      endTimezone: 'Asia/Taipei',
+      note: '大阿啊啊啊啊象',
       coverImage: '',
-      collaborators: [],
       isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
+      createdAt: '2025-10-30T07:35:38.608Z',
+      updatedAt: '2025-10-30T07:35:38.608Z',
     },
     {
-      id: 5,
-      userId: 123,
-      title: '巴塞隆納美食藝術之旅',
-      destination: 'Spain - Barcelona',
-      startDate: '2025-10-10T09:00:00Z',
-      endDate: '2025-10-15T18:00:00Z',
-      note: '高第建築巡禮，拉巴爾街小吃品嚐。\n注意小偷與貴重物品安全。',
+      id: '5',
+      userId: '1',
+      title: '只有我想去尼泊爾',
+      destination: 'Kathmandu、Pokhara、Chitwan',
+      startDate: '2025-09-11T00:00:00.000Z',
+      startTimezone: 'Asia/Taipei',
+      endDate: '2025-09-21T00:00:00.000Z',
+      endTimezone: 'Asia/Kathmandu',
+      note: '尼泊爾的湖',
       coverImage: '',
-      collaborators: [],
       isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
-    },
-    {
-      id: 6,
-      userId: 123,
-      title: '羅馬古蹟漫遊',
-      destination: 'Italy - Rome',
-      startDate: '2025-09-28T09:00:00Z',
-      endDate: '2025-10-02T18:00:00Z',
-      note: '鬥獸場、萬神殿、梵蒂岡博物館。\n每個景點建議提前買票。',
-      coverImage: '',
-      collaborators: [],
-      isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
-    },
-    {
-      id: 7,
-      userId: 123,
-      title: '阿姆斯特丹運河遊',
-      destination: 'Netherlands - Amsterdam',
-      startDate: '2025-10-01T09:00:00Z',
-      endDate: '2025-10-05T18:00:00Z',
-      note: '運河船遊、梵谷博物館、咖啡館巡禮。\n行程悠閒，可慢慢拍照打卡。',
-      coverImage: '',
-      collaborators: [],
-      isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
-    },
-    {
-      id: 8,
-      userId: 123,
-      title: '悉尼海港假期',
-      destination: 'Australia - Sydney',
-      startDate: '2025-10-12T09:00:00Z',
-      endDate: '2025-10-16T18:00:00Z',
-      note: '歌劇院、海港大橋、邦迪海灘。\n記得準備防曬用品，海風可能很強。',
-      coverImage: '',
-      collaborators: [],
-      isDeleted: 0,
-      createdAt: '2025-10-01T12:00:00Z',
-      updatedAt: '2025-10-01T12:00:00Z',
+      createdAt: '2025-10-30T07:35:38.608Z',
+      updatedAt: '2025-10-30T07:35:38.608Z',
     },
   ];
+
+  // #region 關於 Luxon
+  // Luxon 的 DateTime 物件是「時間點 + 時區」的組合
+  // DateTime.fromISO(時間的 ISOstring, {zone: '時區'})：將 ISOSstring 轉成帶有時區資料的 DateTime 物件
+  // DateTime.setZone：把這個時間物件移去別的時區顯示，同一時間、不同時區顯示
+  // DateTime.toUTC：把這個時間物件轉成 UTC (+0) 時區會顯示的時間
+  // DateTime.toISO：把這個時間物件轉成帶有時區資訊的 ISO 字串
+  // DateTime.utc：建立一個 utc 的時間物件
+
+  // #endregion
+  function calculateStatus(trip: any): string {
+    const nowUTC = DateTime.utc();
+    const startDateUTC = DateTime.fromISO(trip.startDate, {
+      zone: trip.startTimezone,
+    }).toUTC();
+    const endDateUTC = DateTime.fromISO(trip.endDate, {
+      zone: trip.endTimezone,
+    });
+
+    let status;
+    if (nowUTC < startDateUTC) {
+      status = '待啟程';
+    } else if (nowUTC < endDateUTC) {
+      status = '進行中';
+    } else {
+      status = '已結束';
+    }
+
+    return status;
+  }
+
+  const tripsForUI = mockTrips.map((trip) => ({
+    ...trip,
+    status: calculateStatus(trip), //前端用：判斷旅程是否進行中的欄位
+  }));
 
   return (
     <>
@@ -140,7 +140,7 @@ export default function ListPage() {
               </div>
               <div className="py-6 flex flex-col gap-6">
                 {/* 單一卡片 */}
-                {mockTrips.map((t) => (
+                {tripsForUI.map((t) => (
                   // 關鍵：一定要給 key（即使不傳資料也要 key）
                   <TripCard key={t.id} trip={t} />
                 ))}
