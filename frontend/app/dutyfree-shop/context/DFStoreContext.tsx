@@ -25,7 +25,8 @@ interface DFStoreContextType {
   products: Product[];
   cart: CartItem[];
   isLoggedIn: boolean;
-  setIsLoggedIn: (value: boolean) => void; // ✅ 新增：登入控制
+  setIsLoggedIn: (value: boolean) => void;
+  logout: () => void; // ✅ 新增：登出方法
   discount: number;
   promoCode: string;
   discountPercent: number;
@@ -46,7 +47,9 @@ const DFStoreContext = createContext<DFStoreContextType | undefined>(undefined);
 // Provider 實作
 // ===============================
 export function DFStoreProvider({ children }: { children: React.ReactNode }) {
+  // -------------------------------
   // 假資料
+  // -------------------------------
   const products: Product[] = [
     {
       id: '1',
@@ -123,54 +126,11 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
       category: '美妝保養',
       subcategory: '彩妝',
     },
-    {
-      id: 'm2',
-      name: 'YSL 情挑誘色唇膏',
-      description: '12 號珊瑚紅・絲滑亮澤',
-      price: 1650,
-      image: '/images/dutyfree/sunglasses.png',
-      images: [
-        '/images/dutyfree/brown.png',
-        '/images/dutyfree/chanel-2.jpg',
-        '/images/dutyfree/chanel-3.jpg',
-        '/images/dutyfree/chanel-4.jpg',
-      ],
-      category: '美妝保養',
-      subcategory: '彩妝',
-    },
-    {
-      id: 'm3',
-      name: 'NARS 裸光蜜粉餅',
-      description: '控油柔焦定妝粉餅・透明色',
-      price: 1750,
-      image: '/images/dutyfree/sunglasses.png',
-      images: [
-        '/images/dutyfree/brown.png',
-        '/images/dutyfree/chanel-2.jpg',
-        '/images/dutyfree/chanel-3.jpg',
-        '/images/dutyfree/chanel-4.jpg',
-      ],
-      category: '美妝保養',
-      subcategory: '彩妝',
-    },
-    {
-      id: 'm4',
-      name: 'Benefit 俏皮光暈腮紅',
-      description: '粉嫩蜜桃色・自然好氣色',
-      price: 1350,
-      image: '/images/dutyfree/sunglasses.png',
-      images: [
-        '/images/dutyfree/brown.png',
-        '/images/dutyfree/chanel-2.jpg',
-        '/images/dutyfree/chanel-3.jpg',
-        '/images/dutyfree/chanel-4.jpg',
-      ],
-      category: '美妝保養',
-      subcategory: '彩妝',
-    },
   ];
 
+  // -------------------------------
   // 狀態管理
+  // -------------------------------
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -178,11 +138,14 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [checkoutItem, setCheckoutItem] = useState<Product | null>(null);
 
-  // LocalStorage 載入
+  // -------------------------------
+  // 初始化：載入儲存資料
+  // -------------------------------
   useEffect(() => {
     const savedCart = cartStorage.load();
-    const savedLogin = authStorage.loadLoginState();
+    const savedLogin = authStorage.loadLoginState(); // ✅ 改成 sessionStorage
     const savedPromo = promoStorage.load();
+
     if (savedCart.length) setCart(savedCart);
     if (savedLogin) setIsLoggedIn(savedLogin);
     if (savedPromo.promoCode) {
@@ -192,14 +155,18 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // LocalStorage 寫入
+  // -------------------------------
+  // 資料持久化
+  // -------------------------------
   useEffect(() => cartStorage.save(cart), [cart]);
   useEffect(() => authStorage.saveLoginState(isLoggedIn), [isLoggedIn]);
   useEffect(() => {
     if (promoCode) promoStorage.save(promoCode, discount, discountPercent);
   }, [promoCode, discount, discountPercent]);
 
-  // 操作方法
+  // -------------------------------
+  // 功能方法
+  // -------------------------------
   const addToCart = (product: Product, qty: number) => {
     const existing = cart.find((item) => item.id === product.id);
     if (existing) {
@@ -243,16 +210,24 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // ===============================
+  // 登出方法：清除 session 與登入狀態
+  const logout = () => {
+    setIsLoggedIn(false);
+    authStorage.clearAuth();
+    toast.info('您已登出');
+  };
+
+  // -------------------------------
   // Context 提供值
-  // ===============================
+  // -------------------------------
   return (
     <DFStoreContext.Provider
       value={{
         products,
         cart,
         isLoggedIn,
-        setIsLoggedIn, // ✅ 新增登入 setter
+        setIsLoggedIn,
+        logout, // 新增
         discount,
         promoCode,
         discountPercent,

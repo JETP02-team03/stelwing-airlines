@@ -7,6 +7,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from './ui/button';
 
@@ -68,7 +69,7 @@ export function DFHeader({
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="relative">
                 <svg
                   width="24"
@@ -96,7 +97,7 @@ export function DFHeader({
               <span className="text-xl font-semibold tracking-wide">
                 STELWING
               </span>
-            </a>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-6">
@@ -117,7 +118,7 @@ export function DFHeader({
                   {/* Flyout Menu */}
                   {activeCategory === category.name && (
                     <div className="absolute top-full left-0 min-w-[200px] bg-[var(--df-surface-alt)] text-[var(--df-text-dark)] shadow-lg py-2 rounded-md">
-                      {category.subcategories.map((sub) => (
+                      {category.subcategories?.map((sub) => (
                         <a
                           key={sub}
                           href="#"
@@ -252,14 +253,14 @@ export function DFHeader({
             {categories.map((category) => (
               <div key={category.name} className="py-2">
                 <div className="font-medium mb-2">{category.name}</div>
-                {category.subcategories.map((sub) => (
-                  <a
+                {category.subcategories?.map((sub) => (
+                  <Link
                     key={sub}
                     href="#"
-                    className="block py-2 pl-4 text-sm text-white/80 hover:text-[var(--df-accent-gold)]"
+                    className="block px-4 py-2 hover:bg-[var(--df-accent-gold)] hover:text-white transition-colors"
                   >
                     {sub}
-                  </a>
+                  </Link>
                 ))}
               </div>
             ))}

@@ -1,8 +1,3 @@
-/**
- * STELWING - localStorage 工具函數
- * 統一管理本地數據持久化
- */
-
 const STORAGE_KEYS = {
   CART: 'stelwing_cart',
   IS_LOGGED_IN: 'stelwing_is_logged_in',
@@ -13,7 +8,9 @@ const STORAGE_KEYS = {
   USER_INFO: 'stelwing_user_info',
 } as const;
 
-// 通用的 localStorage 操作
+// ======================================================
+// 通用 LocalStorage 操作
+// ======================================================
 function setItem<T>(key: string, value: T): void {
   try {
     const serialized = JSON.stringify(value);
@@ -43,7 +40,7 @@ function removeItem(key: string): void {
 
 function clearAll(): void {
   try {
-    Object.values(STORAGE_KEYS).forEach(key => {
+    Object.values(STORAGE_KEYS).forEach((key) => {
       localStorage.removeItem(key);
     });
   } catch (error) {
@@ -58,26 +55,70 @@ export const storage = {
   clear: clearAll,
 };
 
-// 購物車相關
+// ======================================================
+// 購物車資料
+// ======================================================
 export const cartStorage = {
   save: (cart: any[]) => storage.set(STORAGE_KEYS.CART, cart),
   load: () => storage.get(STORAGE_KEYS.CART, []),
   clear: () => storage.remove(STORAGE_KEYS.CART),
 };
 
-// 登入狀態
+// ======================================================
+// 登入狀態（使用 sessionStorage）
+// ======================================================
 export const authStorage = {
-  saveLoginState: (isLoggedIn: boolean) => storage.set(STORAGE_KEYS.IS_LOGGED_IN, isLoggedIn),
-  loadLoginState: () => storage.get(STORAGE_KEYS.IS_LOGGED_IN, false),
-  saveUserInfo: (userInfo: any) => storage.set(STORAGE_KEYS.USER_INFO, userInfo),
+  /**
+   * 儲存登入狀態（sessionStorage）
+   * 關閉瀏覽器或分頁就會自動登出
+   */
+  saveLoginState: (isLoggedIn: boolean) => {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEYS.IS_LOGGED_IN,
+        JSON.stringify(isLoggedIn)
+      );
+    } catch (error) {
+      console.error('Error saving login state:', error);
+    }
+  },
+
+  /**
+   * 讀取登入狀態
+   */
+  loadLoginState: (): boolean => {
+    try {
+      const data = sessionStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN);
+      return data ? JSON.parse(data) : false;
+    } catch (error) {
+      console.error('Error loading login state:', error);
+      return false;
+    }
+  },
+
+  /**
+   * 使用者資料仍使用 localStorage（方便暫存資訊）
+   */
+  saveUserInfo: (userInfo: any) =>
+    storage.set(STORAGE_KEYS.USER_INFO, userInfo),
   loadUserInfo: () => storage.get(STORAGE_KEYS.USER_INFO, null),
+
+  /**
+   * 清除登入與使用者資料
+   */
   clearAuth: () => {
-    storage.remove(STORAGE_KEYS.IS_LOGGED_IN);
-    storage.remove(STORAGE_KEYS.USER_INFO);
+    try {
+      sessionStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
+      storage.remove(STORAGE_KEYS.USER_INFO);
+    } catch (error) {
+      console.error('Error clearing auth:', error);
+    }
   },
 };
 
+// ======================================================
 // 折扣碼
+// ======================================================
 export const promoStorage = {
   save: (promoCode: string, discount: number, discountPercent: number) => {
     storage.set(STORAGE_KEYS.PROMO_CODE, promoCode);
@@ -96,7 +137,9 @@ export const promoStorage = {
   },
 };
 
-// 訂單
+// ======================================================
+// 訂單資料
+// ======================================================
 export const ordersStorage = {
   save: (orders: any[]) => storage.set(STORAGE_KEYS.ORDERS, orders),
   load: () => storage.get(STORAGE_KEYS.ORDERS, []),
