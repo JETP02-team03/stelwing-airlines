@@ -112,7 +112,7 @@ function SingleCalendar({
   };
 
   return (
-    <div className="bg-transparent rounded-2xl p-6 min-w-[320px]">
+    <div className="bg-neutral-50 rounded-lg p-3 min-w-[320px] w-full max-w-[360px] mx-auto">
       {/* 標題區 */}
       <div className="text-center mb-6">
         <div
@@ -123,14 +123,14 @@ function SingleCalendar({
         </div>
         <div
           style={{ color: 'var(--calendar-primary)' }}
-          className="text-base font-light mt-1"
+          className="text-base font-light"
         >
           {MONTHS[month]}
         </div>
       </div>
 
       {/* 星期列 */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-1 mb-1">
         {DAYS.map((day) => (
           <div
             key={day}
@@ -147,7 +147,7 @@ function SingleCalendar({
         {days.map((date, index) => {
           if (!date) {
             // 🔸 無日期的空格
-            return <div key={index} className="h-10 w-10" />;
+            return <div key={index} className="h-6 w-10" />;
           }
 
           const isCurrentMonth = date.getMonth() === currentMonth;
@@ -185,7 +185,7 @@ function SingleCalendar({
           return (
             <div
               key={index}
-              className="relative h-10 flex items-center justify-center"
+              className="relative h-8 flex items-center justify-center"
             >
               {!isPastDate && isCurrentMonth && inRange && (
                 <div
@@ -263,7 +263,7 @@ export default function Calendar({
 
   return (
     <div
-      className={`calendar-wrapper flex justify-center gap-6 relative ${className || ''}`}
+      className={`calendar-wrapper flex flex-col md:flex-row justify-center gap-6 relative ${className || ''}`}
     >
       {/* 上一月 */}
       <button

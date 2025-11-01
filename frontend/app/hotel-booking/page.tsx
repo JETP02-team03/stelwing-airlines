@@ -7,7 +7,6 @@ import SearchBar from './components/SearchBar';
 import { HotelCardData } from './interfaces/HotelCardData';
 
 export default function Page() {
-  // 範例飯店資料
   const hotels: HotelCardData[] = [
     {
       id: 1,
@@ -66,51 +65,52 @@ export default function Page() {
     },
   ];
 
-  // 狀態：儲存選取的日期
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
   >(undefined);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* ========== 1. SearchBar（頂部搜尋欄） ========== */}
+    <div className="min-h-screen bg-[url('/images/hotel/bg1.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/70 bg-blend-darken pb-10">
+      {/* 搜尋欄 */}
       <SearchBar
         selectedRange={selectedRange}
         onDateChange={setSelectedRange}
       />
 
-      {/* ========== 2. 日曆區域 ========== */}
-      <div className="py-12 flex flex-col items-center">
-        <Calendar selected={selectedRange} onSelect={setSelectedRange} />
-      </div>
-
-      {/* ========== 3. 飯店列表區域 ========== */}
-      <div className="pb-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* 標題 */}
-          <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">
-            TOP 5 附近優質飯店
-          </h2>
-
-          {/* 飯店卡片列表（橫向滾動）*/}
-          <div className="flex gap-6 overflow-x-auto px-6 py-4 scrollbar-hide">
-            {hotels.map((hotel) => (
-              <HotelCard key={hotel.id} hotel={hotel} />
-            ))}
-          </div>
+      {/* 日曆區域 */}
+      <div className="flex justify-center px-4 mb-10">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+          <Calendar selected={selectedRange} onSelect={setSelectedRange} />
         </div>
       </div>
 
-      {/* 隱藏滾動條的樣式 */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      {/* 飯店列表 */}
+      <div className="bg-white/90 py-[30px] mx-2 rounded-lg shadow-md">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-800 mb-3 text-center">
+            TOP 5 附近優質飯店
+          </h2>
+
+          {/* 卡片 Grid，自動欄位 + minmax 寬度 */}
+          <div className="[grid-template-columns:repeat(auto-fit,minmax(220px,2fr))] grid gap-y-5 gap-x-1 py-3 px-6">
+            {hotels.map((hotel) => (
+              <div
+                key={hotel.id}
+                className="w-full transition-all duration-300 ease-in-out"
+              >
+                <HotelCard hotel={hotel} />
+              </div>
+            ))}
+          </div>
+          {/* 說明：
+              - auto-fit + minmax(220px,1fr): 卡片最小寬 220px，自動撐滿空間
+              - gap-4: 卡片間距固定
+              - w-full: 卡片撐滿格子
+              - transition-all: 卡片縮放平滑
+              - 效果：小螢幕最少 2 張，中間 3~4 張，桌面最多 5 張，間距自然
+          */}
+        </div>
+      </div>
     </div>
   );
 }
