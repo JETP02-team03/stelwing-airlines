@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
+import CreatePlanModal from '../components/createPlanModal';
 import TripCard from '../components/tripCard';
 // export interface ListPageProps {}
 
@@ -85,6 +86,33 @@ export default function ListPage() {
     },
   ];
 
+  interface Trip {
+    id: string;
+    userId: string;
+    title: string;
+    destination: string;
+    startDate: string;
+    startTimezone: string;
+    endDate: string;
+    endTimezone: string;
+    note: string;
+    coverImage: string;
+    isDeleted: number;
+    createdAt: string;
+    updatedAt: string;
+  }
+  interface tripForUI extends Trip {
+    status: string;
+    displayStartDate: string;
+    displayEndDate: string;
+  }
+
+  const tabs = ['全部', '待啟程', '進行中', '已結束'];
+  const [activeTab, setActiveTab] = useState('全部');
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [error, setError] = useState(null);
+  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false); //預設彈出新增視窗不顯示
+
   // #region 關於 Luxon
 
   // Luxon 的 DateTime 物件是「時間點 + 時區」的組合
@@ -122,17 +150,31 @@ export default function ListPage() {
     return status;
   }
 
-  // function：根據後端 API 傳來的 Data，調整後的前端用 Data
-  const tripsForUI = mockTrips.map((trip) => ({
+  // data：fetch 後端取得資料
+  useEffect(() => {
+    async function fetchTrips() {
+      try {
+        const res = await fetch('http://localhost:3007/api/plans');
+        // 如果 res 回傳失敗，建立 Error 物件並將 message 設定為無法取得旅程資料，且跳到 catch 環節 setError
+        if (!res.ok) throw new Error('無法取得旅程資料');
+        const data = await res.json();
+        setTrips(data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+    fetchTrips();
+  }, []);
+
+  // data：根據後端 API 傳來的 Data，調整後的前端用 Data
+  const tripsForUI: tripForUI[] = trips.map((trip) => ({
     ...trip,
     status: calculateStatus(trip), //前端用：判斷旅程是否進行中的欄位
     displayStartDate: convertToTimezone(trip.startDate, trip.startTimezone),
     displayEndDate: convertToTimezone(trip.endDate, trip.endTimezone),
   }));
 
-  // 功能：Tab 分頁切換
-  const tabs = ['全部', '待啟程', '進行中', '已結束'];
-  const [activeTab, setActiveTab] = useState('全部');
+  // data：Tab 分頁切換篩選出要列出的項目
   const filteredTrips =
     // 當 activeTab 為全部時，呈現所有 trips 資料，否則就使用 filter 語法，將 trips 資料留下 status 和 activeTab 相同的
     activeTab === '全部'
@@ -149,12 +191,17 @@ export default function ListPage() {
           w-full flex flex-col
           overflow-hidden"
         >
+          {/* 搜尋及排序 */}
           <div className="p-4">search！</div>
           {/* 主內容 */}
           <div className="flex-1 flex p-10 bg-(--sw-primary)">
             <div className="flex-1 flex flex-col">
+              {/* 新增行程按鈕 */}
               <div className="mb-6">
-                <button className="sw-btn sw-btn--gold-square">
+                <button
+                  className="sw-btn sw-btn--gold-square"
+                  onClick={() => setShowCreatePlanModal(true)}
+                >
                   <h6>建立新旅程</h6>
                 </button>
               </div>
@@ -192,6 +239,11 @@ export default function ListPage() {
             </div>
           </div>
         </section>
+        {/* 彈出視窗：新增旅程 */}
+        {showCreatePlanModal && (
+          // 因為 modal 是子元件，React 中子元件不能傳資料給父元件、不能改變父元件狀態，所以由父元件將這個操作函式傳給子元件讓子元件使用
+          <CreatePlanModal onClose={() => setShowCreatePlanModal(false)} />
+        )}
       </div>
     </>
   );
