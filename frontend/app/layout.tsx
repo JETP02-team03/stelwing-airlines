@@ -32,8 +32,8 @@ export default function RootLayout({
           {/* 固定在頂端的導覽列 */}
           <Header className="sticky top-0 z-50 w-full" />
           <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
         </div>
+        <Footer />
       </body>
     </html>
   );

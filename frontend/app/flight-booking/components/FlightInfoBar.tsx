@@ -4,13 +4,6 @@ import { Armchair, Calendar, Edit3, FileText, Plane, User } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-type TripType = 'roundtrip' | 'oneway';
-type CabinClass = 'Economy' | 'Business';
-
-function toCJKCabin(c?: string | null) {
-  return c === 'Business' ? '商務艙' : '經濟艙';
-}
-
 function fmtDate(iso?: string | null) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -22,24 +15,29 @@ function fmtDate(iso?: string | null) {
 export default function FlightInfoBar() {
   const sp = useSearchParams();
 
-  const tripType = (sp.get('tripType') as TripType) ?? 'roundtrip';
-  const origin = sp.get('origin') ?? '台北(桃園)';
-  const destination = sp.get('destination') ?? '東京成田';
+  const tripType = sp.get('tripType') ?? 'roundtrip';
+  const origin = sp.get('origin') ?? 'TPE';
+  const destination = sp.get('destination') ?? 'NRT';
   const departDate = sp.get('departDate');
   const returnDate = sp.get('returnDate');
   const passengers = Number(sp.get('passengers') ?? '1');
-  const cabinClass = sp.get('cabinClass') as CabinClass | null;
+  const cabin = sp.get('cabin') ?? '經濟艙';
+
+  // 金額加總（只加有帶的值）
+  const obFare = Number(sp.get('obFare') ?? NaN);
+  const ibFare = Number(sp.get('ibFare') ?? NaN);
+  const total =
+    (Number.isFinite(obFare) ? obFare : 0) +
+    (Number.isFinite(ibFare) ? ibFare : 0);
+
   const qs = sp.toString();
 
   return (
     <div className="sw-section--light border-b border-[var(--sw-grey)]">
-      {/* 下方金線 */}
       <div className="h-[2px] w-full bg-[var(--sw-accent)]" />
-
       <div className="mx-auto max-w-[1140px] px-4 h-12 flex items-center justify-between">
-        {/* 左側：資訊列 */}
+        {/* 左 */}
         <div className="flex flex-wrap items-center gap-3 sw-p1 text-[var(--sw-primary)]">
-          {/* 起迄＋來回/單程 */}
           <div className="flex items-center gap-2">
             <Plane className="w-4 h-4 text-[var(--sw-primary)]" />
             <span className="font-semibold">
@@ -49,11 +47,7 @@ export default function FlightInfoBar() {
               （{tripType === 'roundtrip' ? '來回' : '單程'}）
             </span>
           </div>
-
-          {/* 分隔線 */}
           <span className="hidden md:inline opacity-40">│</span>
-
-          {/* 日期 */}
           <div className="hidden md:flex items-center gap-1">
             <Calendar className="w-4 h-4 text-[var(--sw-primary)]" />
             <span className="sw-p2 opacity-80">日期：</span>
@@ -63,23 +57,17 @@ export default function FlightInfoBar() {
                 : fmtDate(departDate)}
             </span>
           </div>
-
           <span className="hidden md:inline opacity-40">│</span>
-
-          {/* 乘客 */}
           <div className="hidden md:flex items-center gap-1">
             <User className="w-4 h-4 text-[var(--sw-primary)]" />
             <span className="sw-p2 opacity-80">乘客：</span>
             <span className="font-medium">{passengers} 位 成人</span>
           </div>
-
           <span className="hidden md:inline opacity-40">│</span>
-
-          {/* 艙等 + 修改 */}
           <div className="hidden md:flex items-center gap-1">
             <Armchair className="w-4 h-4 text-[var(--sw-primary)]" />
             <span className="sw-p2 opacity-80">艙等：</span>
-            <span className="font-medium">{toCJKCabin(cabinClass)}</span>
+            <span className="font-medium">{cabin}</span>
             <Link
               href={`/?${qs}`}
               className="inline-flex items-center gap-1 text-[var(--sw-accent)] hover:opacity-80"
@@ -90,7 +78,7 @@ export default function FlightInfoBar() {
           </div>
         </div>
 
-        {/* 右側：查看明細｜金額 */}
+        {/* 右 */}
         <div className="flex items-center gap-3 sw-p1 text-[var(--sw-primary)]">
           <Link
             href="/order/summary"
@@ -99,11 +87,14 @@ export default function FlightInfoBar() {
             <FileText className="w-4 h-4" />
             <span className="font-semibold">查看明細</span>
           </Link>
-
           <span className="opacity-40">│</span>
-
           <div className="sw-p1 opacity-80">
-            TWD <span className="font-bold text-[var(--sw-primary)]">0</span>
+            TWD{' '}
+            <span className="font-bold text-[var(--sw-primary)]">
+              {new Intl.NumberFormat('zh-Hant', {
+                maximumFractionDigits: 0,
+              }).format(total)}
+            </span>
           </div>
         </div>
       </div>

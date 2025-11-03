@@ -25,7 +25,16 @@ app.use(express.json());
 // 解析 URL-encoded body 的中間件 
 app.use(express.urlencoded({ extended: true })); 
 // 允許所有來源訪問
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    credentials: true,
+  })
+);
+
+app.set("json replacer", (_key: any, value: { toString: () => any; }) =>
+  typeof value === "bigint" ? value.toString() : value
+);
 
 // - - - 路由區 - - -
 
@@ -37,7 +46,7 @@ app.get("/", (req: Request, res: Response) => {
 // 測試 Prisma 與 Create
 app.use("/api", apiRouter);
 
-const port = +(process.env.PORT || "3002"); 
+const port = +(process.env.PORT || "3007"); 
 app.listen(port, () => { 
   console.log(`Express + TS 啟動 http://localhost:${port}`); 
 }); 

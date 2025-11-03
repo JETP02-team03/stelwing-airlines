@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -12,6 +12,63 @@ datasource db {
 
 // 下面開始放大家的 schema
 model userTest {
-  id          Int      @id @default(autoincrement())
-  name        String
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model Country {
+  countryId   BigInt @id @default(autoincrement()) @map("country_id")
+  countryCode String @unique @map("country_code") @db.Char(2)
+  countryName String @map("country_name") @db.VarChar(100)
+  cities      City[]
+
+  @@map("countries")
+}
+
+model City {
+  cityId    BigInt    @id @default(autoincrement()) @map("city_id")
+  cityName  String    @map("city_name")
+  countryId BigInt    @map("country_id")
+  country   Country   @relation(fields: [countryId], references: [countryId])
+  airports  Airport[]
+
+  @@map("cities")
+}
+
+model Airport {
+  airportId   BigInt   @id @default(autoincrement()) @map("airport_id")
+  airportCode String   @unique @map("airport_code") @db.Char(3)
+  airportName String   @map("airport_name") @db.VarChar(150)
+  cityId      BigInt   @map("city_id")
+  city        City     @relation(fields: [cityId], references: [cityId])
+  departures  Flight[] @relation("origin_airport")
+  arrivals    Flight[] @relation("destination_airport")
+
+  @@map("airports")
+}
+
+enum FlightStatus {
+  SCHEDULED // 尚未起飛
+  CANCELED // 已取消航班
+}
+
+/**
+ * 時區規範：
+ * - depTimeUtc / arrTimeUtc 一律儲存 UTC 時間（+00:00）
+ * - flightDate 為航班當地日期（出發地當地時間）
+ * - 前端顯示時請依照各城市時區轉換（例如 'Asia/Taipei', 'Asia/Tokyo'）
+ */
+model Flight {
+  flightId        BigInt       @id @default(autoincrement()) @map("flight_id")
+  flightNumber    String       @map("flight_number") @db.VarChar(6)
+  flightDate      DateTime     @map("flight_date") @db.Date
+  originIata      String       @map("origin_iata") @db.Char(3)
+  destinationIata String       @map("destination_iata") @db.Char(3)
+  depTimeUtc      DateTime?    @map("dep_time_utc") // UTC departure time
+  arrTimeUtc      DateTime?    @map("arr_time_utc") // UTC arrival time
+  status          FlightStatus @map("status")
+  origin          Airport      @relation("origin_airport", fields: [originIata], references: [airportCode])
+  destination     Airport      @relation("destination_airport", fields: [destinationIata], references: [airportCode])
+
+  @@map("flights")
 }

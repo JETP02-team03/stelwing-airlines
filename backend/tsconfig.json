@@ -17,9 +17,11 @@
     // 源始碼目錄 
     "verbatimModuleSyntax": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "prisma/seed",
+    "prisma/seedFlights.ts"
   ]
 }
