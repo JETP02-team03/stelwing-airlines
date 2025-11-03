@@ -1,4 +1,5 @@
 'use client';
+
 interface TabButtonProps {
   text: string;
   selected?: boolean;
@@ -8,12 +9,15 @@ interface TabButtonProps {
 const TabButton = ({ text, selected = false, onClick }: TabButtonProps) => {
   return (
     <button
-      className={`px-7 py-2 rounded-full font-bold ${
-        selected
-          ? 'bg-[#dcbb87] text-white'
-          : 'bg-transparent text-white border-2 border-[#dcba83]'
-      } transition-colors duration-200`}
       onClick={onClick}
+      className={`
+        px-7 py-2 rounded-full font-bold transition-all duration-200
+        ${
+          selected
+            ? 'bg-[#DCBB87] text-white shadow-md'
+            : 'bg-transparent text-white border border-[#dcba83] hover:bg-[#dcba83]/10'
+        }
+      `}
     >
       {text}
     </button>

@@ -83,11 +83,9 @@ export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
             {/* 價格區塊 */}
             <div>
               <div className="text-l font-bold text-white drop-shadow-lg">
-                {hotel.currency} {hotel.price.toLocaleString()}
+                NT {hotel.price.toLocaleString()}
               </div>
-              <div className="text-xs text-white/80 drop-shadow-lg">
-                {hotel.priceUnit}
-              </div>
+              <div className="text-xs text-white/80 drop-shadow-lg">每晚</div>
             </div>
 
             {/* 預訂按鈕 */}

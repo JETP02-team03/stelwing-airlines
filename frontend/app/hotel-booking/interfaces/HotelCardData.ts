@@ -7,8 +7,8 @@ export interface HotelCardData {
   location: string; // 位置（文字，例如："東京都"）
   distance: string; // 距離描述（文字，例如："距離機場約 0.3公里"）
   price: number; // 價格（數字，例如：2000）
-  currency: string; // 貨幣符號（文字，例如："$"）
-  priceUnit: string; // 價格單位（文字，例如："/night"）
+  //currency: string; // 貨幣符號（文字，例如："$"）
+  //priceUnit: string; // 價格單位（文字，例如："/night"）
   image?: string; // 圖片網址（文字，? 表示可有可無）
 }
 

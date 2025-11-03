@@ -8,7 +8,7 @@ import Dropdown from '../components/ui/Dropdown';
 import SearchView from '../components/ui/SearchView';
 import TabButton from '../components/ui/TabButton';
 
-// 卡片元件（已統一）
+// 卡片元件
 import CarryOnCard from '../components/cards/CarryOnCard';
 import CheckedLuggageCard from '../components/cards/CheckedLuggageCard';
 import ProhibitedItemsCard from '../components/cards/ProhibitedItemsCard';
@@ -18,11 +18,25 @@ export default function FAQPage() {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
-  // --- 下拉選單資料 ---
+  // --- 國家選項 ---
   const countryOptions = ['台灣', '日本', '泰國', '新加坡'];
-  const cityOptions = ['台北', '東京', '曼谷', '新加坡'];
 
+  // --- 階層式城市選項 ---
+  const getCityOptions = (country: string): string[] => {
+    const cityMap: { [key: string]: string[] } = {
+      台灣: ['台北-桃園', '台北-松山', '高雄'],
+      日本: ['東京-成田', '東京-羽田'], // 你的需求！
+      泰國: ['曼谷-素萬那普', '曼谷-廊曼'],
+      新加坡: ['新加坡-樟宜'],
+    };
+    return cityMap[country] || ['請選擇國家'];
+  };
+
+  const cityOptions = getCityOptions(selectedCountry);
+
+  // --- Tab 選項 ---
   const tabButtons = [
     '行李規定',
     '機場資訊',
@@ -31,7 +45,7 @@ export default function FAQPage() {
     '安全提醒',
   ];
 
-  // --- 卡片資料 ---
+  // --- 卡片資料（不變）---
   const checkedLuggageRestrictions = [
     {
       category: '經濟艙',
@@ -71,9 +85,29 @@ export default function FAQPage() {
   ];
 
   // --- Handlers ---
-  const handleTabClick = (tab: string) => setSelectedTab(tab);
+  const handleCountryChange = (val: string) => {
+    setSelectedCountry(val);
+    setSelectedCity(''); // 重置城市
+  };
+
+  const handleCityChange = (val: string) => {
+    setSelectedCity(val);
+  };
+
+  const handleTabClick = (tab: string) => {
+    setSelectedTab(tab);
+  };
+
   const handleSearch = () => {
+    setIsSearching(true);
     console.log('Search:', { selectedCountry, selectedCity, searchKeyword });
+    setTimeout(() => setIsSearching(false), 800);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -85,27 +119,27 @@ export default function FAQPage() {
             目的地旅遊資訊
           </h1>
 
-          {/* 搜尋列區塊 */}
           <div className="w-full max-w-[704px]">
             <div className="flex flex-col sm:flex-row gap-4 mb-6 sm:mb-8">
               <Dropdown
                 options={countryOptions}
                 placeholder="國家"
                 value={selectedCountry}
-                onChange={(val) => setSelectedCountry(val)}
+                onChange={handleCountryChange}
                 className="flex-1"
               />
               <Dropdown
                 options={cityOptions}
-                placeholder="城市"
+                placeholder="城市 / 機場"
                 value={selectedCity}
-                onChange={(val) => setSelectedCity(val)}
+                onChange={handleCityChange}
                 className="flex-1"
               />
               <SearchView
                 placeholder="關鍵字"
                 value={searchKeyword}
                 onChange={(val) => setSearchKeyword(val)}
+                onKeyDown={handleKeyDown}
                 className="flex-1"
               />
             </div>
@@ -113,11 +147,10 @@ export default function FAQPage() {
             <div className="flex justify-center">
               <Button
                 text="搜尋"
-                text_font_size="text-[24px]"
+                text_font_size="text-lg" // 修正：原本 24px 太大
                 text_font_weight="font-bold"
-                text_line_height="leading-[33px]"
                 border_border_radius="rounded-[26px]"
-                className="px-8 py-2"
+                className="px-8 py-3" // 增加內距
                 onClick={handleSearch}
               />
             </div>
@@ -128,7 +161,8 @@ export default function FAQPage() {
       {/* Tab 導覽 */}
       <section className="w-full py-8 sm:py-12">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <div className="flex flex-wrap gap-2 sm:gap-4 justify-center border-[3px] border-[#8e7c60] rounded-full p-3">
+          <div className="flex flex-wrap gap-2 sm:gap-4 justify-center border-[3px] border-[#8e7c60] rounded-full p-4">
+            {/* 修正：p-3 → p-5 */}
             {tabButtons.map((tab) => (
               <TabButton
                 key={tab}
@@ -141,12 +175,30 @@ export default function FAQPage() {
         </div>
       </section>
 
+      {/* 搜尋中提示 */}
+      {isSearching && (
+        <div className="text-center text-white py-4">
+          <p className="text-lg animate-pulse">搜尋中...</p>
+        </div>
+      )}
+
       {/* 卡片區 */}
       <section className="pb-16 sm:pb-20">
         <div className="max-w-[1104px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12">
-          <CheckedLuggageCard data={checkedLuggageRestrictions} />
-          <CarryOnCard data={carryOnRestrictions} />
-          <ProhibitedItemsCard data={prohibitedItems} />
+          {selectedTab === '行李規定' && !isSearching && (
+            <>
+              <CheckedLuggageCard data={checkedLuggageRestrictions} />
+              <CarryOnCard data={carryOnRestrictions} />
+              <ProhibitedItemsCard data={prohibitedItems} />
+            </>
+          )}
+
+          {selectedTab !== '行李規定' && !isSearching && (
+            <div className="text-center text-white py-20 bg-white/5 rounded-lg">
+              <p className="text-xl font-medium">{selectedTab}</p>
+              <p className="text-sm mt-2 opacity-75">內容開發中...</p>
+            </div>
+          )}
         </div>
       </section>
     </div>
