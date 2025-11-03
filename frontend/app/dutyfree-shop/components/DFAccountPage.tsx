@@ -1,7 +1,21 @@
-import { DFStatusTag } from '../components/DFStatusTag';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { X } from 'lucide-react';
+import { DFStatusTag } from '../components/DFStatusTag';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
 
 interface Order {
   id: string;
@@ -31,11 +45,16 @@ export function DFAccountPage({
 }: DFAccountPageProps) {
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'success': return '已完成';
-      case 'processing': return '處理中';
-      case 'cancelled': return '已取消';
-      case 'refunding': return '退款中';
-      default: return status;
+      case 'success':
+        return '已完成';
+      case 'processing':
+        return '處理中';
+      case 'cancelled':
+        return '已取消';
+      case 'refunding':
+        return '退款中';
+      default:
+        return status;
     }
   };
 
@@ -44,7 +63,10 @@ export function DFAccountPage({
       <div className="mx-auto px-4 lg:px-16 max-w-7xl">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 mb-4">
-          <button onClick={onNavigateHome} className="hover:text-[var(--df-accent-gold)]">
+          <button
+            onClick={onNavigateHome}
+            className="hover:text-[var(--df-accent-gold)]"
+          >
             首頁
           </button>
           {' > '}
@@ -53,25 +75,25 @@ export function DFAccountPage({
 
         <Tabs defaultValue="duty-free" className="w-full">
           <TabsList className="mb-4 md:mb-6 bg-white border-b w-full justify-start rounded-none h-auto p-0 overflow-x-auto flex-nowrap">
-            <TabsTrigger 
-              value="member-info" 
+            <TabsTrigger
+              value="member-info"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--df-accent-gold)] data-[state=active]:bg-transparent px-3 md:px-6 py-3 text-sm md:text-base whitespace-nowrap"
             >
               會員資訊
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="machine-order"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--df-accent-gold)] data-[state=active]:bg-transparent px-3 md:px-6 py-3 text-sm md:text-base whitespace-nowrap"
             >
               機票訂單
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="accommodation-order"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--df-accent-gold)] data-[state=active]:bg-transparent px-3 md:px-6 py-3 text-sm md:text-base whitespace-nowrap"
             >
               住宿訂單
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="duty-free"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--df-accent-gold)] data-[state=active]:bg-[var(--df-accent-gold)] data-[state=active]:text-white px-3 md:px-6 py-3 text-sm md:text-base whitespace-nowrap"
             >
@@ -97,14 +119,16 @@ export function DFAccountPage({
                   </thead>
                   <tbody className="divide-y">
                     {orders.map((order, idx) => (
-                      <tr 
-                        key={idx} 
+                      <tr
+                        key={idx}
                         className="hover:bg-gray-50 cursor-pointer"
                         onClick={() => onOrderClick(order)}
                       >
                         <td className="px-6 py-4">{idx + 1}</td>
                         <td className="px-6 py-4">{order.id}</td>
-                        <td className="px-6 py-4">Chanel N°5系列 經典香水-50mL</td>
+                        <td className="px-6 py-4">
+                          Chanel N°5系列 經典香水-50mL
+                        </td>
                         <td className="px-6 py-4">{order.paymentMethod}</td>
                         <td className="px-6 py-4">
                           <DFStatusTag
@@ -114,7 +138,7 @@ export function DFAccountPage({
                         </td>
                         <td className="px-6 py-4 text-sm">{order.date}</td>
                         <td className="px-6 py-4">
-                          <button 
+                          <button
                             className="text-gray-400 hover:text-red-500"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -134,7 +158,7 @@ export function DFAccountPage({
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
               {orders.map((order, idx) => (
-                <div 
+                <div
                   key={idx}
                   className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => onOrderClick(order)}
@@ -144,7 +168,7 @@ export function DFAccountPage({
                       <p className="text-sm text-gray-500">訂購號碼</p>
                       <p className="font-medium">{order.id}</p>
                     </div>
-                    <button 
+                    <button
                       className="text-gray-400 hover:text-red-500"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -157,7 +181,9 @@ export function DFAccountPage({
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-500">商品</span>
-                      <span className="text-right">Chanel N°5系列 經典香水-50mL</span>
+                      <span className="text-right">
+                        Chanel N°5系列 經典香水-50mL
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">付款方式</span>
@@ -201,7 +227,10 @@ export function DFAccountPage({
       </div>
 
       {/* Delete Order Confirmation Dialog */}
-      <AlertDialog open={deleteOrderId !== null} onOpenChange={(open) => !open && onSetDeleteOrderId(null)}>
+      <AlertDialog
+        open={deleteOrderId !== null}
+        onOpenChange={(open) => !open && onSetDeleteOrderId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>確認刪除訂單</AlertDialogTitle>
@@ -210,7 +239,9 @@ export function DFAccountPage({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => onSetDeleteOrderId(null)}>取消</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => onSetDeleteOrderId(null)}>
+              取消
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteOrderId && onRemoveOrder(deleteOrderId)}
               className="bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90"

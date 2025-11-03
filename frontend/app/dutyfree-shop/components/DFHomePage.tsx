@@ -24,12 +24,12 @@ function Word() {
         }
       >
         <div className="flex-none rotate-[348.972deg]">
-          <p className="font-['Homemade_Apple:Regular',_sans-serif] leading-[normal] not-italic relative text-[24px] text-black text-nowrap text-right whitespace-pre">
+          <p className="font-homemade leading-[normal] not-italic relative text-[24px] text-black text-nowrap text-right whitespace-pre">
             Stelwing
           </p>
         </div>
       </div>
-      <p className="font-['Fjalla_One:Regular',_sans-serif] leading-[normal] not-italic relative shrink-0 text-[24px] text-black text-nowrap text-right whitespace-pre">
+      <p className="font-teko leading-[normal] not-italic relative shrink-0 text-[36px] text-black text-nowrap text-right whitespace-pre">
         Duty Free
       </p>
     </div>
@@ -102,6 +102,7 @@ function Pic() {
 interface Product {
   id: string;
   name: string;
+  sub: string;
   description: string;
   price: number;
   image: string;

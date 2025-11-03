@@ -144,7 +144,7 @@ export function DFProductPage({
               {product.name}
             </h1>
             <p className="text-gray-500 mb-4 text-sm md:text-base">
-              關號 {orderNumber}
+              產品編號： {orderNumber}
             </p>
 
             <div className="mb-6">
@@ -192,7 +192,6 @@ export function DFProductPage({
                 {product.description}
                 <br />
                 <br />
-                純粹香氣，魅力永恆。高品質保證，適合送禮或自用。
               </p>
             </div>
           </div>

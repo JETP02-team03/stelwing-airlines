@@ -84,7 +84,7 @@ export default function CartPage() {
                   <div>
                     <h2 className="font-medium text-gray-800">{item.name}</h2>
                     <p className="text-sm text-gray-500 line-clamp-2">
-                      {item.description}
+                      {item.sub}
                     </p>
                     <p className="text-[var(--df-accent-gold)] font-semibold mt-1">
                       TWD {item.price.toLocaleString()}

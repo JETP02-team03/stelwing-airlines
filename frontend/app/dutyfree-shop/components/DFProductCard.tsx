@@ -6,6 +6,7 @@ interface DFProductCardProps {
   image?: string; // ✅ 改為可選
   images?: string[]; // ✅ 新增多圖支援
   name: string;
+  sub: string;
   description: string;
   price: number;
   onClick?: () => void;
@@ -16,6 +17,7 @@ export function DFProductCard({
   image,
   images,
   name,
+  sub,
   description,
   price,
   onClick,
@@ -40,7 +42,7 @@ export function DFProductCard({
         <h3 className="font-medium mb-1 text-[var(--df-text-dark)] group-hover:text-[var(--df-accent-gold)] transition-colors">
           {name}
         </h3>
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{description}</p>
+        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{sub}</p>
         <div
           className="text-[var(--df-accent-gold)]"
           style={{

@@ -1,6 +1,6 @@
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { DFStatusTag } from '../components/DFStatusTag';
 import { DFPickupModal } from '../components/DFPickupModal';
+import { DFStatusTag } from '../components/DFStatusTag';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 
 interface CartItem {
@@ -42,11 +42,16 @@ export function DFOrderDetailPage({
 }: DFOrderDetailPageProps) {
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'success': return '已完成';
-      case 'processing': return '處理中';
-      case 'cancelled': return '已取消';
-      case 'refunding': return '退款中';
-      default: return status;
+      case 'success':
+        return '已完成';
+      case 'processing':
+        return '處理中';
+      case 'cancelled':
+        return '已取消';
+      case 'refunding':
+        return '退款中';
+      default:
+        return status;
     }
   };
 
@@ -55,11 +60,17 @@ export function DFOrderDetailPage({
       <div className="mx-auto px-4 lg:px-16 max-w-5xl">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 mb-4">
-          <button onClick={onNavigateHome} className="hover:text-[var(--df-accent-gold)]">
+          <button
+            onClick={onNavigateHome}
+            className="hover:text-[var(--df-accent-gold)]"
+          >
             首頁
           </button>
           {' > '}
-          <button onClick={onNavigateAccount} className="hover:text-[var(--df-accent-gold)]">
+          <button
+            onClick={onNavigateAccount}
+            className="hover:text-[var(--df-accent-gold)]"
+          >
             會員中心
           </button>
           {' > '}
@@ -70,10 +81,19 @@ export function DFOrderDetailPage({
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-4 mb-6 md:mb-8 pb-6 border-b">
             <div>
-              <h1 style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: '600' }} className="mb-2">
+              <h1
+                style={{
+                  fontSize: '1.5rem',
+                  lineHeight: '2rem',
+                  fontWeight: '600',
+                }}
+                className="mb-2"
+              >
                 訂單詳情
               </h1>
-              <p className="text-gray-500 text-sm md:text-base">訂單號碼：{order.id}</p>
+              <p className="text-gray-500 text-sm md:text-base">
+                訂單號碼：{order.id}
+              </p>
             </div>
             <DFStatusTag
               status={order.status as any}
@@ -96,7 +116,9 @@ export function DFOrderDetailPage({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">訂單總額：</span>
-                  <span className="font-semibold">TWD {order.total.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    TWD {order.total.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -126,7 +148,6 @@ export function DFOrderDetailPage({
           {/* Items */}
           <div>
             <h3 className="font-semibold mb-4">訂購商品</h3>
-            
             {/* Desktop Table View */}
             <div className="hidden md:block border rounded-lg overflow-hidden">
               <table className="w-full">
@@ -152,12 +173,16 @@ export function DFOrderDetailPage({
                           </div>
                           <div>
                             <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-gray-500">{item.description}</p>
+                            <p className="text-sm text-gray-500">
+                              {item.description}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">{item.quantity}</td>
-                      <td className="px-4 py-4 text-right">TWD {item.price.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-right">
+                        TWD {item.price.toLocaleString()}
+                      </td>
                       <td className="px-4 py-4 text-right font-medium">
                         TWD {(item.price * item.quantity).toLocaleString()}
                       </td>
@@ -181,7 +206,9 @@ export function DFOrderDetailPage({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                      <p className="text-sm text-gray-500 line-clamp-2">
+                        {item.description}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm">
@@ -195,7 +222,9 @@ export function DFOrderDetailPage({
                     </div>
                     <div className="flex justify-between font-medium">
                       <span>小計：</span>
-                      <span>TWD {(item.price * item.quantity).toLocaleString()}</span>
+                      <span>
+                        TWD {(item.price * item.quantity).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -212,7 +241,10 @@ export function DFOrderDetailPage({
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">總計：</span>
-                <span className="font-semibold text-[var(--df-accent-gold)]" style={{ fontSize: '1.25rem' }}>
+                <span
+                  className="font-semibold text-[var(--df-accent-gold)]"
+                  style={{ fontSize: '1.25rem' }}
+                >
                   TWD {order.total.toLocaleString()}
                 </span>
               </div>
@@ -240,10 +272,7 @@ export function DFOrderDetailPage({
         </div>
       </div>
 
-      <DFPickupModal
-        open={pickupModalOpen}
-        onClose={onClosePickupModal}
-      />
+      <DFPickupModal open={pickupModalOpen} onClose={onClosePickupModal} />
     </div>
   );
 }

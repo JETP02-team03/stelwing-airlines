@@ -169,7 +169,6 @@ export default function ProductPage() {
                 {product.description}
                 <br />
                 <br />
-                純粹香氣，魅力永恆。高品質保證，適合送禮或自用。
               </p>
             </div>
           </div>

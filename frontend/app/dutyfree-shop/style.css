@@ -2,6 +2,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@import url("https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Teko:wght@300..700&display=swap");
+
+.font-homemade {
+  font-family: "Homemade Apple", cursive;
+}
+
+.font-teko {
+  font-family: "Teko", sans-serif;
+}
+
 :root {
   --font-size: 16px;
 
