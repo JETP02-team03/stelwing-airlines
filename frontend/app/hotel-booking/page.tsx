@@ -85,14 +85,14 @@ export default function Page() {
       </div>
 
       {/* 飯店列表 */}
-      <div className="bg-white/90 py-[30px] mx-2 rounded-lg shadow-md">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-white/90 py-[30px] rounded-lg shadow-md mx-6">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 mb-3 text-center">
             TOP 5 附近優質飯店
           </h2>
 
           {/* 卡片 Grid，自動欄位 + minmax 寬度 */}
-          <div className="[grid-template-columns:repeat(auto-fit,minmax(220px,2fr))] grid gap-y-5 gap-x-1 py-3 px-6">
+          <div className="[grid-template-columns:repeat(auto-fit,minmax(220px,0fr))] justify-center grid gap-y-5 gap-x-2 py-3 px-2">
             {hotels.map((hotel) => (
               <div
                 key={hotel.id}
