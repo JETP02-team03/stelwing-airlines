@@ -1,3 +1,4 @@
+// app/layout.tsx
 import '@/styles/globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -21,17 +22,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
+    <html lang="zh-Hant">
       <body>
-        <div className="flex flex-col min-h-screen">
-          <Header className="fixed top-0 left-0 w-full z-50" />
-          <main className="flex-1">{children}</main>
+        <div className="flex min-h-screen flex-col">
+          {/* 固定在頂端的導覽列 */}
+          <Header className="sticky top-0 z-50 w-full" />
+          <main className="flex-1 flex flex-col">{children}</main>
+          <Footer />
         </div>
-        <Footer />
       </body>
     </html>
   );
