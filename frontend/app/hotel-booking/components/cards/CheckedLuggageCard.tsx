@@ -15,7 +15,7 @@ interface CheckedLuggageCardProps {
 
 const CheckedLuggageCard = ({ data }: CheckedLuggageCardProps) => {
   return (
-    <InfoCard badgeText="托運行李限制">
+    <InfoCard badgeText="入境與轉機規定">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
         {data.map((item, idx) => (
           <div key={idx}>
