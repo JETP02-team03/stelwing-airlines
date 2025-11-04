@@ -16,17 +16,19 @@ export default function CartPage() {
     discount,
     promoCode,
     isLoggedIn, // ✅ 取出登入狀態
+    setCheckoutItem, // ✅ 新增：清除單品結帳殘留
   } = useDFStore();
 
   const [code, setCode] = useState('');
 
-  // 小計與總金額
+  // ✅ 小計與總金額
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
   const total = Math.max(0, subtotal - discount);
 
+  // ✅ 空購物車提示
   if (cart.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-gray-600">
@@ -41,7 +43,7 @@ export default function CartPage() {
     );
   }
 
-  // 套用折扣碼
+  // ✅ 套用折扣碼
   const handleApplyCode = () => {
     const formatted = code.trim().toLowerCase();
     if (!formatted) return;
@@ -49,8 +51,11 @@ export default function CartPage() {
     setCode('');
   };
 
-  // ✅ 點擊前往結帳
+  // ✅ 點擊前往結帳（加上清空 checkoutItem）
   const handleCheckout = () => {
+    // 清除「立即購買」的單品資料，確保進入 checkout 是整車結帳
+    setCheckoutItem(null);
+
     if (!isLoggedIn) {
       router.push('/dutyfree-shop/login');
     } else {
@@ -64,7 +69,7 @@ export default function CartPage() {
         <h1 className="text-2xl font-semibold mb-6">購物車</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: 商品列表 */}
+          {/* 左側：商品列表 */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-4 md:p-6">
             {cart.map((item) => (
               <div
@@ -110,7 +115,7 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Right: 結帳資訊 */}
+          {/* 右側：結帳資訊 */}
           <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
             <h2 className="text-lg font-semibold mb-4">訂單摘要</h2>
 
@@ -156,6 +161,7 @@ export default function CartPage() {
               )}
             </div>
 
+            {/* 前往結帳 */}
             <Button
               onClick={handleCheckout}
               className="w-full mt-6 bg-[var(--df-accent-gold)] text-white hover:bg-[var(--df-accent-gold)]/90"

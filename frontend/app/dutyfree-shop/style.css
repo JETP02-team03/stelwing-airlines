@@ -5,12 +5,32 @@
 @import url("https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Teko:wght@300..700&display=swap");
 
+#dutyfree-theme {
+  --df-primary-dark: #1f2e3c;
+  --df-accent-gold: #dcbb87;
+  --df-text-light: #ffffff;
+  --df-text-dark: #333333;
+  --df-surface-alt: #f8f8f8;
+  --df-state-success: #06c167;
+  --df-state-error: #d44333;
+  --df-state-disabled: #cccccc;
+}
+
 .font-homemade {
   font-family: "Homemade Apple", cursive;
 }
 
 .font-teko {
   font-family: "Teko", sans-serif;
+}
+
+[data-slot="dialog-overlay"] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-slot="dialog-content"] {
+  background-color: var(--color-card, var(--background, #ffffff));
 }
 
 :root {
@@ -27,8 +47,10 @@
   --df-state-disabled: #cccccc;
 
   --background: #ffffff;
+  --color-background: var(--background);
   --foreground: var(--df-text-dark);
   --card: #ffffff;
+  --color-card: var(--card);
   --card-foreground: var(--df-text-dark);
   --popover: #ffffff;
   --popover-foreground: var(--df-text-dark);

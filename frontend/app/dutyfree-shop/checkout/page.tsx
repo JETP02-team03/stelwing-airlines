@@ -1,7 +1,7 @@
 'use client';
 import { CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DFCheckoutStepper } from '../components/DFCheckoutStepper';
 import { DFOrderSummary } from '../components/DFOrderSummary';
 import { Button } from '../components/ui/button';
@@ -28,9 +28,9 @@ interface CheckoutForm {
 // ===============================
 export default function CheckoutPage() {
   const router = useRouter();
-  const { checkoutItem, cart } = useDFStore();
+  const { checkoutItem, cart, setCheckoutItem } = useDFStore();
 
-  // ✅ 所有 hooks 都放在頂部，不能放在條件 return 之後
+  // ✅ 表單狀態
   const [checkoutForm, setCheckoutForm] = useState<CheckoutForm>({
     firstName: '',
     lastName: '',
@@ -53,7 +53,14 @@ export default function CheckoutPage() {
     cvc: '',
   });
 
-  // ✅ 條件：若沒商品，就顯示提示畫面
+  // ✅ 自動防呆：若購物車多於 1 件商品，代表不是立即購買 → 清空 checkoutItem
+  useEffect(() => {
+    if (cart.length > 1 && checkoutItem) {
+      setCheckoutItem(null);
+    }
+  }, [cart.length, checkoutItem, setCheckoutItem]);
+
+  // ✅ 若沒有任何商品（購物車與單品皆空）
   const noItems = !checkoutItem && cart.length === 0;
   if (noItems) {
     return (
@@ -69,7 +76,7 @@ export default function CheckoutPage() {
     );
   }
 
-  // ✅ 若 checkoutItem 有值，優先顯示單品結帳；否則顯示購物車內容
+  // ✅ 若有 checkoutItem，顯示單品結帳；否則顯示購物車內容
   const cartItems = checkoutItem
     ? [
         {
@@ -90,7 +97,7 @@ export default function CheckoutPage() {
   const discount = 0;
 
   // ===============================
-  // 表單邏輯
+  // 表單處理
   // ===============================
   const onFormChange = (field: keyof CheckoutForm, value: string) => {
     setCheckoutForm((prev) => ({ ...prev, [field]: value }));
@@ -104,7 +111,7 @@ export default function CheckoutPage() {
   // 提交邏輯
   // ===============================
   const onSubmit = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Partial<Record<keyof CheckoutForm, string>> = {};
     if (!checkoutForm.firstName) newErrors.firstName = '請輸入姓氏';
     if (!checkoutForm.lastName) newErrors.lastName = '請輸入名字';
     if (!checkoutForm.phone) newErrors.phone = '請輸入電話';
@@ -114,7 +121,7 @@ export default function CheckoutPage() {
     if (!checkoutForm.cvc) newErrors.cvc = '請輸入安全碼';
 
     if (Object.keys(newErrors).length > 0) {
-      setCheckoutErrors(newErrors as any);
+      setCheckoutErrors(newErrors as Record<keyof CheckoutForm, string>);
       return;
     }
 
@@ -135,7 +142,7 @@ export default function CheckoutPage() {
         <DFCheckoutStepper currentStep={2} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-          {/* Left: 表單區 */}
+          {/* 左側：表單區 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 聯絡資訊 */}
             <div className="bg-white rounded-lg p-6">

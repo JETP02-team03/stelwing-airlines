@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 interface CartItem {
   id: string;
   name: string;
+  sub: string;
   description: string;
   price: number;
   image: string;
@@ -173,9 +174,7 @@ export function DFOrderDetailPage({
                           </div>
                           <div>
                             <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-gray-500">
-                              {item.description}
-                            </p>
+                            <p className="text-sm text-gray-500">{item.sub}</p>
                           </div>
                         </div>
                       </td>
