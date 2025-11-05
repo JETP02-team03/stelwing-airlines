@@ -150,7 +150,7 @@ export default function HotelPage() {
                   height={260}
                   className="object-cover h-full w-full"
                 />
-                <div className="absolute top-3 left-3 bg-black/90 text-white text-sm px-2 py-1 rounded-full">
+                <div className="absolute top-3 left-3 bg-black/70 text-white text-sm px-2 py-1 rounded-full">
                   ⭐ {hotel.rating}
                 </div>
               </div>
