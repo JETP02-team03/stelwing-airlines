@@ -1,174 +1,240 @@
-// app/search/page.tsx
 'use client';
 
-import HotelResultCard from '@/components/ui/HotelResultCard';
-import { Filter, List, Map } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import FilterSidebar from './components/ui/FilterSidebar';
-import { HotelCardData } from '/interfaces/HotelCardData';
+import Image from 'next/image';
+import { useState } from 'react';
 
-// 動態載入地圖（避免 SSR 問題）
-const MapView = dynamic(() => import('@/components/ui/MapView'), {
-  ssr: false,
-});
+export default function HotelPage() {
+  const [showFilter, setShowFilter] = useState(false);
 
-const mockHotels: HotelCardData[] = [
-  {
-    id: 1,
-    name: '東橫INN成田機場新館',
-    location: '第二航廈・機場內',
-    distance: '距離市中心 0.1 公里',
-    rating: 4.6,
-    price: 8000,
-    image: '/images/hotel/room1.jpeg',
-    notes: '位於成田機場第二航廈內的優質飯店，適合轉機旅客。',
-    amenities: { wifi: true, cafe: true, frontDesk24h: true },
-    lat: 35.7648,
-    lng: 140.3855,
-  },
-  {
-    id: 2,
-    name: '成田日航酒店',
-    location: '第二航廈・機場內',
-    distance: '距離機場約 0.3公里',
-    rating: 4.9,
-    price: 8000,
-    image: '/images/hotel/room2.jpeg',
-    notes: '五星級飯店，免費接送。',
-    amenities: {
-      wifi: true,
-      parking: true,
-      restaurant: true,
-      shuttleService: true,
+  const hotels = [
+    {
+      id: 1,
+      name: '東橫INN 成田機場新館',
+      location: 'Narita Airport Terminal | Hotel',
+      rating: 4.6,
+      price: 8000,
+      image: '/images/hotel/hotel1.jpeg',
     },
-    lat: 35.762,
-    lng: 140.388,
-  },
-  // ... 其他
-];
-
-export default function SearchPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<any>({});
-
-  // 真篩選
-  const filteredHotels = useMemo(() => {
-    return mockHotels.filter((hotel) => {
-      if (filters.priceMin && hotel.price < filters.priceMin) return false;
-      if (filters.priceMax && hotel.price > filters.priceMax) return false;
-      if (filters.rating && hotel.rating < filters.rating) return false;
-      if (filters.amenities?.length) {
-        return filters.amenities.every(
-          (a: string) => hotel.amenities?.[a as keyof typeof hotel.amenities]
-        );
-      }
-      return true;
-    });
-  }, [filters]);
-
-  const handleHotelClick = (hotel: HotelCardData) => {
-    const params = new URLSearchParams(searchParams.toString());
-    router.push(`/hotel/${hotel.id}?${params.toString()}`);
-  };
+    {
+      id: 2,
+      name: '成田日航酒店',
+      location: 'Narita Airport Terminal | Hotel',
+      rating: 4.9,
+      price: 8000,
+      image: '/images/hotel/hotel2.jpeg',
+    },
+    {
+      id: 3,
+      name: 'Solana Smart INN 成田空港',
+      location: 'Narita Airport Terminal | Hotel',
+      rating: 4.7,
+      price: 10000,
+      image: '/images/hotel/hotel3.jpeg',
+    },
+    {
+      id: 4,
+      name: 'Grand Hotel Narita Airport',
+      location: 'Narita Airport Terminal | Hotel',
+      rating: 4.7,
+      price: 10000,
+      image: '/images/hotel/hotel4.jpeg',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 標題列 */}
-      <div className="bg-white shadow-sm py-4 px-6 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              成田機場住宿 ({filteredHotels.length} 間)
-            </h1>
-            {searchParams.get('checkin') && (
-              <p className="text-sm text-gray-600">
-                {new Date(searchParams.get('checkin')!).toLocaleDateString(
-                  'zh-TW'
-                )}{' '}
-                -{' '}
-                {new Date(searchParams.get('checkout')!).toLocaleDateString(
-                  'zh-TW'
-                )}{' '}
-                · {searchParams.get('adults')} 人 · {searchParams.get('rooms')}{' '}
-                房
-              </p>
-            )}
-          </div>
+    <div
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/images/hotel/bg1.jpeg')" }}
+    >
+      <div className="flex flex-col md:flex-row w-full h-full bg-black/40">
+        {/* 左側篩選區 */}
+        <aside className="w-full md:w-1/4 p-4 md:p-6">
+          {/* 手機版篩選按鈕 */}
+          <button
+            onClick={() => setShowFilter(!showFilter)}
+            className="md:hidden flex items-center justify-between w-full bg-white/80 rounded-lg px-4 py-2 font-semibold text-gray-800 shadow"
+          >
+            <span>篩選條件</span>
+            <span>{showFilter ? '▲' : '▼'}</span>
+          </button>
 
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <List size={20} />
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`p-2 rounded-lg transition ${viewMode === 'map' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <Map size={20} />
-            </button>
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-gray-100 flex items-center gap-1 text-sm"
-            >
-              <Filter size={18} /> 篩選
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 內容區 */}
-      <div className="max-w-6xl mx-auto p-6">
-        {viewMode === 'list' ? (
-          <div className="grid md:grid-cols-4 gap-6">
-            {/* 桌面版篩選（固定） */}
-            <div className="hidden lg:block md:col-span-1">
-              <FilterSidebar
-                onFilter={setFilters}
-                isMobileOpen={false}
-                onClose={() => {}}
-              />
-            </div>
-
-            {/* 列表 */}
-            <div className="md:col-span-3 space-y-4">
-              {filteredHotels.map((hotel) => (
-                <HotelResultCard
-                  key={hotel.id}
-                  hotel={hotel}
-                  onClick={() => handleHotelClick(hotel)}
+          {/* 篩選內容 */}
+          <div
+            className={`transition-all duration-300 overflow-hidden ${
+              showFilter ? 'max-h-[1500px] mt-4' : 'max-h-0 md:max-h-none'
+            } md:block`}
+          >
+            <div className="bg-white/90 rounded-2xl shadow-lg backdrop-blur-md space-y-6 p-4 md:p-6">
+              <div>
+                <Image
+                  src="/images/hotel/map.jpeg"
+                  alt="地圖截圖"
+                  width={400}
+                  height={200}
+                  className="rounded-xl mb-4"
                 />
-              ))}
+                <h2 className="text-lg font-semibold mb-2">價格範圍（每晚）</h2>
+                <input
+                  type="range"
+                  min="3000"
+                  max="50000"
+                  className="w-full accent-[#DCBB87]"
+                />
+                <div className="flex justify-between text-sm text-gray-700 mt-1">
+                  <span>¥3,000</span>
+                  <span>¥50,000</span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-md font-semibold mb-2">最低評分</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li>
+                    <input type="checkbox" /> 4.5星以上
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 4星以上
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 3.5星以上
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 3星以上
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-md font-semibold mb-2">設施</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li>
+                    <input type="checkbox" /> WiFi
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 停車場
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 咖啡廳
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 餐廳
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 24小時前台
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 行李寄存
+                  </li>
+                  <li>
+                    <input type="checkbox" /> 機場接送
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="h-96 rounded-xl overflow-hidden shadow-lg">
-            <MapView hotels={filteredHotels} />
+        </aside>
+
+        {/* 右側飯店卡片區 */}
+        <main className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
+          {hotels.map((hotel) => (
+            <div
+              key={hotel.id}
+              className="flex flex-col md:flex-row bg-white/90 rounded-2xl overflow-hidden shadow-lg backdrop-blur-md hover:shadow-2xl transition-all"
+            >
+              {/* 飯店圖片 */}
+              <div className="relative md:w-1/3">
+                <Image
+                  src={hotel.image}
+                  alt={hotel.name}
+                  width={400}
+                  height={260}
+                  className="object-cover h-full w-full"
+                />
+                <div className="absolute top-3 left-3 bg-black/90 text-white text-sm px-2 py-1 rounded-full">
+                  ⭐ {hotel.rating}
+                </div>
+              </div>
+
+              {/* 飯店資訊 */}
+              <div className="flex flex-col justify-between p-6 md:w-2/3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {hotel.name}
+                  </h3>
+                  <p className="text-gray-500 text-sm mb-3">{hotel.location}</p>
+                  <p className="text-gray-700 text-sm mb-4">
+                    房型：經濟雙床房
+                    <br />
+                    位於成田機場第二航廈內，交通便利。
+                  </p>
+                  <div className="flex flex-wrap gap-3 text-gray-600">
+                    <Image
+                      src="/icons/wifi.svg"
+                      alt="WiFi"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/parking.svg"
+                      alt="Parking"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/coffee.svg"
+                      alt="Coffee"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/restaurant.svg"
+                      alt="Restaurant"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/concierge.svg"
+                      alt="Concierge"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/luggage.svg"
+                      alt="Luggage"
+                      width={24}
+                      height={24}
+                    />
+                    <Image
+                      src="/icons/shuttle.svg"
+                      alt="Shuttle"
+                      width={24}
+                      height={24}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center mt-6">
+                  <div className="text-xl font-bold text-gray-900">
+                    ¥{hotel.price.toLocaleString()}
+                  </div>
+                  <button className="bg-[#DCBB87] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#c9a76e] transition-all">
+                    預訂
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* 上一步 / 下一步 */}
+          <div className="flex justify-between mt-8 pb-6">
+            <button className="bg-black/60 text-white px-6 py-2 rounded-full hover:bg-black transition-all">
+              上一步
+            </button>
+            <button className="bg-black/60 text-white px-6 py-2 rounded-full hover:bg-black transition-all">
+              下一步
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* 手機版篩選彈窗（只出現一次！） */}
-      <FilterSidebar
-        onFilter={setFilters}
-        isMobileOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-      />
-
-      {/* 分頁 */}
-      <div className="flex justify-center gap-4 py-6">
-        <button classSearchName="px-6 py-2 border rounded-full hover:bg-gray-50">
-          上一頁
-        </button>
-        <button className="px-6 py-2 border rounded-full hover:bg-gray-50">
-          下一頁
-        </button>
+        </main>
       </div>
     </div>
   );
