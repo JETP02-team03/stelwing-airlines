@@ -3,10 +3,10 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { timezones } from '../src/data/timezone';
+// @ts-expect-error 我不寫就跳錯我只好加啊氣死
+import { DateTime } from 'luxon';
 
 export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     destination: '',
@@ -28,13 +28,6 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
       document.body.style.overflow = '';
     };
   }, []); // 在元件首次渲染後執行
-
-  // 功能：旅程結束日期不得早於開始日期
-  useEffect(() => {
-    if (endDate && endDate < startDate) {
-      setEndDate(startDate);
-    }
-  }, [startDate, endDate]);
 
   // 功能：監看欄位變化
   const handleChange = (
@@ -59,13 +52,43 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
   };
 
   // 功能：表單送出
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // e 是事件物件，這裡指表單的 submit 事件，參數 e 冒號後面都是型別定義，TS 就可以知道 e 有哪些屬性和方法可以使用
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // e 是事件物件，這裡指表單的 submit 事件，參數 e 冒號後面都是型別定義，TS 就可以知道 e 有哪些屬性和方法可以使用，而這個 e 是 FormEvrnt 表單事件，事件綁掉的元素一定是 HTMLFormElement <form></form> 標籤元素
     e.preventDefault();
-    // FormData 是瀏覽器提供的內建物件，可以快速抓取 form 裡所有的欄位資料，而 e.currentTarget 可以取得這次表單 submit 事件綁的元素，也就是我們要的 form
-    const data = new FormData(e.currentTarget);
-    // FormData 是一個物件，所以可以用物件的方法操作。
-    const formData = Object.fromEntries(data.entries());
+
+    try {
+      // 資料整理：日期轉為帶有時區資料的時間物件格式
+      const startDateTime = DateTime.fromISO(formData.startDate, {
+        zone: formData.startTimezone,
+      }).startOf('day');
+      const endDateTime = DateTime.fromISO(formData.endDate, {
+        zone: formData.endTimezone,
+      }).startOf('day');
+
+      const adjustedData = {
+        ...formData,
+        startDate: startDateTime.toUTC().toISO(),
+        endDate: endDateTime.toUTC().toISO(),
+      };
+
+      const res = await fetch('http://localhost:3007/api/plans', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(adjustedData),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP 錯誤：${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log('後端回傳結果', data);
+    } catch (error) {
+      console.log('新增失敗', error);
+    }
+
     console.log('送出的表單資料:', formData);
   };
 
@@ -112,13 +135,17 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
                   id="startDate"
                   name="startDate"
                   type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  value={formData.startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
                 />
               </div>
               <div className="flex-2 sw-l-input">
                 <label htmlFor="startTimezone">開始日期時區</label>
-                <select id="startTimezone" name="startTimezone">
+                <select
+                  id="startTimezone"
+                  name="startTimezone"
+                  onChange={handleChange}
+                >
                   <option value="">選擇時區 ⭣</option>
                   {timezones.map((tz) => (
                     <option key={tz.value} value={tz.value}>
@@ -136,14 +163,18 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
                   id="endDate"
                   name="endDate"
                   type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate || undefined}
+                  value={formData.endDate}
+                  min={formData.startDate || undefined}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex-2 sw-l-input">
                 <label htmlFor="endTimezone">結束日期時區</label>
-                <select id="endTimezone" name="endTimezone">
+                <select
+                  id="endTimezone"
+                  name="endTimezone"
+                  onChange={handleChange}
+                >
                   <option value="">選擇時區 ⭣</option>
                   {timezones.map((tz) => (
                     <option key={tz.value} value={tz.value}>
@@ -156,7 +187,12 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
             {/* 備註 */}
             <div className="flex-1 sw-l-input">
               <label htmlFor="startDate">備註 (選填)</label>
-              <textarea id="note" name="note" rows={3}></textarea>
+              <textarea
+                id="note"
+                name="note"
+                rows={3}
+                onChange={handleChange}
+              ></textarea>
             </div>
             {/* 封面照片 */}
             <div className="flex gap-4">
@@ -171,6 +207,7 @@ export default function CreatePlanModal({ onClose }: { onClose: () => void }) {
                   readOnly
                   placeholder="使用預設圖片"
                   value=""
+                  onChange={handleChange}
                 />
               </div>
               <div className="mb-[28px] flex items-end">

@@ -107,6 +107,7 @@ export default function ListPage() {
     displayEndDate: string;
   }
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const tabs = ['全部', '待啟程', '進行中', '已結束'];
   const [activeTab, setActiveTab] = useState('全部');
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -154,8 +155,8 @@ export default function ListPage() {
   useEffect(() => {
     async function fetchTrips() {
       try {
-        // const res = await fetch('http://localhost:3007/api/plans');
-        const res = await fetch('http://192.168.65.164:3007/api/plans');
+        const res = await fetch(`${API_BASE}/plans`);
+        // const res = await fetch('http://192.168.65.164:3007/api/plans');
         // 如果 res 回傳失敗，建立 Error 物件並將 message 設定為無法取得旅程資料，且跳到 catch 環節 setError
         if (!res.ok) throw new Error('無法取得旅程資料');
         const data = await res.json();

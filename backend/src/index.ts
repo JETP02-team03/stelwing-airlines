@@ -28,7 +28,18 @@ app.use(express.urlencoded({ extended: true }));
 // 允許所有來源訪問
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        origin.includes("localhost:3000") ||
+        origin.includes("127.0.0.1:3000") ||
+        /^http:\/\/192\.168\.\d+\.\d+:3000$/.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("不符合 CORS 設定，拒絕存取"));
+      }       
+    },
     credentials: true,
   })
 );

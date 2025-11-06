@@ -210,6 +210,31 @@ body {
   cursor: not-allowed;
 }
 
+/* ---------------------------------- */
+/* 🔴 紅色系列 (Emergency Dangerous Tone) */
+/* ---------------------------------- */
+
+/* 方形按鈕 */
+.sw-btn--red-square {
+  background: #a52422;
+  color: var(--sw-white);
+  border-color: #a52422;
+  border-radius: 8px;
+}
+
+.sw-btn--red-square:hover:not(:disabled) {
+  filter: brightness(0.8);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 比較活潑的紅 */
+/* .sw-btn--red-square {
+  background: #f15152;
+  color: var(--sw-white);
+  border-color: #f15152;
+  border-radius: 8px;
+} */
+
 /* --------- */
 /* 黃蕾在用的 */
 /* --------- */

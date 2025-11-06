@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { PrismaClient } from "../../generated/prisma/index.js";
+import { prisma } from "../../utils/prisma-only.js"
 import moment from "moment-timezone";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 /** 列表：?originZone=Asia/Taipei&destZone=Asia/Tokyo */
 router.get("/list", async (req, res) => {
