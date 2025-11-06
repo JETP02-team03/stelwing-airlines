@@ -16,15 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui/tabs';
-
-interface Order {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-  items: number;
-  paymentMethod: string;
-}
+import type { Order } from '../utils/storage';
 
 interface DFAccountPageProps {
   orders: Order[];

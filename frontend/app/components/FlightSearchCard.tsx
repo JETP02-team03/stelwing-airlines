@@ -495,7 +495,7 @@ export default function FlightSearchCard() {
                     <input
                       ref={departRef}
                       type="date"
-                      className="bg-[color:var(--sw-white)] text-[color:var(--sw-primary)] outline-none"
+                      className="bg-(--sw-white) text-(--sw-primary) outline-none"
                       value={values.departDate}
                       min={TODAY}
                       onChange={(e) => handle('departDate', e.target.value)}

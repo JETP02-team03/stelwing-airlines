@@ -20,16 +20,7 @@ import {
   TabsTrigger,
 } from '../components/ui/tabs';
 import { useDFStore } from '../context/DFStoreContext';
-import { ordersStorage } from '../utils/storage';
-
-interface Order {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-  items: number;
-  paymentMethod: string;
-}
+import { Order, ordersStorage } from '../utils/storage';
 
 export default function MemberPage() {
   const router = useRouter();

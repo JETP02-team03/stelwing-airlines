@@ -116,7 +116,7 @@ function FlightOrdersContent() {
                       </div>
                     </div>
                   </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] flex-1">
+                  <div className="box-border flex gap-2.5 h-[35px] items-center justify-center px-[10px] py-[10px] flex-1">
                     <p
                       className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white"
                       style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}

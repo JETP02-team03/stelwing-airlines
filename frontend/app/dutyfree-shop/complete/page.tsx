@@ -1,13 +1,13 @@
 'use client';
 import { Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DFCheckoutStepper } from '../components/DFCheckoutStepper';
 import { DFPickupModal } from '../components/DFPickupModal';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 import { useDFStore } from '../context/DFStoreContext';
-import { ordersStorage } from '../utils/storage';
+import { OrderProduct, ordersStorage } from '../utils/storage';
 
 /**
  *  最終修正版：
@@ -26,19 +26,11 @@ export default function CompletePage() {
     setCheckoutItem,
   } = useDFStore();
 
-  const [cartSnapshot, setCartSnapshot] = useState<
-    {
-      id: string;
-      name: string;
-      sub?: string;
-      price: number;
-      image: string;
-      quantity: number;
-    }[]
-  >([]);
+  const [cartSnapshot, setCartSnapshot] = useState<OrderProduct[]>([]);
 
   const [pickupModalOpen, setPickupModalOpen] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const hasCapturedCart = useRef(false);
 
   //  初始化訂單編號
   useEffect(() => {
@@ -49,55 +41,63 @@ export default function CompletePage() {
 
   // 寫入訂單邏輯 + 清空購物車
   useEffect(() => {
+    if (hasCapturedCart.current) return;
     if (!orderNumber || !cart || cart.length === 0) return;
-    if (cartSnapshot.length > 0) return;
 
-    // 建立快照
-    const snapshot = cart.map((item) => ({
+    const snapshot: OrderProduct[] = cart.map((item) => ({
       id: item.id,
       name: item.name,
       sub: item.sub,
+      description: item.description,
       price: item.price,
       image: item.image,
       quantity: item.quantity,
     }));
 
     setCartSnapshot(snapshot);
+    hasCapturedCart.current = true;
+  }, [orderNumber, cart]);
 
-    // 計算金額
-    const subtotal = snapshot.reduce(
+  useEffect(() => {
+    if (!orderNumber || cartSnapshot.length === 0) return;
+
+    const subtotal = cartSnapshot.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
     const total = discountPercent ? subtotal - discount : subtotal;
 
-    // 訂單物件
     const newOrder = {
       id: orderNumber,
       date: new Date().toLocaleDateString('zh-TW'),
       status: 'success',
       total,
-      items: snapshot.length,
+      items: cartSnapshot.length,
       paymentMethod: '信用卡付款',
-      products: snapshot,
+      products: cartSnapshot,
     };
 
-    // 寫入 localStorage
     const existingOrders = ordersStorage.load();
     const isDuplicate = existingOrders.some((o) => o.id === orderNumber);
     if (!isDuplicate) {
       ordersStorage.save([newOrder, ...existingOrders]);
-      console.log('✅ 已儲存訂單：', newOrder);
+      console.log(' 已儲存訂單：', newOrder);
     }
 
-    // 清空購物車（延遲 1.5 秒確保訂單寫入完成）
     const timer = setTimeout(() => {
       clearCart();
       setCheckoutItem(null);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [orderNumber, cart, discount, discountPercent]);
+  }, [
+    orderNumber,
+    cartSnapshot,
+    discount,
+    discountPercent,
+    clearCart,
+    setCheckoutItem,
+  ]);
 
   // 載入中畫面
   if (!orderNumber) {

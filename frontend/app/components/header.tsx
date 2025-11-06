@@ -14,7 +14,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '../dutyfree-shop/components/ui/button'; // ✅ dutyfree 套件按鈕
+import { Button } from '../dutyfree-shop/components/ui/button'; //  dutyfree 套件按鈕
 
 interface CartItem {
   id: string;
@@ -59,7 +59,7 @@ export default function Header({
     <header
       className={clsx('bg-[var(--sw-primary)] text-white sticky top-0 z-50')}
     >
-      <div className="mx-auto w-full h-[64px] px-[64px] flex items-center justify-between gap-[48px]">
+      <div className="mx-auto w-full h-16 px-16 flex items-center justify-between gap-[48px]">
         {/* =================== 左區：Logo + 導覽 =================== */}
         <div className="flex items-center gap-[48px]">
           <Link href="/">
@@ -73,15 +73,15 @@ export default function Header({
           </Link>
 
           {/* 桌面版導覽列 */}
-          <nav className="hidden md:flex items-center gap-[36px]">
+          <nav className="hidden md:flex items-center gap-9">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'inline-flex items-center h-10 leading-none text-white hover:text-[var(--sw-accent)] transition',
+                  'inline-flex items-center h-10 leading-none text-white hover:text-(--sw-accent)transition',
                   pathname.startsWith(item.href) &&
-                    'text-[var(--sw-accent)] font-semibold'
+                    'text-(--sw-accent) font-semibold'
                 )}
               >
                 {item.name}
@@ -91,13 +91,13 @@ export default function Header({
         </div>
 
         {/* =================== 右區 =================== */}
-        <div className="flex items-center gap-[24px]">
+        <div className="flex items-center gap-6">
           {/* 🛒 Dutyfree 才顯示購物車 */}
           {isDutyfree && (
             <div className="relative">
               <button
                 onClick={() => setCartDropdownOpen(!cartDropdownOpen)}
-                className="relative p-2 hover:text-[var(--sw-accent)] transition"
+                className="relative p-2 hover:text-(--sw-accent) transition"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {cartItemCount > 0 && (
@@ -163,7 +163,7 @@ export default function Header({
                               ? onCheckoutClick()
                               : router.push('/dutyfree-shop/cart');
                           }}
-                          className="w-full bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-white"
+                          className="w-full bg-(--sw-accent) hover:bg-(--sw-accent)/90 text-white"
                         >
                           結帳
                         </Button>
@@ -221,7 +221,7 @@ export default function Header({
 
           <Button
             onClick={onMemberClick}
-            className="w-[80%] mt-4 bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-[var(--sw-primary)]"
+            className="w-[80%] mt-4 bg-(--sw-accent)] hover:bg-(--sw-accent)/90 text-(--sw-primary)"
           >
             <Plane className="w-4 h-4 mr-2" /> 會員中心
           </Button>

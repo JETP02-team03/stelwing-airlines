@@ -3,28 +3,11 @@ import { DFPickupModal } from '../components/DFPickupModal';
 import { DFStatusTag } from '../components/DFStatusTag';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
-
-interface CartItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-  items: number;
-  paymentMethod: string;
-}
+import type { Order, OrderProduct } from '../utils/storage';
 
 interface DFOrderDetailPageProps {
   order: Order;
-  cart: CartItem[];
+  cart: OrderProduct[];
   pickupModalOpen: boolean;
   onNavigateHome: () => void;
   onNavigateAccount: () => void;
@@ -281,16 +264,7 @@ export function DFOrderDetailPage({
 
 // ✅ 僅加這一段 default export，不動樣式
 export default function Page() {
-  const order = {
-    id: 'TEST001',
-    date: '2025-10-30',
-    status: 'success',
-    total: 12345,
-    items: 2,
-    paymentMethod: '信用卡',
-  };
-
-  const cart = [
+  const cart: OrderProduct[] = [
     {
       id: '1',
       name: '香奈兒唇膏',
@@ -299,6 +273,7 @@ export default function Page() {
       image:
         'https://images.unsplash.com/photo-1688413580470-5eff69a96686?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987',
       quantity: 1,
+      sub: '絲絨霧面款 #58',
     },
     {
       id: '2',
@@ -308,8 +283,19 @@ export default function Page() {
       image:
         'https://images.unsplash.com/photo-1688413580470-5eff69a96686?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987',
       quantity: 1,
+      sub: '花漾迪奧淡香水 50ml',
     },
   ];
+
+  const order: Order = {
+    id: 'TEST001',
+    date: '2025-10-30',
+    status: 'success',
+    total: 12345,
+    items: 2,
+    paymentMethod: '信用卡',
+    products: cart,
+  };
 
   return (
     <DFOrderDetailPage

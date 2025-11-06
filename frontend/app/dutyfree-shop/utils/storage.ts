@@ -1,8 +1,34 @@
 /**
  * STELWING - localStorage 工具函數（完整整合版）
- * ✅ 新增：ordersStorage 支援儲存完整 products 陣列
+ * ✅ 新增：ordersStorage 支援儲存完整 products 陣列 + 型別安全
  */
 
+// ===============================
+// 型別定義
+// ===============================
+export interface OrderProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  sub?: string;
+}
+
+export interface Order {
+  id: string;
+  date: string;
+  status: string;
+  total: number;
+  items: number;
+  paymentMethod: string;
+  products: OrderProduct[];
+}
+
+// ===============================
+// 🔹 儲存 Key 常數
+// ===============================
 const STORAGE_KEYS = {
   CART: 'stelwing_cart',
   IS_LOGGED_IN: 'stelwing_is_logged_in',
@@ -14,7 +40,7 @@ const STORAGE_KEYS = {
 } as const;
 
 // ===============================
-// 通用 localStorage 工具
+// 🔹 通用 localStorage 工具
 // ===============================
 function setItem<T>(key: string, value: T): void {
   try {
@@ -47,7 +73,7 @@ function clearAll(): void {
 }
 
 // ===============================
-// 模組封裝
+// 🔹 模組封裝
 // ===============================
 export const storage = {
   set: setItem,
@@ -96,9 +122,9 @@ export const promoStorage = {
   },
 };
 
-// ✅ 訂單（含商品清單）
+// ✅ 訂單（含商品清單，型別安全）
 export const ordersStorage = {
-  save: (orders: any[]) => storage.set(STORAGE_KEYS.ORDERS, orders),
-  load: () => storage.get(STORAGE_KEYS.ORDERS, []),
+  save: (orders: Order[]) => storage.set(STORAGE_KEYS.ORDERS, orders),
+  load: (): Order[] => storage.get(STORAGE_KEYS.ORDERS, []),
   clear: () => storage.remove(STORAGE_KEYS.ORDERS),
 };

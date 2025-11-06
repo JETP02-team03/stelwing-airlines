@@ -1,5 +1,11 @@
 'use client';
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { authStorage, cartStorage, promoStorage } from '../utils/storage';
 
@@ -281,11 +287,11 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   // 清空購物車
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     cartStorage.clear();
     toast.info('購物車已清空');
-  };
+  }, []);
 
   // -------------------------------
   // Context 提供值

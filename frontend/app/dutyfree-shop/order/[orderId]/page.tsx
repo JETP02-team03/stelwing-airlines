@@ -2,30 +2,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DFOrderDetailPage } from '../../components/DFOrderDetailPage';
-import { ordersStorage } from '../../utils/storage';
-
-// ===============================
-// 型別定義
-// ===============================
-interface Product {
-  id: string;
-  name: string;
-  sub: string; //✅ 改成 sub，取代 description
-  description: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-  items: number;
-  paymentMethod: string;
-  products: Product[]; // ✅ 訂單內商品
-}
+import { Order, OrderProduct, ordersStorage } from '../../utils/storage';
 
 // ===============================
 // 頁面元件
@@ -35,21 +12,21 @@ export default function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [cartItems, setCartItems] = useState<Product[]>([]);
+  const [cartItems, setCartItems] = useState<OrderProduct[]>([]);
   const [pickupModalOpen, setPickupModalOpen] = useState(false);
 
   // ✅ 載入指定訂單
   useEffect(() => {
     if (!orderId) return;
 
-    const storedOrders = ordersStorage.load() as Order[];
+    const storedOrders = ordersStorage.load();
     const found = storedOrders.find((o) => o.id === orderId);
 
     if (found) {
       // ✅ 防止舊資料沒有 sub 欄位（相容舊版）
       const normalizedProducts = (found.products || []).map((p) => ({
         ...p,
-        sub: p.sub ?? (p as any).description ?? '', // 若舊訂單沒有 sub，用 description 補上
+        sub: p.sub ?? p.description ?? '',
       }));
 
       setOrder(found);
