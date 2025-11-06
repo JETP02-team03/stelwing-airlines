@@ -2,6 +2,7 @@
 import '@/styles/globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import 'styled-jsx/css';
 import Footer from './components/footer';
 import Header from './components/header';
 
@@ -29,11 +30,14 @@ export default function RootLayout({
     <html lang="zh-Hant">
       <body>
         <div className="flex min-h-screen flex-col">
-          {/* 固定在頂端的導覽列 */}
-          <Header className="sticky top-0 z-50 w-full" />
+          {/* ✅ 用外層 div 包住 Header，實現固定效果 */}
+          <div className="sticky top-0 z-50 w-full">
+            <Header />
+          </div>
+
           <main className="flex-1 flex flex-col">{children}</main>
+          <Footer />
         </div>
-        <Footer />
       </body>
     </html>
   );

@@ -13,8 +13,9 @@ export default function DutyFreeLayout({
   children: React.ReactNode;
 }) {
   return (
+    // ❌ 不要放 <html> 或 <body>
     <DFStoreProvider>
-      {/* ✅ 新增一層變數容器，把 dutyfree theme 套在 body-level */}
+      {/* ✅ 把 dutyfree theme 套在頂層 div */}
       <div id="dutyfree-theme" className="relative" style={{ all: 'unset' }}>
         <main className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
           {children}

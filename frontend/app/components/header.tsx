@@ -1,21 +1,47 @@
 'use client';
 
 import clsx from 'clsx';
-import { ChevronDown, Globe, Menu, Plane, X } from 'lucide-react';
+import {
+  ChevronDown,
+  Globe,
+  Menu,
+  Plane,
+  ShoppingCart,
+  Trash2,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-// icon 使用 lucide-react 套件，這是需要 npm i 的
+import { Button } from '../dutyfree-shop/components/ui/button'; // ✅ dutyfree 套件按鈕
 
-export interface HeaderProps {
-  className?: string;
+interface CartItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
 }
 
-export default function Header({}: HeaderProps) {
-  // 導覽 nav 有橫向電腦版和手機漢堡版，透過這裡做切換，預設是不打開 (false) 的漢堡版
-  const [isOpen, setIsOpen] = useState(false);
+interface HeaderProps {
+  cartItemCount?: number;
+  cartItems?: CartItem[];
+  onCartClick?: () => void;
+  onCheckoutClick?: () => void;
+  onMemberClick?: () => void;
+  onRemoveItem?: (id: string) => void;
+}
 
-  // 因為不想在 navbar 和漢堡列各重複寫五次 Link，所以用迴圈把導覽列按鈕選項一次生出來
+export default function Header({
+  cartItemCount = 0,
+  cartItems = [],
+  onCheckoutClick,
+  onMemberClick,
+  onRemoveItem,
+}: HeaderProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
+
   const navItems = [
     { name: '訂購機票', href: '/flight-booking' },
     { name: '住宿預定', href: '/hotel-booking' },
@@ -24,99 +50,170 @@ export default function Header({}: HeaderProps) {
     { name: '旅遊分享', href: '/travel-community' },
   ];
 
-  // 這裡是 Header 的畫面
   return (
-    <>
-      <header className={clsx('bg-[var(--sw-primary)] h-[64px]')}>
-        {/* 固定高度 + 垂直置中，左右兩邊都對齊 */}
-        <div className="mx-auto w-full h-full px-[64px] flex items-center justify-between gap-[48px]">
-          {/* 左：Logo + 主導覽 */}
-          <div className="flex items-center gap-[48px]">
-            <Link href="/">
-              <Image
-                src="/logo-white.svg"
-                alt="Stelwing Logo"
-                width={125}
-                height={48}
-                className="cursor-pointer"
-              />
-            </Link>
+    <header
+      className={clsx('bg-[var(--sw-primary)] text-white sticky top-0 z-50')}
+    >
+      <div className="mx-auto w-full h-[64px] px-[64px] flex items-center justify-between gap-[48px]">
+        {/* =================== 左區：Logo + 導覽 =================== */}
+        <div className="flex items-center gap-[48px]">
+          <Link href="/">
+            <Image
+              src="/logo-white.svg"
+              alt="Stelwing Logo"
+              width={125}
+              height={48}
+              className="cursor-pointer"
+            />
+          </Link>
 
-            {/* 五大功能：統一高度、leading 置零，視覺對齊右側 */}
-            <nav className="hidden md:flex items-center gap-[36px]">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="inline-flex items-center h-10 leading-none text-white hover:text-[var(--sw-accent)] transition"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* 右：語系 + 會員登入 */}
-          <div className="flex items-center gap-[24px]">
-            {/* 語系切換 */}
-            <button
-              type="button"
-              className="inline-flex items-center h-10 leading-none gap-2 text-white hover:text-[var(--sw-accent)] transition"
-              aria-label="切換語言"
-            >
-              <Globe className="w-4 h-4" />
-              <span>繁體中文</span>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {/* 會員登入（用你的金色按鈕樣式） */}
-            <Link
-              href="/member-center"
-              className="sw-btn sw-btn--gold-primary inline-flex items-center h-10 leading-none gap-2"
-            >
-              <Plane className="w-4 h-4 text-[color:var(--sw-primary)]" />
-              會員登入
-            </Link>
-          </div>
-        </div>
-
-        {/* 手機漢堡版：預設以 flex 出現，在中螢幕時隱藏 */}
-        <div className="nav-hamburger md:hidden flex-1 flex justify-end">
-          {/* 漢堡列是一個按鈕，onClick 切換漢堡 menu 或關閉選單叉叉 X 的 icon*/}
-          <button className="text-white" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* 漢堡選單內容：當 isOpen 為 true，也就是選單要打開時，顯示這個區塊的 div */}
-        {isOpen && (
-          <div
-            className="
-          md:hidden py-4
-          absolute top-full left-0 w-full 
-          bg-[#1F2E3C] 
-          flex flex-col items-center"
-          >
+          {/* 桌面版導覽列 */}
+          <nav className="hidden md:flex items-center gap-[36px]">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-white hover:text-[#DCBB87] py-2"
-                onClick={() => setIsOpen(false)} // 點擊後自動收起
+                className="inline-flex items-center h-10 leading-none text-white hover:text-[var(--sw-accent)] transition"
               >
                 {item.name}
               </Link>
             ))}
+          </nav>
+        </div>
+
+        {/* =================== 右區：購物車、語系、會員登入 =================== */}
+        <div className="flex items-center gap-[24px]">
+          {/* 🛒 購物車 Dropdown（移到最前面） */}
+          <div className="relative">
+            <button
+              onClick={() => setCartDropdownOpen(!cartDropdownOpen)}
+              className="relative p-2 hover:text-[var(--sw-accent)] transition"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown內容 */}
+            {cartDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl border border-gray-200 z-50">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold">購物車 ({cartItemCount})</h3>
+                </div>
+
+                {cartItems.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    購物車是空的
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-96 overflow-y-auto">
+                      {cartItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-4 border-b hover:bg-gray-50 flex gap-3"
+                        >
+                          <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {item.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              x{item.quantity}
+                            </p>
+                            <p className="text-sm font-medium text-[var(--sw-accent)]">
+                              TWD{' '}
+                              {(item.price * item.quantity).toLocaleString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => onRemoveItem?.(item.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <Button
+                        onClick={() => {
+                          setCartDropdownOpen(false);
+                          onCheckoutClick?.();
+                        }}
+                        className="w-full bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-white"
+                      >
+                        結帳
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 語系切換（移到購物車之後） */}
+          <button
+            type="button"
+            className="inline-flex items-center h-10 gap-2 text-white hover:text-[var(--sw-accent)] transition"
+          >
+            <Globe className="w-4 h-4" />
+            <span>繁體中文</span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+
+          {/* ✈️ 會員登入（按鈕＋飛機 icon） */}
+          <Link
+            href="/member-center"
+            className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-[var(--sw-primary)] font-medium transition"
+          >
+            <Plane className="w-4 h-4" />
+            會員登入
+          </Link>
+
+          {/* 📱 漢堡按鈕 (手機) */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      {/* =================== 手機版選單 =================== */}
+      {isOpen && (
+        <div className="md:hidden py-4 absolute top-full left-0 w-full bg-[#1F2E3C] flex flex-col items-center z-40">
+          {navItems.map((item) => (
             <Link
-              href="/member-center"
+              key={item.href}
+              href={item.href}
               className="text-white hover:text-[#DCBB87] py-2"
               onClick={() => setIsOpen(false)}
             >
-              會員中心
+              {item.name}
             </Link>
-          </div>
-        )}
-      </header>
-    </>
+          ))}
+
+          <Button
+            onClick={onMemberClick}
+            className="w-[80%] mt-4 bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-[var(--sw-primary)]"
+          >
+            <Plane className="w-4 h-4 mr-2" /> 會員中心
+          </Button>
+        </div>
+      )}
+    </header>
   );
 }
