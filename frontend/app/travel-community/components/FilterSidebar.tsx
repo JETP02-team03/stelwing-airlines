@@ -4,16 +4,14 @@
 export default function FilterSidebar() {
   return (
     <div className="rounded-[12px] border border-[rgba(45,64,87,0.1)] bg-white p-5 shadow-sm">
-      <h3 className="font-semibold mb-4 flex items-center gap-2">
-        <span>🧭</span> 排序方式
-      </h3>
+      <h3 className="font-semibold mb-4 flex items-center gap-2">排序方式</h3>
       <div className="space-y-2 mb-6">
         <RadioItem name="sort" label="最新" defaultChecked />
         <RadioItem name="sort" label="最熱門" />
         <RadioItem name="sort" label="最多哩程" />
       </div>
 
-      <Field label="發布時間">
+      <Field label="發佈時間">
         <Select options={["所有時間", "近 7 天", "近 30 天", "今年"]} />
       </Field>
 

@@ -1,44 +1,79 @@
 // app/travel-community/components/PostCard.tsx
-type PostType = "遊記" | "影片" | "隨手拍";
+"use client";
+
+import { useState } from "react";
 
 export interface Post {
   id: string | number;
   title: string;
   author: string;
   miles: number;
-  type: PostType;
-  cover: string; // /travel-community/xxx.png
-  duration?: string; // 影片 0:06
-  location?: string; // 臺北市立動物園
+  type: "遊記" | "影片" | "隨手拍";
+  cover?: string;
+  duration?: string;
+  location?: string;
 }
 
 export default function PostCard({ post }: { post: Post }) {
+  const [error, setError] = useState(false);
+  const badge = post.type;
   const isVideo = post.type === "影片";
-  const isPhoto = post.type === "隨手拍";
-  const badge = isVideo ? "影片" : isPhoto ? "隨手拍" : "遊記";
 
   return (
-    <article className="mb-5 break-inside-avoid rounded-[12px] border bg-white shadow-sm overflow-hidden">
-      {/* 圖片區 */}
-      <div className="relative">
-        <img
-          src={post.cover}
-          alt={post.title}
-          className="w-full h-auto object-cover"
-        />
+    <article
+      className="
+        mb-[18px]
+        break-inside-avoid
+        rounded-[var(--sw-r-lg)]
+        border border-[rgba(31,46,60,0.08)]
+        bg-white shadow-sm overflow-hidden
+      "
+    >
+      {/* 圖片 / fallback 區 */}
+      <div className="relative w-full pb-[140%] rounded-[var(--sw-r-lg)] overflow-hidden bg-[var(--sw-primary)]">
+        {!error && post.cover && (
+          <img
+            src={post.cover}
+            alt={post.title}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setError(true)}
+          />
+        )}
 
-        {/* 角落標籤 */}
+        {/* fallback（品牌感佔位） */}
+        {(!post.cover || error) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+            <div className="w-2/3 h-[2px] bg-[var(--sw-accent)] mb-3 rounded-full opacity-80" />
+            <span className="text-[var(--sw-white)] font-bold text-[14px] tracking-wider uppercase">
+              No Image
+            </span>
+            <div className="flex gap-[3px] mt-3">
+              <div className="w-1 h-1 bg-[var(--sw-accent)] rounded-full"></div>
+              <div className="w-1 h-1 bg-[var(--sw-accent)] rounded-full"></div>
+              <div className="w-1 h-1 bg-[var(--sw-accent)] rounded-full"></div>
+            </div>
+          </div>
+        )}
+
+        {/* 類型標籤 */}
         <div className="absolute left-2 top-2">
-          <span className="rounded-full bg-white/80 px-2 py-1 text-[12px]">
-            {badge}{isVideo && post.duration ? ` ・ ${post.duration}` : ""}
+          <span
+            className="
+              rounded-full bg-white/85 backdrop-blur
+              px-2 py-1 text-[11px] font-semibold
+            "
+          >
+            {badge}
+            {isVideo && post.duration ? `・${post.duration}` : ""}
           </span>
         </div>
       </div>
 
-      {/* 文字區 */}
+      {/* 文字內容 */}
       <div className="p-3">
-        <div className="text-[15px] font-semibold mb-1">
-          {post.location ?? ""}{post.location ? "｜" : ""}{post.title}
+        <div className="sw-h6 mb-1 leading-tight">
+          {post.location ? `${post.location}｜` : ""}
+          {post.title}
         </div>
 
         <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
