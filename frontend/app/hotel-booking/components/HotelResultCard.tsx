@@ -23,13 +23,14 @@ interface HotelResultCardProps {
     name: string;
     engName?: string;
     location: string;
+    distance?: string;
     rating: number;
     price: number;
-    image: string;
-    amenities: AmenityKey[];
-    taxFree?: boolean;
-    notes?: string;
+    image?: string;
+    amenities?: AmenityKey[];
+    busFree?: boolean;
     roomType?: string;
+    notes?: string;
   };
 }
 
@@ -56,107 +57,107 @@ export default function HotelResultCard({ hotel }: HotelResultCardProps) {
     setIsFavorite(!isFavorite);
   };
 
-  const handleClick = () => {
-    router.push(`/hotel/${hotel.id}`);
+  const iconsMap: Record<AmenityKey, React.ReactNode> = {
+    wifi: <Wifi size={16} />,
+    parking: <Car size={16} />,
+    cafe: <Coffee size={16} />,
+    restaurant: <Utensils size={16} />,
+    frontDesk24h: <Clock size={16} />,
+    luggageStorage: <Package size={16} />,
+    shuttleService: <Truck size={16} />,
   };
 
-  const iconsMap: Record<AmenityKey, React.ReactNode> = {
-    wifi: <Wifi size={18} />,
-    parking: <Car size={18} />,
-    cafe: <Coffee size={18} />,
-    restaurant: <Utensils size={18} />,
-    frontDesk24h: <Clock size={18} />,
-    luggageStorage: <Package size={18} />,
-    shuttleService: <Truck size={18} />,
-  };
+  const handleClick = () => router.push(`/hotel/${hotel.id}`);
 
   return (
     <div
       onClick={handleClick}
-      className="flex bg-white rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden"
+      className="flex bg-white rounded-lg shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden"
     >
-      {/* 圖片 */}
-      <div className="relative w-40 h-32 rounded-l-2xl overflow-hidden flex-shrink-0">
-        <Image
-          src={hotel.image}
-          alt={hotel.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 40vw"
-        />
-        <div className="absolute top-2 left-2 bg-[#DCBB87] text-white font-semibold text-xs rounded-md px-2 flex items-center gap-1">
-          <Star size={12} /> {hotel.rating.toFixed(1)}
+      <div className="relative w-40 h-32 rounded-l-lg overflow-hidden flex-shrink-0">
+        {hotel.image && (
+          <Image
+            src={hotel.image}
+            alt={hotel.name}
+            fill
+            className="object-cover"
+          />
+        )}
+        <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 rounded flex items-center gap-1 text-xs text-white">
+          <Star size={12} color="#D4AF37" fill="#D4AF37" />{' '}
+          {hotel.rating.toFixed(1)}
         </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
             router.push(`/hotel/${hotel.id}`);
           }}
-          className="absolute top-2 right-6 w-6 h-6 bg-white rounded-full flex justify-center items-center text-gray-800 shadow-md hover:bg-gray-100 transition"
-          aria-label="更多資訊"
+          className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex justify-center items-center text-gray-800 shadow-md hover:bg-gray-100 transition"
         >
           &gt;
         </button>
       </div>
 
-      {/* 資訊區 */}
-      <div className="flex flex-col flex-1 p-4 gap-3 relative">
+      <div className="flex flex-col flex-1 p-4 gap-2 relative">
         <button
           onClick={toggleFavorite}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white border border-gray-200 flex justify-center items-center text-gray-400 hover:text-red-500 transition"
-          aria-label="收藏"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white border border-gray-200 flex justify-center items-center text-gray-400 hover:text-red-500 transition"
         >
           <Heart
-            size={20}
+            size={16}
             fill={isFavorite ? 'currentColor' : 'none'}
             stroke={isFavorite ? 'none' : undefined}
           />
         </button>
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{hotel.name}</h3>
+        <h3 className="text-gray-900 font-semibold text-lg">{hotel.name}</h3>
+        {hotel.engName && (
           <p className="text-sm text-gray-600">{hotel.engName}</p>
-          <div className="flex items-center text-gray-500 text-xs gap-2 mt-1 mb-1">
-            <MapPin size={12} /> {hotel.location}
-            {hotel.taxFree && (
-              <span className="ml-3 px-2 py-0.5 rounded-md bg-[#DCBB87] text-black font-semibold text-xs">
-                免稅
-              </span>
+        )}
+
+        <div className="flex items-center text-gray-500 text-xs gap-1 mt-1">
+          <MapPin size={12} /> {hotel.location}
+          {hotel.distance && <span>・{hotel.distance}</span>}
+          {hotel.busFree && (
+            <span className="ml-2 px-2 py-0.5 rounded-lg bg-[#DCBB87] text-black font-semibold text-xs">
+              免稅
+            </span>
+          )}
+        </div>
+
+        {hotel.notes && (
+          <p className="text-gray-700 text-sm mt-1">{hotel.notes}</p>
+        )}
+
+        {hotel.amenities && (
+          <div className="flex gap-2 mt-1">
+            {hotel.amenities.map(
+              (key) =>
+                iconsMap[key] && (
+                  <div
+                    key={key}
+                    className="bg-[#F1F1F1] rounded-md p-1 flex items-center justify-center hover:bg-[#E0D7C1] transition-all duration-200"
+                    style={{ width: 28, height: 28 }}
+                    title={amenityLabels[key]}
+                  >
+                    {iconsMap[key]}
+                  </div>
+                )
             )}
           </div>
-        </div>
+        )}
 
-        <div className="text-sm text-gray-700">
-          <p className="font-semibold">
-            房型：{hotel.roomType || '經濟雙床房'}
-          </p>
-          <p>{hotel.notes}</p>
-        </div>
-
-        <div className="flex gap-3 text-gray-600">
-          {hotel.amenities.map((key) => (
-            <div
-              key={key}
-              className="bg-gray-100 rounded-md p-1 flex items-center justify-center"
-              style={{ width: 28, height: 28 }}
-              title={amenityLabels[key]}
-            >
-              {iconsMap[key]}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-end mt-auto items-center gap-4">
-          <div className="text-2xl font-bold text-gray-900">
+        <div className="flex justify-end items-center gap-3 mt-auto">
+          <div className="text-lg font-bold text-gray-900">
             ${hotel.price.toLocaleString()}
           </div>
-          <div className="text-sm text-gray-500 mb-0.5">/night</div>
+          <div className="text-xs text-gray-500 mb-0.5">/night</div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               alert(`預訂 ${hotel.name}`);
             }}
-            className="px-6 py-2 bg-[#1E2A33] text-[#DCBB87] font-semibold rounded-md hover:bg-[#303D49] transition"
+            className="px-4 py-1 bg-[#1E2A33] text-[#DCBB87] font-semibold rounded-md hover:bg-[#303D49] transition"
           >
             預訂
           </button>

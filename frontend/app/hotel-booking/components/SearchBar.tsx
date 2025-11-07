@@ -1,20 +1,22 @@
 'use client';
 
 import { Calendar as CalendarIcon, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // 新增
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Calendar, { DateRange } from './Calendar';
 
 interface SearchBarProps {
   selectedRange?: DateRange;
   onDateChange?: (range: DateRange | undefined) => void;
+  hideTitle?: boolean; // ✅ 可選，讓別的頁面隱藏標題
 }
 
 export default function SearchBar({
   selectedRange,
   onDateChange,
+  hideTitle = false,
 }: SearchBarProps) {
-  const router = useRouter(); // 新增
+  const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
   const [adults, setAdults] = useState(2);
@@ -34,16 +36,13 @@ export default function SearchBar({
     }
   };
 
-  // 點「搜尋」→ 跳轉到 /search
   const handleSearch = () => {
     if (!selectedRange?.from || !selectedRange?.to) {
       alert('請選擇入住與退房日期');
       return;
     }
-
     const checkin = selectedRange.from.toISOString().split('T')[0];
     const checkout = selectedRange.to.toISOString().split('T')[0];
-
     router.push(
       `/search?checkin=${checkin}&checkout=${checkout}&adults=${adults}&rooms=${rooms}`
     );
@@ -53,17 +52,18 @@ export default function SearchBar({
     <>
       <div className="text-white py-12 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-center text-xl mb-8 font-medium">
-            提尋機場內及周邊 1 公里內的優質住宿
-          </h1>
+          {!hideTitle && (
+            <h1 className="text-center text-xl mb-8 font-medium">
+              提尋機場內及周邊 1 公里內的優質住宿
+            </h1>
+          )}
 
           {/* 搜尋欄 */}
           <div className="flex flex-wrap justify-center gap-3 py-4 relative">
-            {/* 日期區 */}
-            <div className="flex items-center bg-white rounded-lg gap-0 overflow-hidden">
-              {/* Check in */}
+            {/* 日期選擇 */}
+            <div className="flex items-center bg-white rounded-lg overflow-hidden">
               <button
-                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors"
+                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center gap-3 hover:bg-gray-50 transition-colors"
                 onClick={() => setShowCalendar(true)}
               >
                 <CalendarIcon size={20} className="text-gray-600" />
@@ -72,11 +72,10 @@ export default function SearchBar({
                 </span>
               </button>
 
-              <div className="w-[1px] h-6 bg-gray-400 mx-0.5"></div>
+              <div className="w-[1px] h-6 bg-gray-300 mx-0.5"></div>
 
-              {/* Check out */}
               <button
-                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors"
+                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center gap-3 hover:bg-gray-50 transition-colors"
                 onClick={() => setShowCalendar(true)}
               >
                 <CalendarIcon size={20} className="text-gray-600" />
@@ -86,7 +85,7 @@ export default function SearchBar({
               </button>
             </div>
 
-            {/* 人數/房間 */}
+            {/* 人數選擇 */}
             <button
               className="bg-white text-gray-800 px-6 py-[10px] rounded-lg flex items-center gap-3 hover:bg-gray-50 transition-colors min-w-[180px]"
               onClick={() => setShowGuestPicker(!showGuestPicker)}
@@ -97,10 +96,9 @@ export default function SearchBar({
               </span>
             </button>
 
-            {/* 人數選擇器彈窗 */}
+            {/* 人數彈窗 */}
             {showGuestPicker && (
               <div className="absolute top-[70px] right-0 bg-white text-gray-800 rounded-lg shadow-lg p-4 z-50 w-[220px]">
-                {/* 成人 */}
                 <div className="flex justify-between items-center mb-2">
                   <span>成人</span>
                   <div className="flex items-center gap-2">
@@ -120,7 +118,6 @@ export default function SearchBar({
                   </div>
                 </div>
 
-                {/* 房間 */}
                 <div className="flex justify-between items-center mb-2">
                   <span>房間</span>
                   <div className="flex items-center gap-2">
@@ -152,7 +149,6 @@ export default function SearchBar({
             )}
           </div>
 
-          {/* 搜尋按鈕換行 */}
           <div className="w-full flex justify-center mt-2">
             <button
               onClick={handleSearch}
@@ -174,7 +170,7 @@ export default function SearchBar({
           <div className="relative bg-white rounded-lg p-5 shadow-2xl max-w-4xl w-full z-10">
             <button
               onClick={() => setShowCalendar(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center z-20"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl w-8 h-8 flex items-center justify-center"
             >
               ×
             </button>
@@ -182,13 +178,13 @@ export default function SearchBar({
             <div className="flex justify-end gap-4 mt-6">
               <button
                 onClick={() => setShowCalendar(false)}
-                className="px-6 py-1 border-2 border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                className="px-6 py-1 border-2 border-gray-300 rounded-full hover:bg-gray-50"
               >
                 取消
               </button>
               <button
                 onClick={() => setShowCalendar(false)}
-                className="px-6 py-1 bg-[#D4A574] hover:bg-[#C69563] text-white rounded-full transition-colors"
+                className="px-6 py-1 bg-[#D4A574] hover:bg-[#C69563] text-white rounded-full"
               >
                 確認
               </button>
