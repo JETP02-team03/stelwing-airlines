@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
-import CreatePlanModal from '../components/createPlanModal';
+import CreatePlanForm from '../components/createPlanForm';
+import FormDialog from '../components/formDialog';
 import TripCard from '../components/tripCard';
 // export interface ListPageProps {}
 
@@ -112,7 +113,7 @@ export default function ListPage() {
   const [activeTab, setActiveTab] = useState('全部');
   const [trips, setTrips] = useState<Trip[]>([]);
   const [error, setError] = useState(null);
-  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false); //預設彈出新增視窗不顯示
+  const [isOpenCreatePlan, setIsOpenCreatePlan] = useState(false); //彈出視窗 UI 套件版
 
   // #region 關於 Luxon
 
@@ -182,6 +183,11 @@ export default function ListPage() {
       ? tripsForUI
       : tripsForUI.filter((t) => t.status === activeTab);
 
+  // 功能：新增旅程 form 成功新增後關閉彈出視窗
+  const handleFormSuccess = () => {
+    setIsOpenCreatePlan(false);
+  };
+
   // return 畫面
   return (
     <>
@@ -201,7 +207,7 @@ export default function ListPage() {
               <div className="mb-6">
                 <button
                   className="sw-btn sw-btn--gold-square"
-                  onClick={() => setShowCreatePlanModal(true)}
+                  onClick={() => setIsOpenCreatePlan(true)}
                 >
                   <h6>建立新旅程</h6>
                 </button>
@@ -241,10 +247,13 @@ export default function ListPage() {
           </div>
         </section>
         {/* 彈出視窗：新增旅程 */}
-        {showCreatePlanModal && (
-          // 因為 modal 是子元件，React 中子元件不能傳資料給父元件、不能改變父元件狀態，所以由父元件將這個操作函式傳給子元件讓子元件使用
-          <CreatePlanModal onClose={() => setShowCreatePlanModal(false)} />
-        )}
+        <FormDialog
+          open={isOpenCreatePlan}
+          onOpenChange={setIsOpenCreatePlan}
+          title={'新增旅程'}
+        >
+          <CreatePlanForm onSuccess={handleFormSuccess} />
+        </FormDialog>
       </div>
     </>
   );
