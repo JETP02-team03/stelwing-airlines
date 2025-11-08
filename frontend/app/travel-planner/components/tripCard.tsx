@@ -1,5 +1,6 @@
 'use client';
 
+import { MoveRight } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmDialog from './confirmDialog';
 
@@ -75,15 +76,31 @@ export default function TripCard({ trip }: TripCardProps) {
         </div>
         {/* 第 2 塊：行程文字內容 */}
         <div className="flex-1 px-4 flex flex-col">
-          <h6 className="sw-h6">
-            {trip.displayStartDate}{' '}
-            <span className="text-[#8b929a] text-xs">{trip.startTimezone}</span>{' '}
-            - {trip.displayEndDate}{' '}
-            <span className="text-[#8b929a] text-xs">{trip.endTimezone}</span>
-          </h6>
-          <div className="flex-1">
-            <h6 className="sw-h6">{trip.title}</h6>
+          {/* 時間與標題 */}
+          <div className="flex-1 flex items-start">
+            {/* 時間 */}
+            <div className="flex-1 flex gap-2">
+              {/* 開始 */}
+              <div className="flex-1">
+                <h6 className="sw-h6">{trip.displayStartDate}</h6>
+                <p className="text-[#8b929a] text-xs">{trip.startTimezone}</p>
+              </div>
+              <div>
+                <MoveRight />
+              </div>
+              {/* 結束 */}
+              <div className="flex-1 text-right">
+                <h6 className="sw-h6">{trip.displayEndDate}</h6>
+                <p className="text-[#8b929a] text-xs">{trip.endTimezone}</p>
+              </div>
+            </div>
+            {/* 標題 */}
+            <div className="flex-1">
+              <h6 className="sw-h6  ml-10">{trip.title}</h6>
+            </div>
           </div>
+
+          {/* 地點 */}
           <div className="flex gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -96,6 +113,7 @@ export default function TripCard({ trip }: TripCardProps) {
             </svg>
             <div>{trip.destination}</div>
           </div>
+          {/* 裝飾 */}
           <div className="flex justify-between pt-1 mt-1 border-t border-solid border-(--sw-grey)">
             <div className="text-[8px] text-(--sw-grey)">BOARDING TIME</div>
             <div className="text-[8px] text-(--sw-grey)">GATE</div>
