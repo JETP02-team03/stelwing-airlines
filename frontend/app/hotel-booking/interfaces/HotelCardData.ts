@@ -8,6 +8,10 @@ export interface HotelCardData {
   price: number;
   image?: string;
 
+  // 🔽 地圖座標欄位
+  lat?: number;
+  lng?: number;
+
   // 搜尋頁額外欄位
   address?: string;
   roomType?: string;

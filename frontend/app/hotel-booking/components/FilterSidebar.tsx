@@ -10,76 +10,77 @@ import {
   Wifi,
 } from 'lucide-react';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AmenityKey,
   MAX_PRICE,
   MIN_PRICE,
   PRICE_STEP,
+  amenityLabels,
 } from '../interfaces/constants';
 
 interface FilterSidebarProps {
-  onFilter: (filters: {
-    priceMin: number;
-    priceMax: number;
-    rating?: number[];
-    amenities?: AmenityKey[];
-  }) => void;
+  // 接收父層狀態
+  priceMin: number;
+  onPriceMinChange: (value: number) => void;
+  priceMax: number;
+  onPriceMaxChange: (value: number) => void;
+  selectedRatings: number[];
+  onSelectedRatingsChange: (ratings: number[]) => void;
+  selectedAmenities: AmenityKey[];
+  onSelectedAmenitiesChange: (amenities: AmenityKey[]) => void;
+  onClearAll: () => void;
+
   isMobileOpen: boolean;
   onClose: () => void;
 }
 
+// 設施圖標映射
+const amenityIconMap: Record<AmenityKey, React.ReactNode> = {
+  wifi: <Wifi size={16} />,
+  parking: <Car size={16} />,
+  cafe: <Coffee size={16} />,
+  restaurant: <Utensils size={16} />,
+  shuttleService: <Truck size={16} />,
+  frontDesk24h: <Clock size={16} />,
+  luggageStorage: <Package size={16} />,
+};
+
+// 動態生成設施列表
+const amenityList: {
+  key: AmenityKey;
+  label: string;
+  icon: React.ReactNode;
+}[] = Object.entries(amenityLabels).map(([key, label]) => ({
+  key: key as AmenityKey,
+  label: label,
+  icon: amenityIconMap[key as AmenityKey],
+}));
+
 export default function FilterSidebar({
-  onFilter,
+  priceMin,
+  onPriceMinChange,
+  priceMax,
+  onPriceMaxChange,
+  selectedRatings,
+  onSelectedRatingsChange,
+  selectedAmenities,
+  onSelectedAmenitiesChange,
+  onClearAll,
   isMobileOpen,
   onClose,
 }: FilterSidebarProps) {
-  const [priceMin, setPriceMin] = useState(MIN_PRICE);
-  const [priceMax, setPriceMax] = useState(MAX_PRICE);
-  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
-  const [amenities, setAmenities] = useState<AmenityKey[]>([]);
-
   const ratings = [4.5, 4, 3.5, 3] as const;
 
-  const amenityList: {
-    key: AmenityKey;
-    label: string;
-    icon: React.ReactNode;
-  }[] = [
-    { key: 'wifi', label: 'WiFi', icon: <Wifi size={16} /> },
-    { key: 'parking', label: '停車場', icon: <Car size={16} /> },
-    { key: 'cafe', label: '咖啡廳', icon: <Coffee size={16} /> },
-    { key: 'restaurant', label: '餐廳', icon: <Utensils size={16} /> },
-    { key: 'shuttleService', label: '機場接送', icon: <Truck size={16} /> },
-    { key: 'frontDesk24h', label: '24小時前台', icon: <Clock size={16} /> },
-    { key: 'luggageStorage', label: '行李寄存', icon: <Package size={16} /> },
-  ];
-
   const toggleRating = (rate: number) => {
-    setSelectedRatings((prev) =>
-      prev.includes(rate) ? prev.filter((r) => r !== rate) : [...prev, rate]
-    );
+    const updated = selectedRatings.includes(rate)
+      ? selectedRatings.filter((r) => r !== rate)
+      : [...selectedRatings, rate];
+    onSelectedRatingsChange(updated);
   };
 
   const clearAll = () => {
-    setPriceMin(MIN_PRICE);
-    setPriceMax(MAX_PRICE);
-    setSelectedRatings([]);
-    setAmenities([]);
-  };
-
-  const applyFilters = () => {
-    // 🔒 自動修正 min/max 順序
-    const min = Math.min(priceMin, priceMax);
-    const max = Math.max(priceMin, priceMax);
-
-    onFilter({
-      priceMin: min,
-      priceMax: max,
-      rating: selectedRatings.length > 0 ? selectedRatings : undefined,
-      amenities: amenities.length > 0 ? amenities : undefined,
-    });
-    onClose();
+    onClearAll();
   };
 
   const minPercent = ((priceMin - MIN_PRICE) / (MAX_PRICE - MIN_PRICE)) * 100;
@@ -94,11 +95,12 @@ export default function FilterSidebar({
         />
       )}
 
-      {/* ⚙️ 外層容器 */}
+      {/* ⚙️ 外層容器：保留 w-70，並確保高度填滿並可滾動，增加深色背景來視覺化拉伸 */}
       <div
         className={`
-          fixed lg:static inset-y-0 left-0 w-80 space-y-4 z-50 
+          fixed lg:static inset-y-0 left-0 w-70 space-y-6 z-50 
           transform transition-transform duration-300 ease-in-out overflow-y-auto
+          lg:h-full lg:overflow-y-auto lg:bg-black/80 // ⭐ 確保在桌面版高度填滿，並增加背景色來測試拉伸效果
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
@@ -117,7 +119,7 @@ export default function FilterSidebar({
         </div>
 
         {/* ⚙️ 篩選內容 */}
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-6 w-full space-y-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 w-full space-y-6">
           {/* 標題與清除 */}
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-800">篩選條件</h3>
@@ -135,7 +137,7 @@ export default function FilterSidebar({
               價格範圍（每晚）
             </h4>
             <div className="relative h-10 flex items-center">
-              <div className="absolute w-full h-5 bg-black rounded-full" />
+              <div className="absolute w-full h-5 bg-black rounded-full py" />
               <div
                 className="absolute h-1 bg-black rounded"
                 style={{
@@ -150,7 +152,7 @@ export default function FilterSidebar({
                 max={MAX_PRICE}
                 step={PRICE_STEP}
                 value={priceMin}
-                onChange={(e) => setPriceMin(Number(e.target.value))}
+                onChange={(e) => onPriceMinChange(Number(e.target.value))} // 呼叫父層 setter
                 className="absolute w-full h-6 bg-transparent appearance-none z-20 pointer-events-auto cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                   [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md
@@ -164,7 +166,7 @@ export default function FilterSidebar({
                 max={MAX_PRICE}
                 step={PRICE_STEP}
                 value={priceMax}
-                onChange={(e) => setPriceMax(Number(e.target.value))}
+                onChange={(e) => onPriceMaxChange(Number(e.target.value))} // 呼叫父層 setter
                 className="absolute w-full h-6 bg-transparent appearance-none z-10 pointer-events-auto cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                   [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md
@@ -200,7 +202,7 @@ export default function FilterSidebar({
                     <input
                       type="checkbox"
                       checked={selectedRatings.includes(r)}
-                      onChange={() => toggleRating(r)}
+                      onChange={() => toggleRating(r)} // 呼叫 toggleRating 函式
                       className="w-4 h-4 text-[#DCBB87] rounded-lg focus:ring-[#DCBB87]"
                     />
                     {r}星以上
@@ -219,13 +221,12 @@ export default function FilterSidebar({
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      checked={amenities.includes(key)}
+                      checked={selectedAmenities.includes(key)}
                       onChange={(e) => {
-                        setAmenities((prev) =>
-                          e.target.checked
-                            ? [...prev, key]
-                            : prev.filter((a) => a !== key)
-                        );
+                        const updated = e.target.checked
+                          ? [...selectedAmenities, key]
+                          : selectedAmenities.filter((a) => a !== key);
+                        onSelectedAmenitiesChange(updated);
                       }}
                       className="w-4 h-4 text-[#DCBB87] rounded focus:ring-[#DCBB87]"
                     />
@@ -239,12 +240,12 @@ export default function FilterSidebar({
           </div>
         </div>
 
-        {/* 📱 手機版按鈕 */}
+        {/* 📱 手機版按鈕：只負責關閉側邊欄 */}
         <button
-          onClick={applyFilters}
+          onClick={onClose}
           className="lg:hidden w-full py-3 bg-[#DCBB87] rounded-lg font-semibold text-white hover:bg-[#C49D67] transition"
         >
-          套用篩選
+          關閉篩選
         </button>
       </div>
     </>
