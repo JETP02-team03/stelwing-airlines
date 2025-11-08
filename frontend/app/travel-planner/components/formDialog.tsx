@@ -1,7 +1,8 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import React from 'react';
+import React, { useState } from 'react';
+import ConfirmDialog from './confirmDialog';
 
 export interface FormDialogProps {
   open: boolean;
@@ -18,31 +19,49 @@ export default function FormDialog({
   description,
   children,
 }: FormDialogProps) {
+  const [isOpenCloseComfirm, setIsOpenCloseComfirm] = useState(false);
+
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      {/* Portal：入口網頁，所有彈出相關內容 */}
-      <Dialog.Portal>
-        {/* Overlay：背景遮罩 */}
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        {/* Content：彈出視窗 */}
-        <Dialog.Content className="sw-dialog fixed w-[90vx] max-w-[600px] h-[90vh] max-h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ticket pl-6 pr-3 py-6 rounded-lg shadow-lg flex flex-col">
-          {title && <Dialog.Title className="sw-h5 mb-3">{title}</Dialog.Title>}
-          {description && (
-            <Dialog.Description className="text-sm text-gray-500 mb-4">
-              {description}
-            </Dialog.Description>
-          )}
+    <>
+      <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        {/* Portal：入口網頁，所有彈出相關內容 */}
+        <Dialog.Portal>
+          {/* Overlay：背景遮罩 */}
+          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+          {/* Content：彈出視窗 */}
+          <Dialog.Content className="sw-dialog fixed w-[90vx] max-w-[600px] h-[90vh] max-h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ticket pl-6 pr-3 py-6 rounded-lg shadow-lg flex flex-col">
+            {title && (
+              <Dialog.Title className="sw-h5 mb-3">{title}</Dialog.Title>
+            )}
+            {description && (
+              <Dialog.Description className="text-sm text-gray-500 mb-4">
+                {description}
+              </Dialog.Description>
+            )}
 
-          {/* 傳進來的 form 元件放這裡 */}
-          {children}
+            {/* 傳進來的 form 元件放這裡 */}
+            {children}
 
-          <Dialog.Close asChild>
-            <button className="absolute top-2 right-4 text-gray-600 hover:text-black">
+            <button
+              type="button"
+              aria-label="關閉編輯視窗"
+              className="absolute top-2 right-4 text-gray-600 hover:text-black"
+              onClick={() => setIsOpenCloseComfirm(true)}
+            >
               ✕
             </button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+      {/* 彈出視窗 / UI 套件：確認是否關閉 */}
+      <ConfirmDialog
+        open={isOpenCloseComfirm}
+        onOpenChange={setIsOpenCloseComfirm}
+        title={'確定要關閉編輯視窗嗎？'}
+        description={'輸入的內容尚未儲存'}
+        confirmText={'確認關閉'}
+        onConfirm={() => onOpenChange(false)}
+      />
+    </>
   );
 }
