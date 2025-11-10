@@ -5,123 +5,11 @@ import { DateRange } from '../components/Calendar';
 import FilterSidebar from '../components/FilterSidebar';
 import HotelResultCard from '../components/HotelResultCard';
 import SearchBar from '../components/SearchBar';
+// 🌟 導入常量和類型
 import { AmenityKey, MAX_PRICE, MIN_PRICE } from '../interfaces/constants';
-
-interface Hotel {
-  id: number;
-  name: string;
-  engName?: string;
-  location: string;
-  rating: number;
-  price: number;
-  image: string;
-  amenities: AmenityKey[];
-  busFree?: boolean;
-  notes?: string;
-  roomType?: string;
-}
-
-const hotels: Hotel[] = [
-  {
-    id: 1,
-    name: '東京成田機場旅館',
-    engName: 'Toyoko Inn Narita Airport | Hotel',
-    location: '第二航廈・機場內',
-    rating: 3.4,
-    price: 3500,
-    image: '/images/hotel/room1.jpeg',
-    amenities: [
-      'wifi',
-      'parking',
-      'cafe',
-      'restaurant',
-      'frontDesk24h',
-      'luggageStorage',
-    ],
-    busFree: true,
-    roomType: '經典商務房',
-  },
-  {
-    id: 2,
-    name: '成田日航酒店',
-    engName: 'Hotel Nikko Narita | Hotel',
-    location: '距離機場約 0.3公里',
-    rating: 4.9,
-    price: 5500,
-    image: '/images/hotel/room2.jpeg',
-    amenities: [
-      'wifi',
-      'parking',
-      'cafe',
-      'restaurant',
-      'frontDesk24h',
-      'luggageStorage',
-      'shuttleService',
-    ],
-    busFree: true,
-    roomType: '經典商務房',
-  },
-  {
-    id: 3,
-    name: '普雷米爾飯店',
-    engName: 'Premier Narita | Hotel',
-    location: '距離機場約 0.2公里',
-    rating: 4.7,
-    price: 10000,
-    image: '/images/hotel/room3.jpeg',
-    amenities: [
-      'wifi',
-      'parking',
-      'cafe',
-      'restaurant',
-      'frontDesk24h',
-      'luggageStorage',
-      'shuttleService',
-    ],
-    busFree: true,
-    roomType: '經典商務房',
-  },
-  {
-    id: 4,
-    name: 'Grand Hotel Narita ',
-    engName: 'Grand Hotel Narita |Hotel',
-    location: '距離機場約 0.2公里',
-    rating: 4.8,
-    price: 12000,
-    image: '/images/hotel/room4.jpeg',
-    amenities: [
-      'wifi',
-      'parking',
-      'cafe',
-      'restaurant',
-      'frontDesk24h',
-      'luggageStorage',
-      'shuttleService',
-    ],
-    busFree: true,
-    roomType: '經典商務房',
-  },
-  {
-    id: 5,
-    name: '成田東武酒店',
-    engName: 'Narita Tobu Hotel |Hotel',
-    location: '距離機場約 0.3公里',
-    rating: 4.7,
-    price: 18000,
-    image: '/images/hotel/room5.jpeg',
-    amenities: [
-      'wifi',
-      'parking',
-      'cafe',
-      'restaurant',
-      'frontDesk24h',
-      'luggageStorage',
-      'shuttleService',
-    ],
-    busFree: true,
-    roomType: '經典商務房',
-  },
-];
+// 🌟 導入集中管理的飯店數據和介面
+import { allMockHotels } from '../interfaces/mockHotels';
+// ❗ 移除了原本寫在本地的 interface Hotel 和 const hotels 陣列。
 
 export default function HotelPage() {
   const [showFilter, setShowFilter] = useState(false);
@@ -136,8 +24,6 @@ export default function HotelPage() {
     undefined
   );
 
-  // 移除了 handleFilter，篩選條件直接使用 state
-
   const clearAllFilters = useCallback(() => {
     setPriceMin(MIN_PRICE);
     setPriceMax(MAX_PRICE);
@@ -150,7 +36,8 @@ export default function HotelPage() {
     const min = Math.min(priceMin, priceMax);
     const max = Math.max(priceMin, priceMax);
 
-    return hotels.filter((hotel) => {
+    // 🌟 使用導入的 allMockHotels 陣列進行篩選
+    return allMockHotels.filter((hotel) => {
       // 1. 價格篩選
       if (hotel.price < min || hotel.price > max) return false;
 

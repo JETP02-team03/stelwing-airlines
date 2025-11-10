@@ -98,14 +98,14 @@ export default function FilterSidebar({
       {/* ⚙️ 外層容器：保留 w-70，並確保高度填滿並可滾動，增加深色背景來視覺化拉伸 */}
       <div
         className={`
-          fixed lg:static inset-y-0 left-0 w-70 space-y-6 z-50 
+          fixed lg:static inset-y-0 left-0 w-70 space-y-9 z-50 
           transform transition-transform duration-300 ease-in-out overflow-y-auto
-          lg:h-full lg:overflow-y-auto lg:bg-black/80 // ⭐ 確保在桌面版高度填滿，並增加背景色來測試拉伸效果
+          lg:h-full lg:overflow-y-auto
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* 🗺️ 地圖 */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-4 w-full h-40 relative cursor-pointer">
+        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-full h-45 relative cursor-pointer">
           <Image
             src="/images/hotel/map.jpeg"
             alt="地圖找房"

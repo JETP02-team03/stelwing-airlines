@@ -95,7 +95,7 @@ export default function HotelResultCard({ hotel }: HotelResultCardProps) {
           </div>
         )}
         {/* 星級 */}
-        <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded flex items-center gap-1 text-xs text-white">
+        <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded-full flex items-center gap-1 text-xs text-white">
           <Star size={12} color="#D4AF37" fill="#D4AF37" />{' '}
           {hotel.rating.toFixed(1)}
         </div>
