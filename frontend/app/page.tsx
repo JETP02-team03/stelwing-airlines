@@ -31,7 +31,7 @@ export default function AppPage() {
         </div>
       </section>
       {/* 後續內容… */}
-      <section className="h-[160px]" /> {/* 讓出絕對定位高度 */}
+      <section className="h-40" /> {/* 讓出絕對定位高度 */}
     </main>
   );
 }
