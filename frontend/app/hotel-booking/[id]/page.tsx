@@ -23,7 +23,6 @@ interface HotelDetailPageProps {
  * 實際應用中,您會在這裡發起 API 請求。
  */
 const fetchHotelData = (id: string): HotelDetailData | null => {
-  // 由於我們只有一個模擬數據,這裡我們簡單地返回它。
   // 臨時修正:允許任何非空 ID 返回模擬數據
   if (id) {
     return mockHotelDetailData;
@@ -40,14 +39,12 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
 
   const hotel = fetchHotelData(unwrappedParams.id);
 
-  // 🌟 統一狀態管理 (整合所有表單數據)
+  // 🌟 統一狀態管理
   const [formData, setFormData] = React.useState({
-    // 預訂資訊
     checkIn: '2025/12/24',
     checkOut: '2025/12/27',
     nights: 3,
     guests: 2,
-    // 登記者資料
     name: '',
     phone: '',
     email: '',
@@ -58,10 +55,8 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // 🌟 處理輸入變更
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // 清除該欄位的錯誤
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -71,13 +66,10 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
     }
   };
 
-  // 🌟 表單驗證
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = '請輸入姓名';
-    }
+    if (!formData.name.trim()) newErrors.name = '請輸入姓名';
     if (!formData.phone.trim()) {
       newErrors.phone = '請輸入電話';
     } else if (!/^09\d{8}$/.test(formData.phone.replace(/-/g, ''))) {
@@ -93,10 +85,8 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 🌟 提交處理
   const handleSubmit = () => {
     if (!validateForm()) {
-      // 滾動到第一個錯誤欄位
       const firstErrorField = Object.keys(errors)[0];
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
@@ -106,7 +96,6 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
     }
 
     setIsSubmitting(true);
-    // 模擬提交
     setTimeout(() => {
       alert(
         `預訂成功!\n\n訂房資訊:\n姓名: ${formData.name}\n電話: ${formData.phone}\n郵件: ${formData.email}\n入住: ${formData.checkIn}\n退房: ${formData.checkOut}\n房型: ${formData.roomType}\n吸菸需求: ${formData.smokingPreference}\n總金額: $${hotel?.price.toLocaleString()}`
@@ -115,20 +104,13 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
     }, 1500);
   };
 
-  if (!hotel) {
-    // 如果找不到飯店 (例如 ID 不存在),使用 Next.js 的 notFound() 處理 404
-    notFound();
-  }
+  if (!hotel) notFound();
 
   return (
-    <div
-      className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative"
-      // 使用您網頁中常見的背景圖和樣式
-      style={{ backgroundImage: "url('/images/hotel/bg1.jpeg')" }}
-    >
-      <div className="flex flex-col w-full min-h-screen bg-black/70 p-4 md:p-8">
-        {/* 麵包屑/頂部導航 - 🌟 替換為 Next.js 的 Link 組件 */}
-        <nav className="text-sm text-gray-400 mb-6 max-w-6xl mx-auto w-full">
+    <div className="min-h-screen bg-[url('/images/hotel/bg2.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/70 bg-blend-darken pb-10">
+      <div className="flex flex-col w-full min-h-screen px-4 md:px-8 pt-6">
+        {/* 麵包屑/頂部導航 */}
+        <nav className="text-sm text-gray-300 mb-6 max-w-6xl mx-auto w-full">
           <Link
             href="/"
             className="hover:underline hover:text-white transition"
@@ -145,9 +127,8 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
           &gt; <span className="text-white font-medium">{hotel.name}</span>
         </nav>
 
-        {/* 主要內容容器 (左右分欄) */}
-        <div className="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mb-8">
-          {/* 左側:內容區 (圖片、描述、設施、登記者資料) */}
+        {/* 主體內容 */}
+        <div className="w-full max-w-6xl mx-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mb-8">
           <HotelDetailContent
             hotel={hotel}
             formData={{
@@ -161,7 +142,6 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
             onInputChange={handleInputChange}
           />
 
-          {/* 右側:預訂卡片區 (價格、日期、訂單輸入) */}
           <HotelDetailBookingCard
             hotel={hotel}
             formData={{

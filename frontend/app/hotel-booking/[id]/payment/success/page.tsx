@@ -19,10 +19,10 @@ export default function PaymentSuccessPage() {
   const totalPrice = hotel.price;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F7F7] px-6 py-12">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+    <div className="min-h-screen bg-[url('/images/hotel/bg2.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/50 bg-blend-darken flex flex-col items-center justify-center px-6 py-12">
+      <div className="bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-lg w-full max-w-md text-center">
         <h2 className="text-2xl font-bold text-green-600 mb-4">預訂成功！</h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-700 mb-6">
           感謝您的預訂，確認信件將寄送至您的信箱。
         </p>
 
@@ -78,7 +78,7 @@ export default function PaymentSuccessPage() {
         </div>
 
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/hotel-booking')}
           className="w-full py-3 bg-[#1F2E3C] text-white font-bold rounded-lg hover:bg-[#2d3d4c] transition"
         >
           返回首頁

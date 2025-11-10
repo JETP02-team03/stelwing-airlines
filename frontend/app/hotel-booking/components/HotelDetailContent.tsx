@@ -1,10 +1,5 @@
 'use client';
 
-import * as React from 'react';
-// 🌟 導入所需的介面和常量
-import { HotelDetailData } from '../interfaces/HotelDetailData'; // 修正路徑
-import { AmenityKey, amenityLabels } from '../interfaces/constants'; // 修正路徑
-// 導入 Lucide Icons
 import {
   Briefcase,
   BusFront,
@@ -26,6 +21,9 @@ import {
   Wifi,
   X,
 } from 'lucide-react';
+import * as React from 'react';
+import { HotelDetailData } from '../interfaces/HotelDetailData';
+import { AmenityKey, amenityLabels } from '../interfaces/constants';
 
 interface HotelDetailContentProps {
   hotel: HotelDetailData;
@@ -40,25 +38,23 @@ interface HotelDetailContentProps {
   onInputChange: (field: string, value: any) => void;
 }
 
-// 設施圖標映射
+// 設施圖標映射（固定大小、不可點擊）
 const amenityIcons: Record<AmenityKey, React.ReactNode> = {
-  wifi: <Wifi size={20} />,
-  parking: <Car size={20} />,
-  cafe: <Coffee size={20} />,
-  restaurant: <Utensils size={20} />,
-  frontDesk24h: <Clock size={20} />,
-  luggageStorage: <Luggage size={20} />,
-  shuttleService: <BusFront size={20} />,
+  wifi: <Wifi size={16} className="text-gray-600" />,
+  parking: <Car size={16} className="text-gray-600" />,
+  cafe: <Coffee size={16} className="text-gray-600" />,
+  restaurant: <Utensils size={16} className="text-gray-600" />,
+  frontDesk24h: <Clock size={16} className="text-gray-600" />,
+  luggageStorage: <Luggage size={16} className="text-gray-600" />,
+  shuttleService: <BusFront size={16} className="text-gray-600" />,
 };
 
-// --- 組件定義 ---
 export default function HotelDetailContent({
   hotel,
   formData,
   errors,
   onInputChange,
 }: HotelDetailContentProps) {
-  // 🌟 狀態管理
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
   const [isFavorite, setIsFavorite] = React.useState(false);
@@ -95,7 +91,6 @@ export default function HotelDetailContent({
     );
   };
 
-  // 🌟 圖片導航功能
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % hotel.images.length);
   };
@@ -108,7 +103,7 @@ export default function HotelDetailContent({
 
   return (
     <div className="flex-1 lg:pr-8">
-      {/* 1. 標題與基本資訊 - 🌟 新增收藏按鈕 */}
+      {/* 標題與收藏 */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
@@ -146,7 +141,7 @@ export default function HotelDetailContent({
         </div>
       </div>
 
-      {/* 2. 圖片輪播/畫廊 - 🌟 新增點擊開啟燈箱功能 */}
+      {/* 圖片輪播 */}
       <div className="mb-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 rounded-lg overflow-hidden">
           {hotel.images.slice(0, 4).map((img, index) => (
@@ -172,7 +167,7 @@ export default function HotelDetailContent({
                 }}
               />
               {index === 3 && hotel.images.length > 4 && (
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center text-white font-bold text-xl hover:bg-opacity-70 transition">
+                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center text-white font-bold text-xl transition">
                   + {hotel.images.length - 4} 張
                 </div>
               )}
@@ -181,7 +176,7 @@ export default function HotelDetailContent({
         </div>
       </div>
 
-      {/* 🌟 圖片燈箱 (全螢幕圖片瀏覽) */}
+      {/* 燈箱 */}
       {isGalleryOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
           <button
@@ -216,7 +211,7 @@ export default function HotelDetailContent({
         </div>
       )}
 
-      {/* 3. 描述 */}
+      {/* 飯店簡介 */}
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">
           飯店簡介
@@ -224,25 +219,27 @@ export default function HotelDetailContent({
         <p className="text-gray-600 leading-relaxed">{hotel.description}</p>
       </div>
 
-      {/* 4. 設施列表 - 🌟 新增 hover 效果 */}
+      {/* 主要設施 - 純顯示、Lucide icon、固定大小 */}
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">
           主要設施
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {hotel.amenityKeys.map((key) => (
             <div
               key={key}
-              className="flex items-center space-x-3 text-gray-700 bg-gray-50 p-3 rounded-lg shadow-sm hover:shadow-md hover:bg-gray-100 transition"
+              className="flex items-center space-x-2 text-gray-700 bg-gray-50 p-2 rounded-lg"
             >
-              {amenityIcons[key] || <Briefcase size={20} />}
-              <span className="font-medium">{amenityLabels[key]}</span>
+              {amenityIcons[key] || (
+                <Briefcase size={16} className="text-gray-600" />
+              )}
+              <span className="text-sm">{amenityLabels[key]}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 5. 聯絡資訊 - 🌟 改善排版與圖示 */}
+      {/* 聯絡資訊 */}
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">
           聯絡資訊
@@ -288,13 +285,12 @@ export default function HotelDetailContent({
         </div>
       </div>
 
-      {/* 🌟 6. 主要登記者資料 (從 BookingCard 移過來) */}
+      {/* 登記者資料 */}
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
           <User size={24} />
           主要登記者資料
         </h3>
-
         <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
           {/* 姓名 */}
           <div>
@@ -425,7 +421,7 @@ export default function HotelDetailContent({
         </div>
       </div>
 
-      {/* 定義 SVG 漸變以模擬半星 */}
+      {/* 半星漸變 */}
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="halfGradient">
