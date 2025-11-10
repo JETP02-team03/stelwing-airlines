@@ -104,34 +104,69 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 // ✅ 1️⃣ 註冊
-router.post("/register", async (req: Request, res: Response) => {
-   const { email, password, name } = req.body;
+// router.post("/register", async (req: Request, res: Response) => {
+//    const { email, password, name } = req.body;
 
-  // fake data
-  // const email = 'test@gmail.com'
-  // const password = 'P@ssw0rd'
-  // const name='王小明'
+//   // fake data
+//   // const email = 'test@gmail.com'
+//   // const password = 'P@ssw0rd'
+//   // const name='王小明'
 
+//   try {
+//     const existing = await prisma.member.findUnique({ where: { email } });
+//     if (existing) {
+//       return res.status(409).json({ message: "Email 已註冊" });
+//     }
+
+//     const hashed = await bcrypt.hash(password, 10);
+//     const newUser = await prisma.member.create({
+//       data: { email, password: hashed, firstName: name },
+//     });
+
+//     res.status(201).json({
+//       message: "註冊成功",
+//       user: { id: newUser.memberId, email },
+//     });
+//   } catch (err) {
+//     console.error("❌ Register 錯誤內容:", err);
+//     res.status(500).json({ message: "伺服器錯誤", error: err });
+//   }
+// });
+router.post("/register", async (req, res) => {
   try {
-    const existing = await prisma.member.findUnique({ where: { email } });
-    if (existing) {
-      return res.status(409).json({ message: "Email 已註冊" });
+    const { firstName, lastName, email, password } = req.body
+
+    // ✅ 改這裡：改為檢查 firstName, email, password
+    if (!firstName || !email || !password) {
+      return res.status(400).json({ message: "缺少必要欄位" })
     }
 
-    const hashed = await bcrypt.hash(password, 10);
-    const newUser = await prisma.member.create({
-      data: { email, password: hashed, firstName: name },
-    });
+    const existing = await prisma.member.findUnique({ where: { email } })
+    if (existing) {
+      return res.status(409).json({ message: "此信箱已註冊" })
+    }
 
-    res.status(201).json({
-      message: "註冊成功",
-      user: { id: newUser.memberId, email },
-    });
+    const hashed = await bcrypt.hash(password, 10)
+
+    await prisma.member.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        password: hashed,
+      },
+    })
+
+    res.status(201).json({ message: "註冊成功" })
   } catch (err) {
-    console.error("❌ Register 錯誤內容:", err);
-    res.status(500).json({ message: "伺服器錯誤", error: err });
+    console.error("❌ Register 錯誤內容:", err)
+    if (err.code === "P2002") {
+      return res.status(409).json({ message: "此信箱已註冊" })
+    }
+    res.status(500).json({ message: "伺服器錯誤" })
   }
-});
+})
+
 
 // ✅ 2️⃣ 登入
 router.post("/login", async (req: Request, res: Response) => {
@@ -149,11 +184,16 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "密碼錯誤" });
     }
 
-    const token = jwt.sign(
-      { memberId: user.memberId, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "3h" }
-    );
+    // ✅ 把 BigInt 轉成普通 number 或 string
+const token = jwt.sign(
+  {
+    memberId: Number(user.memberId), // 轉成 number
+    email: user.email,
+  },
+  JWT_SECRET,
+  { expiresIn: "3h" }
+);
+
 
     res.json({ message: "登入成功", token });
   } catch (err) {
