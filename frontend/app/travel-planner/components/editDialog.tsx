@@ -1,7 +1,7 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import ConfirmDialog from './confirmDialog';
 
 export interface FormDialogProps {
@@ -20,6 +20,9 @@ export default function FormDialog({
   children,
 }: FormDialogProps) {
   const [isOpenCloseComfirm, setIsOpenCloseComfirm] = useState(false);
+  const handleEditDialogClose = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   return (
     <>
@@ -60,7 +63,7 @@ export default function FormDialog({
         title={'確定要關閉編輯視窗嗎？'}
         description={'輸入的內容尚未儲存'}
         confirmText={'確認關閉'}
-        onConfirm={() => onOpenChange(false)}
+        onConfirm={handleEditDialogClose}
       />
     </>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { MoveRight } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import ConfirmDialog from './confirmDialog';
 
 export interface Trip {
@@ -45,7 +45,7 @@ export default function TripCard({ trip }: TripCardProps) {
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const [isOpenDeletePlan, setIsOpenDeletePlan] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/plans/${trip.id}`, {
         method: 'DELETE',
@@ -65,7 +65,7 @@ export default function TripCard({ trip }: TripCardProps) {
     } catch (error) {
       alert(`系統錯誤，請再試一次：${error}`);
     }
-  };
+  }, [API_BASE, trip.id]);
 
   return (
     <>
@@ -150,17 +150,17 @@ export default function TripCard({ trip }: TripCardProps) {
           >
             <h6 className="sw-h6">刪除整趟旅程</h6>
           </button>
-          {/* 彈出視窗 / UI 套件：確認是否刪除 */}
-          <ConfirmDialog
-            open={isOpenDeletePlan}
-            onOpenChange={setIsOpenDeletePlan}
-            title={'確定要刪除這趟旅程嗎？'}
-            description={'整趟旅程及已建立的每日行程細項皆會刪除'}
-            confirmText={'確認刪除'}
-            onConfirm={() => handleDelete()}
-          />
         </div>
       </div>
+      {/* 彈出視窗 / UI 套件：確認是否刪除 */}
+      <ConfirmDialog
+        open={isOpenDeletePlan}
+        onOpenChange={setIsOpenDeletePlan}
+        title={'確定要刪除這趟旅程嗎？'}
+        description={'整趟旅程及已建立的每日行程細項皆會刪除'}
+        confirmText={'確認刪除'}
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

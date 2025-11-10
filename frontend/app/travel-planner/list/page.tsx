@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
 import CreatePlanForm from '../components/createPlanForm';
-import FormDialog from '../components/formDialog';
+import EditDialog from '../components/editDialog';
 import TripCard from '../components/tripCard';
 // export interface ListPageProps {}
 
@@ -166,7 +166,7 @@ export default function ListPage() {
       }
     }
     fetchTrips();
-  }, []);
+  }, [API_BASE]);
 
   // data：根據後端 API 傳來的 Data，調整後的前端用 Data
   const tripsForUI: tripForUI[] = trips.map((trip) => ({
@@ -247,13 +247,13 @@ export default function ListPage() {
           </div>
         </section>
         {/* 彈出視窗：新增旅程 */}
-        <FormDialog
+        <EditDialog
           open={isOpenCreatePlan}
           onOpenChange={setIsOpenCreatePlan}
           title={'新增旅程'}
         >
           <CreatePlanForm onSuccess={handleFormSuccess} />
-        </FormDialog>
+        </EditDialog>
       </div>
     </>
   );
