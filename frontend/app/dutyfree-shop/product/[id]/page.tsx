@@ -12,6 +12,8 @@ export default function ProductPage() {
   const { id } = useParams(); // 從網址抓 id
   const { products, addToCart, isLoggedIn, setCheckoutItem } = useDFStore(); // ✅ 新增 isLoggedIn / setCheckoutItem
   const product = products.find((p) => p.id === id);
+  const handleNavigateDutyFree = () =>
+    router.push('/dutyfree-shop#dutyfree-products');
 
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -47,7 +49,12 @@ export default function ProductPage() {
             首頁
           </button>
           {' > '}
-          <span>免稅商品</span>
+          <button
+            onClick={handleNavigateDutyFree}
+            className="hover:text-[var(--df-accent-gold)]"
+          >
+            免稅商品
+          </button>
           {' > '}
           <span className="hidden md:inline">{product.name}</span>
           <span className="md:hidden">...</span>

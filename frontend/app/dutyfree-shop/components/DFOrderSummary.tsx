@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface OrderItem {
   id: string;
   name: string;
@@ -10,6 +12,7 @@ interface DFOrderSummaryProps {
   items: OrderItem[];
   subtotal: number;
   discount?: number;
+  promoCode?: string;
   sticky?: boolean;
 }
 
@@ -17,6 +20,7 @@ export function DFOrderSummary({
   items,
   subtotal,
   discount = 0,
+  promoCode,
   sticky = false,
 }: DFOrderSummaryProps) {
   const total = subtotal - discount;
@@ -30,11 +34,13 @@ export function DFOrderSummary({
       <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
         {items.map((item) => (
           <div key={item.id} className="flex gap-3">
-            <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-              <img
+            <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative">
+              <Image
                 src={item.image}
                 alt={item.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="64px"
+                className="object-cover"
               />
             </div>
             <div className="flex-1 min-w-0">
@@ -57,7 +63,9 @@ export function DFOrderSummary({
 
         {discount > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--df-state-success)]">優惠券</span>
+            <span className="text-[var(--df-state-success)]">
+              優惠券{promoCode ? `（${promoCode.toUpperCase()}）` : ''}
+            </span>
             <span className="text-[var(--df-state-success)]">
               -${discount.toLocaleString()} (折扣)
             </span>

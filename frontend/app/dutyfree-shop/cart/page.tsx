@@ -13,6 +13,7 @@ export default function CartPage() {
     updateCartQuantity,
     removeFromCart,
     applyPromoCode,
+    clearPromoCode,
     discount,
     promoCode,
     isLoggedIn, // ✅ 取出登入狀態
@@ -27,6 +28,7 @@ export default function CartPage() {
     0
   );
   const total = Math.max(0, subtotal - discount);
+  const hasDiscount = discount > 0 && !!promoCode;
 
   // ✅ 空購物車提示
   if (cart.length === 0) {
@@ -124,10 +126,21 @@ export default function CartPage() {
               <span>TWD {subtotal.toLocaleString()}</span>
             </div>
 
-            {discount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>折扣 ({promoCode})</span>
-                <span>- TWD {discount.toLocaleString()}</span>
+            {hasDiscount && (
+              <div className="flex items-center justify-between text-sm text-green-600">
+                <span>折扣（{promoCode.toUpperCase()}）</span>
+                <div className="flex items-center gap-2">
+                  <span>- TWD {discount.toLocaleString()}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearPromoCode}
+                    className="h-7 px-2 text-xs text-red-500 hover:text-red-600"
+                  >
+                    移除
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -154,9 +167,9 @@ export default function CartPage() {
                   套用
                 </Button>
               </div>
-              {promoCode && discount > 0 && (
+              {hasDiscount && (
                 <p className="text-xs text-green-600 mt-1">
-                  已套用優惠碼 <strong>{promoCode}</strong>（95 折）
+                  已套用優惠碼 <strong>{promoCode.toUpperCase()}</strong>
                 </p>
               )}
             </div>

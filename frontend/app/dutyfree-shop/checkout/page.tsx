@@ -28,7 +28,8 @@ interface CheckoutForm {
 // ===============================
 export default function CheckoutPage() {
   const router = useRouter();
-  const { checkoutItem, cart, setCheckoutItem } = useDFStore();
+  const { checkoutItem, cart, setCheckoutItem, discount, promoCode } =
+    useDFStore();
 
   // ✅ 表單狀態
   const [checkoutForm, setCheckoutForm] = useState<CheckoutForm>({
@@ -94,7 +95,9 @@ export default function CheckoutPage() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const discount = 0;
+  const appliedDiscount =
+    !checkoutItem && discount > 0 ? Math.min(discount, subtotal) : 0;
+  const appliedPromoCode = !checkoutItem && discount > 0 ? promoCode : '';
 
   // ===============================
   // 表單處理
@@ -327,7 +330,8 @@ export default function CheckoutPage() {
             <DFOrderSummary
               items={cartItems}
               subtotal={subtotal}
-              discount={discount}
+              discount={appliedDiscount}
+              promoCode={appliedPromoCode || undefined}
               sticky
             />
           </div>

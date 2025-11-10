@@ -61,7 +61,7 @@ export default function Header({
     >
       <div className="mx-auto w-full h-16 px-16 flex items-center justify-between gap-[48px]">
         {/* =================== 左區：Logo + 導覽 =================== */}
-        <div className="flex items-center gap-[48px]">
+        <div className="flex items-center gap-12">
           <Link href="/">
             <Image
               src="/logo-white.svg"

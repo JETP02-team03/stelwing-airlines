@@ -43,6 +43,7 @@ interface DFStoreContextType {
   removeFromCart: (id: string) => void;
   updateCartQuantity: (id: string, quantity: number) => void;
   applyPromoCode: (code: string) => void;
+  clearPromoCode: () => void;
   clearCart: () => void; //  新增：清空購物車
 }
 
@@ -279,6 +280,14 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearPromoCode = () => {
+    setPromoCode('');
+    setDiscount(0);
+    setDiscountPercent(0);
+    promoStorage.clear();
+    toast.info('已移除折扣碼');
+  };
+
   // 登出方法：清除 session 與登入狀態
   const logout = () => {
     setIsLoggedIn(false);
@@ -313,6 +322,7 @@ export function DFStoreProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         updateCartQuantity,
         applyPromoCode,
+        clearPromoCode,
         clearCart,
       }}
     >

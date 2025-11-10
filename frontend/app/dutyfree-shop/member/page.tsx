@@ -19,12 +19,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '../components/ui/tabs';
-import { useDFStore } from '../context/DFStoreContext';
 import { Order, ordersStorage } from '../utils/storage';
 
 export default function MemberPage() {
   const router = useRouter();
-  const { cart } = useDFStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
@@ -254,7 +252,7 @@ export default function MemberPage() {
         open={deleteOrderId !== null}
         onOpenChange={(open) => !open && setDeleteOrderId(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md bg-white text-gray-800">
           <AlertDialogHeader>
             <AlertDialogTitle>確認刪除訂單</AlertDialogTitle>
             <AlertDialogDescription>

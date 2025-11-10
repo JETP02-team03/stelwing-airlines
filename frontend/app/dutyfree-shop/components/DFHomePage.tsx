@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Search, X } from 'lucide-react';
 import { DFCategorySection } from './DFCategorySection';
 import { DFProductCard } from './DFProductCard';
@@ -43,10 +44,13 @@ function WhitePic() {
       data-name="whitePic"
     >
       <div className="h-[119px] relative shrink-0 w-full">
-        <img
-          alt="Login visual"
-          className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
+        <Image
           src="/images/dutyfree/mainWhite.jpg"
+          alt="Login visual"
+          fill
+          className="object-cover pointer-events-none"
+          sizes="(max-width: 768px) 100vw, 900px"
+          priority
         />
       </div>
     </div>
@@ -75,20 +79,26 @@ function Pic() {
         className="basis-0 grow h-[450px] min-h-px min-w-px relative shrink-0"
         data-name="left"
       >
-        <img
-          alt="Left visual"
-          className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
+        <Image
           src="/images/dutyfree/mainLeft.jpg"
+          alt="Duty free hero left"
+          fill
+          className="object-cover pointer-events-none"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority
         />
       </div>
       <div
         className="basis-0 grow h-[450px] min-h-px min-w-px relative shrink-0"
         data-name="right"
       >
-        <img
-          alt="Right visual"
-          className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
+        <Image
           src="/images/dutyfree/mainRight.jpg"
+          alt="Duty free hero right"
+          fill
+          className="object-cover pointer-events-none"
+          sizes="(max-width: 768px) 100vw, 50vw"
+          priority
         />
       </div>
     </div>
@@ -206,7 +216,10 @@ export function DFHomePage({
       </div>
 
       {/* 商品卡區 */}
-      <div className="mx-auto px-4 md:px-8 lg:px-16 py-8 md:py-12">
+      <div
+        id="dutyfree-products"
+        className="mx-auto px-4 md:px-8 lg:px-16 py-8 md:py-12"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {filteredProducts.map((product) => (
             <DFProductCard
