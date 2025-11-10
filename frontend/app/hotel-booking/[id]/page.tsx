@@ -146,7 +146,7 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
         </nav>
 
         {/* 主要內容容器 (左右分欄) */}
-        <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mb-8">
+        <div className="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mb-8">
           {/* 左側:內容區 (圖片、描述、設施、登記者資料) */}
           <HotelDetailContent
             hotel={hotel}
@@ -175,11 +175,6 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
             isSubmitting={isSubmitting}
           />
         </div>
-
-        {/* 🌟 底部資訊 */}
-        <footer className="text-center text-gray-400 text-sm pb-4">
-          <p>© 2025 飯店預訂系統. All rights reserved.</p>
-        </footer>
       </div>
     </div>
   );

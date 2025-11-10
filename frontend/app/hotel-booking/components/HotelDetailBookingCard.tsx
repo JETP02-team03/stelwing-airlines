@@ -1,8 +1,7 @@
-// components/HotelDetailBookingCard.tsx
 'use client';
 
 import { Calendar, Moon, Users } from 'lucide-react';
-import { HotelDetailData } from '../interfaces/HotelDetailData'; // 假設路徑
+import { HotelDetailData } from '../interfaces/HotelDetailData';
 
 interface HotelDetailBookingCardProps {
   hotel: HotelDetailData;
@@ -29,7 +28,6 @@ export default function HotelDetailBookingCard({
       <div className="sticky top-10 bg-[#F7F7F7] p-6 rounded-lg shadow-xl border border-gray-200">
         <h2 className="text-xl font-bold text-gray-800 mb-4">立即預訂</h2>
 
-        {/* 價格 */}
         <div className="flex justify-between items-end mb-4 border-b pb-4">
           <span className="text-sm text-gray-600">總金額 (含稅)</span>
           <span className="text-4xl font-extrabold text-[#303D49]">
@@ -37,7 +35,7 @@ export default function HotelDetailBookingCard({
           </span>
         </div>
 
-        {/* 預訂日期/人數/晚數 */}
+        {/* 表單區塊 */}
         <div className="space-y-4 text-gray-700">
           {/* 入住日期 */}
           <div>
@@ -49,7 +47,7 @@ export default function HotelDetailBookingCard({
               type="date"
               value={formData.checkIn}
               onChange={(e) => onInputChange('checkIn', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
             />
           </div>
 
@@ -63,7 +61,7 @@ export default function HotelDetailBookingCard({
               type="date"
               value={formData.checkOut}
               onChange={(e) => onInputChange('checkOut', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
             />
           </div>
 
@@ -78,11 +76,11 @@ export default function HotelDetailBookingCard({
               onChange={(e) =>
                 onInputChange('nights', parseInt(e.target.value))
               }
-              className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n} 晚
+              {[...Array(10)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1} 晚
                 </option>
               ))}
             </select>
@@ -99,7 +97,7 @@ export default function HotelDetailBookingCard({
               onChange={(e) =>
                 onInputChange('guests', parseInt(e.target.value))
               }
-              className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
             >
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <option key={n} value={n}>
@@ -130,21 +128,21 @@ export default function HotelDetailBookingCard({
           </div>
         </div>
 
-        {/* 主要操作按鈕 */}
+        {/* 按鈕 */}
         <button
           onClick={onSubmit}
           disabled={isSubmitting}
-          className="w-full mt-6 py-3 bg-[#DCBB87] text-[#303D49] font-bold text-lg rounded-md hover:bg-[#C49D67] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          className="w-full mt-6 py-3 bg-[#1F2E3C] text-white font-bold text-lg rounded-lg hover:bg-[#2e445b] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
         >
-          {isSubmitting ? '處理中...' : '確認預訂'}
+          {isSubmitting ? '處理中...' : '前往付款'}
         </button>
 
         <p className="text-xs text-center text-gray-500 mt-3">
           點擊確認預訂即表示您同意我們的服務條款
         </p>
 
-        {/* 取消政策提示 */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-gray-700">
+        {/* 免費取消政策 */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-gray-700">
           <p className="font-semibold mb-1">✓ 免費取消</p>
           <p>入住前 24 小時可免費取消</p>
         </div>
