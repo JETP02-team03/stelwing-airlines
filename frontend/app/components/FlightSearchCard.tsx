@@ -6,26 +6,16 @@ import {
   ArrowLeftRight,
   Calendar,
   ChevronDown,
-  ChevronLeft,
   Plane,
   Ticket,
   User,
   X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { JSX, useEffect, useMemo, useRef, useState } from 'react';
+import React, { JSX, useMemo, useRef, useState } from 'react';
 
 export type TripType = 'roundtrip' | 'oneway';
 export type CabinClass = 'Economy' | 'Business';
-
-type AirportNode = { code: string; name: string };
-type CityNode = { cityId: string; cityName: string; airports: AirportNode[] };
-type CountryNode = {
-  countryId: string;
-  countryCode: string;
-  countryName: string;
-  cities: CityNode[];
-};
 
 export interface FlightSearchValues {
   tripType: TripType;
@@ -37,32 +27,34 @@ export interface FlightSearchValues {
   cabinClass: CabinClass;
 }
 
-/** ===== Mock / API 切換 ===== */
-const USE_MOCK = true;
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3007';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3007';
+const TODAY = new Date().toISOString().slice(0, 10);
 
-/** ===== 公用 FieldShell（吃 globals token） ===== */
-const FieldShell: React.FC<{
+/* ---------- UI wrappers ---------- */
+const FieldShell = ({
+  label,
+  icon,
+  children,
+  showChevron = true,
+}: {
   label: string;
   icon: JSX.Element;
   children: React.ReactNode;
   showChevron?: boolean;
-}> = ({ label, icon, children, showChevron = true }) => (
+}) => (
   <div className="flex flex-col gap-1">
     <span className="text-xs text-[color:var(--sw-primary)]/70">{label}</span>
-    <div className="relative h-12 w-full flex items-center gap-2 rounded-[var(--sw-r-md)] bg-[color:var(--sw-white)] border border-[color:var(--sw-accent)] px-3">
-      <span className="text-[color:var(--sw-primary)] pointer-events-none">
-        {icon}
-      </span>
+    <div className="relative h-12 flex items-center gap-2 rounded-[var(--sw-r-md)] bg-[color:var(--sw-white)] border border-[color:var(--sw-accent)] px-3">
+      <span className="text-[color:var(--sw-primary)]">{icon}</span>
       <div className="flex-1">{children}</div>
       {showChevron && (
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--sw-primary)]" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--sw-primary)]" />
       )}
     </div>
   </div>
 );
 
-/** ===== 簡易 Modal ===== */
 function Modal({
   open,
   onClose,
@@ -76,24 +68,13 @@ function Modal({
 }) {
   if (!open) return null;
   return (
-    <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center"
-      aria-modal
-      role="dialog"
-    >
-      <div
-        className="absolute inset-0 bg-black/30"
-        onClick={onClose}
-        aria-hidden
-      />
-      <div className="relative w-[min(680px,92vw)] rounded-[var(--sw-r-lg)] bg-[color:var(--sw-white)] shadow-xl border border-[color:var(--sw-accent)]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--sw-grey)]/50">
-          <div className="sw-h5 text-[color:var(--sw-primary)]">
-            {title ?? '選擇地點'}
-          </div>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative w-[min(680px,92vw)] rounded-[var(--sw-r-lg)] bg-white shadow-xl border border-[color:var(--sw-accent)]">
+        <div className="flex items-center justify-between px-4 py-2 border-b">
+          <div className="font-semibold">{title ?? '選擇機場'}</div>
           <button
             onClick={onClose}
-            aria-label="關閉"
             className="sw-btn sw-btn--grey-square h-8 px-2 py-1"
           >
             <X className="w-4 h-4" />
@@ -105,117 +86,113 @@ function Modal({
   );
 }
 
-type Level = 'country' | 'city' | 'airport';
-
-/** ===== 地點挑選器（國家→城市→機場） ===== */
-function LocationPicker({
-  locations,
+/* ---------- 搜尋式挑選器 ---------- */
+function AirportSearchPicker({
   onConfirm,
   onCancel,
-  initial,
+  hint,
 }: {
-  locations: CountryNode[];
-  onConfirm: (pickedIata: string) => void;
+  onConfirm: (pick: { iata: string; label: string }) => void;
   onCancel: () => void;
-  /** 若要預設某條路徑，例如 { countryId: '1', cityId:'10' } */
-  initial?: { countryId?: string; cityId?: string };
+  hint?: string;
 }) {
-  const [level, setLevel] = useState<Level>('country');
-  const [countryId, setCountryId] = useState(initial?.countryId ?? '');
-  const [cityId, setCityId] = useState(initial?.cityId ?? '');
+  const [q, setQ] = useState(hint ?? '');
+  const [list, setList] = useState<
+    Array<{
+      id: string;
+      iata: string;
+      name: string;
+      city: string;
+      countryCode: string;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (initial?.countryId) setLevel(initial.cityId ? 'airport' : 'city');
-  }, [initial?.countryId, initial?.cityId]);
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3007';
 
-  const country = locations.find((c) => c.countryId === countryId);
-  const cities = country?.cities ?? [];
-  const city = cities.find((ci) => ci.cityId === cityId);
-  const airports = city?.airports ?? [];
-
-  const goBack = () => {
-    if (level === 'airport') setLevel('city');
-    else if (level === 'city') setLevel('country');
-  };
+  // --- 自動搜尋 + debounce ---
+  React.useEffect(() => {
+    const t = setTimeout(async () => {
+      if (!q.trim()) {
+        setList([]);
+        return;
+      }
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `${API_BASE}/api/flight-search/airports?query=${encodeURIComponent(q)}`
+        );
+        const json = await res.json();
+        setList(json);
+      } catch (e) {
+        console.error('airports search failed', e);
+        setList([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [q]);
 
   return (
-    <div className="space-y-4">
-      {/* 麵包屑 */}
-      <div className="flex items-center gap-2 text-sm text-[color:var(--sw-primary)]/70">
-        <button
-          className="inline-flex items-center gap-1 hover:underline disabled:opacity-50"
-          onClick={goBack}
-          disabled={level === 'country'}
-        >
-          <ChevronLeft className="w-4 h-4" />
-          返回
-        </button>
-        <span className="mx-1">|</span>
-        <span>
-          {country ? country.countryName : '選國家'}
-          {country && level !== 'country' ? ' › ' : ''}
-          {city ? city.cityName : level === 'airport' ? '選城市' : ''}
-        </span>
+    <div className="space-y-4 text-[color:var(--sw-primary)]">
+      {/* 搜尋框 */}
+      <div className="flex items-center border border-[color:var(--sw-accent)] rounded-[var(--sw-r-md)] px-3 py-2 focus-within:shadow-[0_0_0_2px_var(--sw-accent)] transition-shadow">
+        <Plane className="w-4 h-4 text-[color:var(--sw-primary)]/70 mr-2" />
+        <input
+          autoFocus
+          className="flex-1 bg-transparent outline-none text-[color:var(--sw-primary)] placeholder:text-[color:var(--sw-primary)]/50"
+          placeholder="輸入城市、機場或 IATA 代碼，例如：TPE、Tokyo、NRT"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
       </div>
 
       {/* 清單 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[48vh] overflow-auto pr-1">
-        {level === 'country' &&
-          locations.map((c) => (
-            <button
-              key={c.countryId}
-              className="sw-btn sw-btn--grey-square justify-start"
-              onClick={() => {
-                setCountryId(c.countryId);
-                setLevel('city');
-              }}
-            >
-              {c.countryName}
-            </button>
-          ))}
-
-        {level === 'city' &&
-          cities.map((ci) => (
-            <button
-              key={ci.cityId}
-              className="sw-btn sw-btn--grey-square justify-start"
-              onClick={() => {
-                setCityId(ci.cityId);
-                setLevel('airport');
-              }}
-            >
-              {ci.cityName}
-            </button>
-          ))}
-
-        {level === 'airport' &&
-          airports.map((ap) => (
-            <button
-              key={ap.code}
-              className="sw-btn sw-btn--gold-square justify-between"
-              onClick={() => onConfirm(ap.code)}
-              title={`${ap.code} — ${ap.name}`}
-            >
-              <span>✈️ {ap.code}</span>
-              <span className="sw-p2">{ap.name}</span>
-            </button>
-          ))}
+      <div className="max-h-[48vh] overflow-auto space-y-2">
+        {loading && (
+          <div className="text-sm text-[color:var(--sw-primary)]/70 px-2">
+            查詢中…
+          </div>
+        )}
+        {!loading && list.length === 0 && q && (
+          <div className="text-sm text-[color:var(--sw-primary)]/70 px-2">
+            找不到符合的機場
+          </div>
+        )}
+        {list.map((a) => (
+          <button
+            key={`${a.id}-${a.iata}`}
+            onClick={() =>
+              onConfirm({ iata: a.iata, label: `${a.iata} — ${a.name}` })
+            }
+            className="w-full flex items-center justify-between px-4 py-3 border border-[color:var(--sw-grey)] rounded-[var(--sw-r-md)] hover:border-[color:var(--sw-accent)] hover:bg-[color:var(--sw-accent)]/10 transition"
+          >
+            <div className="font-semibold text-[color:var(--sw-primary)]">
+              {a.iata} · {a.city}
+            </div>
+            <div className="text-sm text-[color:var(--sw-primary)]/70">
+              {a.name}（{a.countryCode}）
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* 底部動作 */}
-      <div className="flex justify-end gap-2 pt-2">
-        <button className="sw-btn sw-btn--grey-square" onClick={onCancel}>
+      {/* 底部按鈕 */}
+      <div className="flex justify-end pt-2">
+        <button
+          onClick={onCancel}
+          className="sw-btn sw-btn--grey-square hover:bg-[color:var(--sw-grey)]/30 transition"
+        >
           取消
         </button>
-        {/* 選機場時按鈕等於直接點選項確定，所以這裡不用再放「確認」 */}
       </div>
     </div>
   );
 }
 
-/** ===== 主卡片 ===== */
-const TODAY = new Date().toISOString().slice(0, 10);
-
+/* ---------- 主元件 ---------- */
 export default function FlightSearchCard() {
   const router = useRouter();
 
@@ -229,81 +206,17 @@ export default function FlightSearchCard() {
     cabinClass: 'Economy',
   });
 
-  const [locations, setLocations] = useState<CountryNode[]>([]);
-  const [loadingLoc, setLoadingLoc] = useState(true);
+  // 顯示用標籤（避免還要再查一次機場名稱）
+  const [originLabel, setOriginLabel] = useState('');
+  const [destLabel, setDestLabel] = useState('');
 
-  // Modal 控制
+  // Modal
   const [openOriginPicker, setOpenOriginPicker] = useState(false);
   const [openDestPicker, setOpenDestPicker] = useState(false);
 
-  // 讓日期 input 可程式開啟
+  // 日期 input
   const departRef = useRef<HTMLInputElement | null>(null);
   const returnRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      setLoadingLoc(true);
-      if (USE_MOCK) {
-        const mock: { countries: CountryNode[] } = {
-          countries: [
-            {
-              countryId: '1',
-              countryCode: 'TW',
-              countryName: 'Taiwan',
-              cities: [
-                {
-                  cityId: '10',
-                  cityName: 'Taipei',
-                  airports: [
-                    { code: 'TPE', name: '台北桃園國際機場' },
-                    { code: 'TSA', name: '台北松山機場' },
-                  ],
-                },
-                {
-                  cityId: '11',
-                  cityName: 'Kaohsiung',
-                  airports: [{ code: 'KHH', name: '高雄國際機場' }],
-                },
-              ],
-            },
-            {
-              countryId: '2',
-              countryCode: 'JP',
-              countryName: 'Japan',
-              cities: [
-                {
-                  cityId: '20',
-                  cityName: 'Tokyo',
-                  airports: [
-                    { code: 'NRT', name: '成田國際機場' },
-                    { code: 'HND', name: '羽田機場' },
-                  ],
-                },
-                {
-                  cityId: '21',
-                  cityName: 'Osaka',
-                  airports: [{ code: 'KIX', name: '關西國際機場' }],
-                },
-              ],
-            },
-          ],
-        };
-        setLocations(mock.countries);
-        // 給個預設（可移除）
-        setValues((v) => ({ ...v, origin: 'TPE', destination: 'NRT' }));
-      } else {
-        const res = await fetch(
-          `${API_BASE.replace(/\/$/, '')}/api/meta/locations`,
-          {
-            cache: 'no-store',
-          }
-        );
-        const json = await res.json();
-        setLocations(json.countries || []);
-      }
-      setLoadingLoc(false);
-    })();
-  }, []);
 
   const canSubmit = useMemo(() => {
     const base =
@@ -320,12 +233,16 @@ export default function FlightSearchCard() {
   ) => setValues((prev) => ({ ...prev, [key]: value }));
 
   const swapOD = () =>
-    setValues((v) => ({ ...v, origin: v.destination, destination: v.origin }));
+    setValues((v) => {
+      // 同步交換標籤
+      setOriginLabel(destLabel);
+      setDestLabel(originLabel);
+      return { ...v, origin: v.destination, destination: v.origin };
+    });
 
   const openPicker = (which: 'depart' | 'return') => {
     const el = which === 'depart' ? departRef.current : returnRef.current;
-    if (el?.showPicker) el.showPicker();
-    else el?.focus();
+    el?.showPicker ? el.showPicker() : el?.focus();
   };
 
   const setTripType = (tt: TripType) => {
@@ -347,21 +264,9 @@ export default function FlightSearchCard() {
         ? { returnDate: values.returnDate }
         : {}),
       passengers: String(values.passengers),
-      cabinClass: values.cabinClass,
+      cabin: values.cabinClass,
     });
     router.push(`/flight-booking?${params.toString()}`);
-  };
-
-  // 幫 IATA 顯示對應名稱
-  const findAirportLabel = (iata?: string) => {
-    if (!iata) return '';
-    for (const co of locations) {
-      for (const ci of co.cities) {
-        const ap = ci.airports.find((a) => a.code === iata);
-        if (ap) return `${ap.code} — ${ap.name}`;
-      }
-    }
-    return iata;
   };
 
   return (
@@ -374,11 +279,7 @@ export default function FlightSearchCard() {
       >
         {/* Tabs */}
         <div className="py-2 flex justify-center bg-[color:var(--sw-accent)]">
-          <div
-            role="tablist"
-            aria-label="行程類型"
-            className="inline-flex rounded-full bg-[color:var(--sw-primary)]/10 p-1"
-          >
+          <div className="inline-flex rounded-full bg-[color:var(--sw-primary)]/10 p-1">
             <button
               onClick={() => setTripType('roundtrip')}
               className={clsx(
@@ -406,69 +307,61 @@ export default function FlightSearchCard() {
 
         {/* 表單 */}
         <div className="px-4 md:px-6 pt-4 pb-5">
-          {/* 第 1 排：起點 | 交換 | 到達 */}
+          {/* 第1排：起點 | 交換 | 到達 */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
-            {/* 起點（點一下開 Modal） */}
+            {/* 起點 */}
             <div className="md:col-span-5">
-              <FieldShell
-                label="起點"
-                icon={
-                  <Plane className="w-4 h-4 text-[color:var(--sw-primary)]" />
-                }
-              >
+              <FieldShell label="起點" icon={<Plane className="w-4 h-4" />}>
                 <button
                   type="button"
-                  disabled={loadingLoc}
                   onClick={() => setOpenOriginPicker(true)}
                   className="w-full text-left bg-transparent outline-none"
-                  title="點擊選擇起點"
                 >
                   {values.origin ? (
                     <span className="text-[color:var(--sw-primary)]">
-                      {findAirportLabel(values.origin)}
+                      {originLabel || values.origin}
                     </span>
                   ) : (
                     <span className="text-[color:var(--sw-primary)]/50">
-                      選擇國家 / 城市 / 機場
+                      搜尋城市 / 機場 / IATA
                     </span>
                   )}
                 </button>
               </FieldShell>
             </div>
 
-            {/* 交換 */}
-            <div className="hidden md:flex md:col-span-2 items-end justify-center">
+            {/* 交換按鈕 */}
+            <div className="md:col-span-2 flex items-end md:items-center justify-center">
               <button
+                type="button"
                 onClick={swapOD}
-                title="交換起點與到達"
-                className="h-12 w-12 rounded-full border border-[color:var(--sw-accent)] bg-[color:var(--sw-white)] text-[color:var(--sw-primary)]/80 hover:text-[color:var(--sw-primary)] flex items-center justify-center shadow-sm"
+                aria-label="交換出發與到達"
+                className={clsx(
+                  'h-12 w-12 rounded-full border border-[color:var(--sw-accent)]',
+                  'bg-[color:var(--sw-white)] hover:bg-[color:var(--sw-accent)]/10',
+                  'flex items-center justify-center transition'
+                )}
+                title="交換出發與到達"
               >
-                <ArrowLeftRight className="w-5 h-5" />
+                <ArrowLeftRight className="w-5 h-5 text-[color:var(--sw-primary)]" />
               </button>
             </div>
 
-            {/* 到達（點一下開 Modal） */}
+            {/* 到達 */}
             <div className="md:col-span-5">
-              <FieldShell
-                label="到達"
-                icon={
-                  <Plane className="w-4 h-4 text-[color:var(--sw-primary)]" />
-                }
-              >
+              <FieldShell label="到達" icon={<Plane className="w-4 h-4" />}>
                 <button
                   type="button"
-                  disabled={loadingLoc}
                   onClick={() => setOpenDestPicker(true)}
                   className="w-full text-left bg-transparent outline-none"
-                  title="點擊選擇到達"
                 >
                   {values.destination ? (
                     <span className="text-[color:var(--sw-primary)]">
-                      {findAirportLabel(values.destination)}
+                      {destLabel || values.destination}
                     </span>
                   ) : (
                     <span className="text-[color:var(--sw-primary)]/50">
-                      選擇國家 / 城市 / 機場
+                      搜尋城市 / 機場 / IATA
                     </span>
                   )}
                 </button>
@@ -476,7 +369,7 @@ export default function FlightSearchCard() {
             </div>
           </div>
 
-          {/* 第 2 排：日期 / 乘客 / 艙等 */}
+          {/* 第2排：日期 / 乘客 / 艙等 */}
           <div className="mt-3 grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
             <div className="md:col-span-6">
               <FieldShell
@@ -489,13 +382,13 @@ export default function FlightSearchCard() {
                     onClick={() => openPicker('depart')}
                     className="flex items-center gap-2"
                   >
-                    <span className="text-xs text-[color:var(--sw-primary)]/70">
+                    <span className="text-xs text-[color:var(--sw-primary)] font-medium">
                       出發
                     </span>
                     <input
                       ref={departRef}
                       type="date"
-                      className="bg-[color:var(--sw-white)] text-[color:var(--sw-primary)] outline-none"
+                      className="bg-transparent outline-none text-[color:var(--sw-primary)] font-semibold"
                       value={values.departDate}
                       min={TODAY}
                       onChange={(e) => handle('departDate', e.target.value)}
@@ -507,13 +400,13 @@ export default function FlightSearchCard() {
                     disabled={values.tripType === 'oneway'}
                     className="flex items-center gap-2 disabled:opacity-50"
                   >
-                    <span className="text-xs text-[color:var(--sw-primary)]/70">
+                    <span className="text-xs text-[color:var(--sw-primary)] font-medium">
                       回程
                     </span>
                     <input
                       ref={returnRef}
                       type="date"
-                      className="bg-[color:var(--sw-white)] text-[color:var(--sw-primary)] outline-none"
+                      className="bg-transparent outline-none text-[color:var(--sw-primary)] font-semibold disabled:text-[color:var(--sw-primary)]/50"
                       value={values.returnDate ?? ''}
                       min={values.departDate || TODAY}
                       onChange={(e) => handle('returnDate', e.target.value)}
@@ -527,7 +420,7 @@ export default function FlightSearchCard() {
             <div className="md:col-span-3">
               <FieldShell label="乘客" icon={<User className="w-4 h-4" />}>
                 <select
-                  className="w-full bg-[color:var(--sw-white)] text-[color:var(--sw-primary)] outline-none"
+                  className="w-full bg-transparent outline-none text-[color:var(--sw-primary)] font-semibold"
                   value={values.passengers}
                   onChange={(e) => handle('passengers', Number(e.target.value))}
                 >
@@ -543,7 +436,7 @@ export default function FlightSearchCard() {
             <div className="md:col-span-3">
               <FieldShell label="艙等" icon={<Armchair className="w-4 h-4" />}>
                 <select
-                  className="w-full bg-[color:var(--sw-white)] text-[color:var(--sw-primary)] outline-none"
+                  className="w-full bg-transparent outline-none text-[color:var(--sw-primary)] font-semibold"
                   value={values.cabinClass}
                   onChange={(e) =>
                     handle('cabinClass', e.target.value as CabinClass)
@@ -564,7 +457,7 @@ export default function FlightSearchCard() {
               onClick={handleSubmit}
               className={clsx(
                 'sw-btn sw-btn--gold-primary rounded-full',
-                !canSubmit && 'sw-btn--gold-disabled'
+                !canSubmit && 'opacity-60 cursor-not-allowed'
               )}
             >
               <Ticket className="w-4 h-4 text-[color:var(--sw-primary)] mr-2" />
@@ -574,33 +467,35 @@ export default function FlightSearchCard() {
         </div>
       </div>
 
-      {/* === 起點 Modal === */}
+      {/* 起點 Modal */}
       <Modal
         open={openOriginPicker}
         onClose={() => setOpenOriginPicker(false)}
         title="選擇起點"
       >
-        <LocationPicker
-          locations={locations}
+        <AirportSearchPicker
+          hint="TPE"
           onCancel={() => setOpenOriginPicker(false)}
-          onConfirm={(iata) => {
+          onConfirm={({ iata, label }) => {
             setValues((v) => ({ ...v, origin: iata }));
+            setOriginLabel(label);
             setOpenOriginPicker(false);
           }}
         />
       </Modal>
 
-      {/* === 到達 Modal === */}
+      {/* 到達 Modal */}
       <Modal
         open={openDestPicker}
         onClose={() => setOpenDestPicker(false)}
         title="選擇到達"
       >
-        <LocationPicker
-          locations={locations}
+        <AirportSearchPicker
+          hint="NRT"
           onCancel={() => setOpenDestPicker(false)}
-          onConfirm={(iata) => {
+          onConfirm={({ iata, label }) => {
             setValues((v) => ({ ...v, destination: iata }));
+            setDestLabel(label);
             setOpenDestPicker(false);
           }}
         />
