@@ -7,12 +7,16 @@ import "dotenv/config";
 // 載入各種路由
 import { requireAuth } from "./middleware/jwt.js";
 import apiRouter from "./routes/index.js"
+//若晴測試會員
+import authRoutes from "./routes/auth.routes.js";
 // 周邊工具安裝：zod 驗證、session 們
 import { z } from "zod";
 import session from "express-session";
 import sessionFileStore from "session-file-store";
 import cors from "cors";
 import { log } from "console";
+
+
 
 
 const FileStore = sessionFileStore(session);
@@ -43,6 +47,10 @@ app.set("json replacer", (_key: any, value: { toString: () => any; }) =>
 app.get("/", (req: Request, res: Response) => { 
   res.send("歡迎來到 Express + TS !"); 
 }); 
+
+//若晴測試中
+// 登入／註冊／驗證 路由
+app.use("/api/auth", authRoutes);
 
 // 測試 Prisma 與 Create
 app.use("/api", apiRouter);
