@@ -4,19 +4,19 @@ import * as React from 'react';
 import Calendar, { DateRange } from './components/Calendar';
 import HotelCard from './components/HotelCard';
 import SearchBar from './components/SearchBar';
-import { HotelCardData } from './interfaces/HotelCardData';
+// 🌟 修正導入路徑，確保使用 interfaces/constants.ts 中的 HotelCardData
+import { HotelCardData } from './interfaces/constants';
 
 export default function Page() {
+  // 數據保持本地定義，並使用 HotelCardData
   const hotels: HotelCardData[] = [
     {
       id: 1,
       name: 'Toyoko Inn Narita Airport',
       location: 'Tokyo, Japan',
-      distance: '距離市中心 0.1 公里',
+      distance: '距離機場約 0.1 公里',
       rating: 4.6,
       price: 3500,
-      //currency: 'NT$',
-      //priceUnit: '每晚',
       image: '/images/hotel/room1.jpeg',
     },
     {
@@ -26,8 +26,6 @@ export default function Page() {
       distance: '距離機場約 0.3公里',
       rating: 4.9,
       price: 5500,
-      //currency: 'NT$',
-      //priceUnit: '每晚',
       image: '/images/hotel/room2.jpeg',
     },
     {
@@ -36,9 +34,7 @@ export default function Page() {
       location: 'Tokyo, Japan',
       distance: '第二航廈・機場內',
       rating: 4.7,
-      price: 3800,
-      //currency: 'NT$',
-      //priceUnit: '每晚',
+      price: 10000,
       image: '/images/hotel/room3.jpeg',
     },
     {
@@ -47,9 +43,7 @@ export default function Page() {
       location: 'Tokyo, Japan',
       distance: '距離機場約 0.2公里',
       rating: 4.8,
-      price: 4500,
-      //currency: 'NT$',
-      //priceUnit: '每晚',
+      price: 1200,
       image: '/images/hotel/room4.jpeg',
     },
     {
@@ -58,9 +52,7 @@ export default function Page() {
       location: 'Tokyo, Japan',
       distance: '第二航廈・機場內',
       rating: 4.8,
-      price: 3000,
-      //currency: 'NT$',
-      //priceUnit: '每晚',
+      price: 18000,
       image: '/images/hotel/room5.jpeg',
     },
   ];
@@ -102,13 +94,6 @@ export default function Page() {
               </div>
             ))}
           </div>
-          {/* 說明：
-              - auto-fit + minmax(220px,1fr): 卡片最小寬 220px，自動撐滿空間
-              - gap-4: 卡片間距固定
-              - w-full: 卡片撐滿格子
-              - transition-all: 卡片縮放平滑
-              - 效果：小螢幕最少 2 張，中間 3~4 張，桌面最多 5 張，間距自然
-          */}
         </div>
       </div>
     </div>

@@ -1,25 +1,20 @@
 'use client';
 
 import { Calendar as CalendarIcon, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Calendar, { DateRange } from './Calendar';
 
 interface SearchBarProps {
   selectedRange?: DateRange;
   onDateChange?: (range: DateRange | undefined) => void;
-  onSearchChange?: (params: {
-    checkIn: Date | undefined;
-    checkOut: Date | undefined;
-    adults: number;
-    rooms: number;
-  }) => void;
 }
 
 export default function SearchBar({
   selectedRange,
   onDateChange,
-  onSearchChange,
 }: SearchBarProps) {
+  const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
   const [adults, setAdults] = useState(2);
@@ -32,22 +27,24 @@ export default function SearchBar({
     return `${month} ${day}`;
   };
 
+  // 修改這裡：選完日期不自動關閉
   const handleDateSelect = (range: DateRange | undefined) => {
     if (onDateChange) onDateChange(range);
-    if (range?.from && range?.to) {
-      setShowCalendar(false);
-    }
+    // 不再自動關閉日曆
   };
 
   const handleSearch = () => {
-    const searchParams = {
-      checkIn: selectedRange?.from,
-      checkOut: selectedRange?.to,
-      adults,
-      rooms,
-    };
-    console.log('搜尋條件：', searchParams);
-    if (onSearchChange) onSearchChange(searchParams);
+    if (!selectedRange?.from || !selectedRange?.to) {
+      alert('請選擇入住與退房日期');
+      return;
+    }
+
+    const checkin = selectedRange.from.toISOString().split('T')[0];
+    const checkout = selectedRange.to.toISOString().split('T')[0];
+
+    router.push(
+      `/search?checkin=${checkin}&checkout=${checkout}&adults=${adults}&rooms=${rooms}`
+    );
   };
 
   return (

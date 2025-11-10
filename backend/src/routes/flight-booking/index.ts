@@ -1,6 +1,6 @@
 import { Router } from "express";
+import { prisma } from "../../utils/prisma-only.js"
 import moment from "moment-timezone";
-import { prisma } from "../../utils/prisma-only.js";
 
 const router = Router();
 
