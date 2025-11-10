@@ -22,6 +22,7 @@ export default function FlightCard({
   data,
   dir, // 'outbound' | 'inbound'
   isSelected = false,
+  isDisabled = false,
   onBook,
   onCancel,
 }: {
@@ -29,6 +30,8 @@ export default function FlightCard({
   dir: 'outbound' | 'inbound';
   /** 是否為已選中的航班（由外部控制） */
   isSelected?: boolean;
+  /** 已選了同方向的另一張票時，這張暫時不能點（由外部控制） */
+  isDisabled?: boolean;
   /** 點「訂購」要做的事（通常進票價頁） */
   onBook: (f: FlightItem) => void;
   /** 已選狀態下點「取消」 */
@@ -36,8 +39,18 @@ export default function FlightCard({
 }) {
   const { flightNo, leg, price, currency } = data;
 
+  // 只有「不是已選中」且被鎖定時才視為不可互動
+  const locked = !isSelected && isDisabled;
+
   return (
-    <div className="rounded-2xl bg-[var(--sw-primary)] text-[var(--sw-white)] p-6 shadow-[var(--sw-shadow-1)]">
+    <div
+      className={[
+        'rounded-2xl p-6 shadow-[var(--sw-shadow-1)]',
+        'bg-[var(--sw-primary)] text-[var(--sw-white)]',
+        locked ? 'opacity-60' : '',
+      ].join(' ')}
+      aria-disabled={locked ? true : undefined}
+    >
       <div className="text-[12px] opacity-70 mb-2">{flightNo}</div>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6">
@@ -99,7 +112,18 @@ export default function FlightCard({
               取消
             </button>
           </>
+        ) : locked ? (
+          <button
+            type="button"
+            disabled
+            aria-disabled
+            className="rounded-full bg-[color:var(--sw-accent)]/40 text-[var(--sw-black)]/60 font-semibold px-5 py-2 cursor-not-allowed"
+            title="請先取消已選航班"
+          >
+            已選擇其他航班
+          </button>
         ) : (
+          // 可訂購
           <button
             type="button"
             className="rounded-full bg-[color:var(--sw-accent)] text-[var(--sw-black)] font-semibold px-5 py-2 hover:opacity-90"
