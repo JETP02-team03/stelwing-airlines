@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { FareDetailsFromStore } from '../components/FareDetailsModal';
 import FlightInfoBar from '../components/FlightInfoBar';
 import FareBundleCard, { FareBundle } from './components/FareBundleCard';
 
@@ -115,6 +116,8 @@ export default function FarePage() {
             />
           ))}
         </div>
+        {/* 掛 store 版本的彈窗（跨頁可用） */}
+        <FareDetailsFromStore />
       </main>
 
       {open && selected && (
