@@ -178,7 +178,7 @@ export default function LoginPage() {
       if (res.ok) {
         localStorage.setItem("token", data.token);
         setMessage("登入成功！即將導向會員中心");
-        setTimeout(() => router.push("/member-center/profile"), 1000);
+        setTimeout(() => router.push("/member-center"), 1000);
       } else {
         setMessage(data.message || "帳號或密碼錯誤");
       }

@@ -9,6 +9,7 @@ import { requireAuth } from "./middleware/jwt.js";
 import apiRouter from "./routes/index.js";
 //若晴測試會員
 import authRoutes from "./routes/auth.routes.js";
+import memberRoutes from "./routes/member.routes.js"; 
 // 周邊工具安裝：zod 驗證、session 們
 import { z } from "zod";
 import session from "express-session";
@@ -59,6 +60,7 @@ app.get("/", (req: Request, res: Response) => {
 //若晴測試中
 // 登入／註冊／驗證 路由
 app.use("/api/auth", authRoutes);
+app.use("/api/member", memberRoutes);
 
 // 測試 Prisma 與 Create
 app.use("/api", apiRouter);

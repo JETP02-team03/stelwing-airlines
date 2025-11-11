@@ -132,40 +132,39 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 //     res.status(500).json({ message: "伺服器錯誤", error: err });
 //   }
 // });
-router.post("/register", async (req, res) => {
+router.post("/register", async (req: Request, res: Response) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  if (!firstName || !email || !password) {
+    return res.status(400).json({ message: "缺少必要欄位" });
+  }
+
   try {
-    const { firstName, lastName, email, password } = req.body
+    const existing = await prisma.member.findUnique({ where: { email } });
+    if (existing) return res.status(409).json({ message: "此信箱已註冊" });
 
-    // ✅ 改這裡：改為檢查 firstName, email, password
-    if (!firstName || !email || !password) {
-      return res.status(400).json({ message: "缺少必要欄位" })
-    }
-
-    const existing = await prisma.member.findUnique({ where: { email } })
-    if (existing) {
-      return res.status(409).json({ message: "此信箱已註冊" })
-    }
-
-    const hashed = await bcrypt.hash(password, 10)
-
-    await prisma.member.create({
+    const hashed = await bcrypt.hash(password, 10);
+    const newUser = await prisma.member.create({
       data: {
         firstName,
-        lastName,
+        lastName: lastName || "",
         email,
         password: hashed,
       },
-    })
+    });
 
-    res.status(201).json({ message: "註冊成功" })
+    res.status(201).json({
+      message: "註冊成功",
+      memberId: newUser.memberId.toString(),
+    });
   } catch (err) {
-    console.error("❌ Register 錯誤內容:", err)
+    console.error("❌ Register error:", err);
     if (err.code === "P2002") {
-      return res.status(409).json({ message: "此信箱已註冊" })
+      return res.status(409).json({ message: "此信箱已註冊" });
     }
-    res.status(500).json({ message: "伺服器錯誤" })
+    res.status(500).json({ message: "伺服器錯誤" });
   }
-})
+});
 
 
 // ✅ 2️⃣ 登入
@@ -203,7 +202,7 @@ const token = jwt.sign(
 });
 
 // ✅ 3️⃣ 驗證 token
-router.get("/verify", (req: Request, res: Response) => {
+router.get("/verify", async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
     return res.status(401).json({ ok: false, message: "未提供 token" });
@@ -211,10 +210,128 @@ router.get("/verify", (req: Request, res: Response) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    res.json({ ok: true, user: decoded });
-  } catch {
+    const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number; email: string };
+
+    // ✅ 新增：查資料庫回傳完整會員資料
+    const member = await prisma.member.findUnique({
+      where: { memberId: BigInt(decoded.memberId) },
+      select: {
+        memberId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        membershipLevel: true,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({ ok: false, message: "找不到會員" });
+    }
+
+    res.json({ ok: true, member });
+  } catch (err) {
     res.status(401).json({ ok: false, message: "token 無效或過期" });
+  }
+});
+
+// ✅ 取得頭像圖庫（給前端選擇使用）
+router.get("/avatars", async (req: Request, res: Response) => {
+  try {
+    const avatars = await prisma.avatarOption.findMany({
+      where: { isActive: true },
+      select: { avatarId: true, imagePath: true, label: true },
+    });
+    res.json({ ok: true, avatars });
+  } catch (err) {
+    console.error("❌ Fetch avatars error:", err);
+    res.status(500).json({ ok: false, message: "伺服器錯誤" });
+  }
+});
+
+// ✅ 更新會員頭像
+router.put("/update-avatar", async (req: Request, res: Response) => {
+  const { memberId, avatarChoice } = req.body;
+  if (!memberId || !avatarChoice)
+    return res.status(400).json({ ok: false, message: "缺少必要參數" });
+
+  try {
+    await prisma.member.update({
+      where: { memberId: BigInt(memberId) },
+      data: { avatarChoice },
+    });
+    res.json({ ok: true, message: "頭像更新成功" });
+  } catch (err) {
+    console.error("❌ Update avatar error:", err);
+    res.status(500).json({ ok: false, message: "伺服器錯誤" });
+  }
+});
+
+// ✅ 更新會員個人資料
+router.put("/update-profile", async (req: Request, res: Response) => {
+  const { memberId, gender, birthDate, phoneNumber, address } = req.body;
+
+  if (!memberId) return res.status(400).json({ ok: false, message: "缺少 memberId" });
+
+  try {
+    const updated = await prisma.member.update({
+      where: { memberId: BigInt(memberId) },
+      data: {
+        gender: gender || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        phoneNumber: phoneNumber || null,
+        address: address || null,
+      },
+      select: {
+        memberId: true,
+        gender: true,
+        birthDate: true,
+        phoneNumber: true,
+        address: true,
+      },
+    });
+
+    res.json({ ok: true, message: "會員資料已更新", member: updated });
+  } catch (err) {
+    console.error("❌ Update profile error:", err);
+    res.status(500).json({ ok: false, message: "伺服器錯誤" });
+  }
+});
+
+// ✅ 變更密碼
+router.put("/update-password", async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ ok: false, message: "未提供 token" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number };
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ ok: false, message: "缺少欄位" });
+    }
+
+    const member = await prisma.member.findUnique({
+      where: { memberId: BigInt(decoded.memberId) },
+    });
+
+    if (!member) return res.status(404).json({ ok: false, message: "找不到會員" });
+
+    const match = await bcrypt.compare(oldPassword, member.password);
+    if (!match) return res.status(401).json({ ok: false, message: "舊密碼錯誤" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.member.update({
+      where: { memberId: BigInt(decoded.memberId) },
+      data: { password: hashed },
+    });
+
+    res.json({ ok: true, message: "密碼更新成功" });
+  } catch (err) {
+    console.error("❌ Update password error:", err);
+    res.status(500).json({ ok: false, message: "伺服器錯誤" });
   }
 });
 
