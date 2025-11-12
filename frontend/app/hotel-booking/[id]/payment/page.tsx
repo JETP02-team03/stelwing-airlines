@@ -8,7 +8,8 @@ export default function PaymentPage() {
 
   const handlePayment = (formData: FormDataType) => {
     // 模擬付款成功
-    router.push(`/hotel-booking/1/payment/success`);
+    const hotelId = localStorage.getItem('booking_selectedHotelId') || '1';
+    router.push(`/hotel-booking/${hotelId}/payment/success`);
   };
 
   return (

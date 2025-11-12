@@ -4,19 +4,28 @@ import { Calendar, Moon, Users } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { mockHotelDetailData } from '../../../interfaces/HotelDetailData';
+import { convertHotelToDetailData } from '../../../interfaces/hotelUtils';
+import { allMockHotels } from '../../../interfaces/mockHotels';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  const hotel = mockHotelDetailData;
 
+  const bookingData =
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('booking_final') || '{}')
+      : {};
+  const hotel = bookingData.hotelId
+    ? convertHotelToDetailData(
+        allMockHotels.find((h) => h.id === bookingData.hotelId)
+      )
+    : mockHotelDetailData;
   const formData = {
-    checkIn: '2025-11-20',
-    checkOut: '2025-11-22',
-    nights: 2,
-    guests: 2,
+    checkIn: bookingData.checkIn || '2025-11-20',
+    checkOut: bookingData.checkOut || '2025-11-22',
+    nights: bookingData.nights || 2,
+    guests: bookingData.guests || 2,
   };
-
-  const totalPrice = hotel.price;
+  const totalPrice = (hotel?.price || 0) * (formData.nights || 1);
 
   return (
     <div className="min-h-screen bg-[url('/images/hotel/bg2.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/50 bg-blend-darken flex flex-col items-center justify-center px-6 py-12">
@@ -27,8 +36,8 @@ export default function PaymentSuccessPage() {
         </p>
 
         <Image
-          src={hotel.images?.[1] || '/images/hotel/default.jpeg'}
-          alt={hotel.name}
+          src={hotel?.images?.[1] || '/images/hotel/default.jpeg'}
+          alt={hotel?.name || 'Hotel'}
           width={400}
           height={160}
           className="w-full h-40 object-cover rounded-lg mb-4"
@@ -37,11 +46,11 @@ export default function PaymentSuccessPage() {
         <div className="space-y-3 text-gray-700 text-sm mb-6 text-left">
           <div className="flex justify-between">
             <span>飯店名稱</span>
-            <span className="font-medium">{hotel.name}</span>
+            <span className="font-medium">{hotel?.name || '未知飯店'}</span>
           </div>
           <div className="flex justify-between">
             <span>房型</span>
-            <span>{hotel.roomType}</span>
+            <span>{hotel?.roomType || '標準房'}</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center gap-1">

@@ -9,6 +9,11 @@ import SearchBar from '../components/SearchBar';
 import { AmenityKey, MAX_PRICE, MIN_PRICE } from '../interfaces/constants';
 import { allMockHotels } from '../interfaces/mockHotels';
 
+const formatDateLocal = (date: Date) => {
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+};
+
 export default function HotelPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -18,8 +23,35 @@ export default function HotelPage() {
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<AmenityKey[]>([]);
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
-    undefined
+    () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('booking_search');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.checkin && parsed.checkout
+            ? { from: new Date(parsed.checkin), to: new Date(parsed.checkout) }
+            : undefined;
+        }
+      }
+      return undefined;
+    }
   );
+
+  const [guests, setGuests] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('booking_search');
+      return saved ? JSON.parse(saved).guests || 2 : 2;
+    }
+    return 2;
+  });
+
+  const [rooms, setRooms] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('booking_search');
+      return saved ? JSON.parse(saved).rooms || 1 : 1;
+    }
+    return 1;
+  });
 
   const hotelRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -49,9 +81,47 @@ export default function HotelPage() {
     });
   }, [priceMin, priceMax, selectedRatings, selectedAmenities]);
 
-  // 自動滾動到 highlight 的飯店
+  const updateLocalStorage = (
+    updates: Partial<{
+      checkin: string;
+      checkout: string;
+      guests: number;
+      rooms: number;
+    }>
+  ) => {
+    const existing = JSON.parse(localStorage.getItem('booking_search') || '{}');
+    localStorage.setItem(
+      'booking_search',
+      JSON.stringify({ ...existing, ...updates })
+    );
+  };
+
+  const handleDateChange = (range: DateRange | undefined) => {
+    setSelectedRange(range);
+    if (range?.from && range?.to) {
+      updateLocalStorage({
+        checkin: formatDateLocal(range.from),
+        checkout: formatDateLocal(range.to),
+        guests,
+        rooms,
+      });
+    }
+  };
+
+  const handleGuestsChange = (newGuests: number) => {
+    setGuests(newGuests);
+    updateLocalStorage({ guests: newGuests });
+  };
+
+  const handleRoomsChange = (newRooms: number) => {
+    setRooms(newRooms);
+    updateLocalStorage({ rooms: newRooms });
+  };
+
   useEffect(() => {
-    const highlightedHotelId = searchParams.get('highlight');
+    const highlightedHotelId =
+      searchParams.get('scrollToHotelId') ||
+      localStorage.getItem('scrollToHotelId');
     if (highlightedHotelId) {
       const id = parseInt(highlightedHotelId, 10);
       const el = hotelRefs.current[id];
@@ -80,7 +150,11 @@ export default function HotelPage() {
       <div className="flex flex-col w-full h-full bg-black/70 min-h-screen p-4 md:p-8">
         <SearchBar
           selectedRange={selectedRange}
-          onDateChange={setSelectedRange}
+          onDateChange={handleDateChange}
+          guests={guests}
+          onGuestsChange={handleGuestsChange}
+          rooms={rooms}
+          onRoomsChange={handleRoomsChange}
         />
 
         <div className="flex-1 flex flex-col md:flex-row w-full max-w-6xl mx-auto mt-4 md:mt-6">
@@ -101,13 +175,6 @@ export default function HotelPage() {
           </div>
 
           <main className="flex-1 overflow-y-auto space-y-6 px-4 md:px-8 flex flex-col items-center">
-            <button
-              onClick={() => setShowFilter(true)}
-              className="md:hidden mb-4 border rounded-md px-4 py-2 bg-white text-gray-800 font-bold w-full"
-            >
-              篩選條件
-            </button>
-
             {filteredHotels.length === 0 ? (
               <div className="text-center py-12 text-gray-300">
                 <p className="text-lg mb-4">沒有符合條件的飯店</p>
@@ -136,15 +203,6 @@ export default function HotelPage() {
                 </div>
               ))
             )}
-
-            <div className="flex justify-between mt-8 pb-6 w-full max-w-4xl">
-              <button
-                onClick={() => router.push('/hotel-booking')}
-                className="border border-[#D4A574] text-[#D4A574] px-6 py-2 rounded-full hover:bg-[#D4A574] hover:text-white transition-all font-semibold"
-              >
-                返回首頁
-              </button>
-            </div>
           </main>
         </div>
       </div>

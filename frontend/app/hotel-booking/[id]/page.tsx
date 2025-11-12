@@ -5,14 +5,18 @@ import { useParams, useRouter } from 'next/navigation';
 import * as React from 'react';
 import HotelDetailBookingCard from '../components/HotelDetailBookingCard';
 import HotelDetailContent from '../components/HotelDetailContent';
-import {
-  HotelDetailData,
-  mockHotelDetailData,
-} from '../interfaces/HotelDetailData';
+import { HotelDetailData } from '../interfaces/HotelDetailData';
+import { convertHotelToDetailData } from '../interfaces/hotelUtils';
+import { allMockHotels } from '../interfaces/mockHotels';
 
 const fetchHotelData = (id: string): HotelDetailData | null => {
-  if (id) return mockHotelDetailData;
-  return null;
+  const hotel = allMockHotels.find((h) => h.id === parseInt(id));
+  return hotel ? convertHotelToDetailData(hotel) : null;
+};
+
+const formatDateLocal = (date: Date) => {
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
 };
 
 export default function HotelDetailPage() {
@@ -28,10 +32,12 @@ export default function HotelDetailPage() {
       : {};
 
   const [formData, setFormData] = React.useState({
-    checkIn: savedSearch.checkin || '2025/12/24',
-    checkOut: savedSearch.checkout || '2025/12/27',
+    checkIn: savedSearch.checkin || formatDateLocal(new Date()),
+    checkOut:
+      savedSearch.checkout ||
+      formatDateLocal(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
     nights: 3,
-    guests: 2,
+    guests: savedSearch.guests || 2,
     name: '',
     phone: '',
     email: '',
@@ -139,7 +145,7 @@ export default function HotelDetailPage() {
             onClick={() => router.back()}
             className="text-[#D4A574] underline text-lg"
           >
-            ← 返回上一頁
+            上一步
           </button>
         </div>
       </div>

@@ -23,6 +23,8 @@ export default function HotelDetailBookingCard({
   onSubmit,
   isSubmitting,
 }: HotelDetailBookingCardProps) {
+  const totalPrice = hotel.price * formData.nights;
+
   return (
     <aside className="lg:w-80 flex-shrink-0">
       <div className="sticky top-10 bg-[#F7F7F7] p-6 rounded-lg shadow-xl border border-gray-200">
@@ -31,7 +33,7 @@ export default function HotelDetailBookingCard({
         <div className="flex justify-between items-end mb-4 border-b pb-4">
           <span className="text-sm text-gray-600">總金額 (含稅)</span>
           <span className="text-4xl font-extrabold text-[#303D49]">
-            ${hotel.price.toLocaleString()}
+            ${totalPrice.toLocaleString()}
           </span>
         </div>
 
@@ -112,7 +114,7 @@ export default function HotelDetailBookingCard({
         <div className="mt-6 border-t pt-4 space-y-2 text-sm">
           <div className="flex justify-between text-gray-600">
             <span>每晚價格</span>
-            <span>${(hotel.price / formData.nights).toLocaleString()}</span>
+            <span>${hotel.price.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>住宿晚數</span>
@@ -124,7 +126,7 @@ export default function HotelDetailBookingCard({
           </div>
           <div className="flex justify-between font-bold text-lg text-gray-800 border-t pt-2">
             <span>總計</span>
-            <span>${hotel.price.toLocaleString()}</span>
+            <span>${totalPrice.toLocaleString()}</span>
           </div>
         </div>
 

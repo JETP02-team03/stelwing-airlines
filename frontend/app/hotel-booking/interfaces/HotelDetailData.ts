@@ -1,12 +1,8 @@
-// 從 constants.ts 引入 AmenityKey
-import { AmenityKey } from './constants';
+import type { AmenityKey } from './constants'; // ✅ 正確引入類型
 
-/**
- * 飯店詳情頁 (Detail Page) 專用的資料介面。
- * 備註: 詳情頁的 amenities 使用 AmenityKey[] 陣列。
- */
+export type { AmenityKey }; // 如果你希望在外部再 export
+
 export interface HotelDetailData {
-  // 核心基礎屬性 (從 HotelCardData 沿用)
   id: number;
   name: string;
   engName: string;
@@ -16,7 +12,6 @@ export interface HotelDetailData {
   roomType: string;
   busFree: boolean;
 
-  // 詳情頁新增欄位
   images: string[];
   reviewCount: number;
   description: string;
@@ -26,7 +21,6 @@ export interface HotelDetailData {
   amenityKeys: AmenityKey[];
 }
 
-// 模擬單一飯店數據 (保持不變)
 export const mockHotelDetailData: HotelDetailData = {
   id: 1,
   name: '東京成田機場旅館',
@@ -62,3 +56,23 @@ export const mockHotelDetailData: HotelDetailData = {
   contact: '0900-123-123',
   email: 'toyokoinn@narita.com',
 };
+
+export interface HotelCardData {
+  id: number;
+  name: string;
+  engName?: string;
+  rating: number;
+  location: string;
+  distance?: string;
+  price: number;
+  image?: string;
+  lat?: number;
+  lng?: number;
+
+  address?: string;
+  roomType?: string;
+  notes?: string;
+  busFree?: boolean;
+
+  amenities: AmenityKey[];
+}

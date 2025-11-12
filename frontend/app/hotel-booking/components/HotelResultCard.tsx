@@ -67,19 +67,10 @@ export default function HotelResultCard({ hotel }: HotelResultCardProps) {
     shuttleService: <Truck size={16} />,
   };
 
-  // ⭐ URL 傳參方式，包含必要飯店資訊
+  // 統一跳轉邏輯，與 HotelPage 一致
   const handleClick = () => {
-    const params = new URLSearchParams({
-      id: hotel.id.toString(),
-      name: hotel.name,
-      location: hotel.location,
-      price: hotel.price.toString(),
-      image: hotel.image || '',
-      notes: hotel.notes || '',
-      amenities: hotel.amenities ? hotel.amenities.join(',') : '',
-    }).toString();
-
-    router.push(`/hotel/detail?${params}`);
+    localStorage.setItem('booking_selectedHotelId', hotel.id.toString());
+    router.push(`/hotel-booking/${hotel.id}`);
   };
 
   return (
@@ -121,7 +112,7 @@ export default function HotelResultCard({ hotel }: HotelResultCardProps) {
           <Heart
             size={16}
             fill={isFavorite ? 'currentColor' : 'none'}
-            stroke={isFavorite ? 'none' : undefined}
+            stroke={isFavorite ? 'none' : 'currentColor'}
           />
         </button>
 
@@ -170,7 +161,7 @@ export default function HotelResultCard({ hotel }: HotelResultCardProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              alert(`預訂 ${hotel.name}`);
+              handleClick(); // 呼叫相同跳轉函數
             }}
             className="px-4 py-1 bg-[#1E2A33] text-[#DCBB87] font-semibold rounded-md hover:bg-[#303D49] transition"
           >
