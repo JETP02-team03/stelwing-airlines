@@ -119,7 +119,7 @@ export default function FilterSidebar({
         </div>
 
         {/* ⚙️ 篩選內容 */}
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 w-full space-y-6">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 h-210 w-full space-y-6">
           {/* 標題與清除 */}
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-800">篩選條件</h3>

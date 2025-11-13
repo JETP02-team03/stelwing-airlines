@@ -82,7 +82,7 @@ export default function OrderPage({
     nights: 3,
     guests: 2,
     rooms: 1,
-    name: 'yun',
+    name: '',
     phone: '0980123123',
     email: 'yun@gmail.com',
     roomType: 'King Size Bed',
