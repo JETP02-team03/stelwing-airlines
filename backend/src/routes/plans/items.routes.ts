@@ -1,5 +1,6 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
+import type { ApiResponse, ApiErrorResponse } from "../../interfaces/api.js"
 import { prisma } from "../../utils/prisma-only.js"
 import { authMiddleware } from "../../middleware/authMiddleware.js";
 
@@ -14,5 +15,12 @@ const router = express.Router();
 // | DELETE | /api/plans/:planId/items/:itemId | 刪除單一行程 |
 
 // #endregion
+
+
+
+
+
+
+
 
 export default router;

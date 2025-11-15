@@ -3,13 +3,13 @@ export type Trip = {
   id: string;
   userId: string;
   title: string;
-  destination: string;
+  destination: string | null;
   startDate: string;
   startTimezone: string;
   endDate: string;
   endTimezone: string;
-  note: string;
-  coverImage: string;
+  note: string | null;
+  coverImage: string | null;
   isDeleted: number;
   createdAt: string;
   updatedAt: string;

@@ -71,7 +71,8 @@ export default function CreatePlanForm({
         endDate: endDateTime.toUTC().toISO(),
       };
 
-      const data = await apiFetch(`${API_BASE}/plans`, {
+      const data = await apiFetch(`http://localhost:3007/api/plans`, {
+        // const data = await apiFetch(`${API_BASE}/plans`, {
         method: 'POST',
         body: JSON.stringify(adjustedData),
         headers: { 'Content-Type': 'application/json' },

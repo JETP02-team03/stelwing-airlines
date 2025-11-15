@@ -3,34 +3,37 @@
 import { MoveRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { useTripContext } from '../../../src/context/TripContext';
 import { useAlertDialog } from '../components/alertDialog/useAlertDialog';
+import type { Trip, TripForUI } from '../types';
 import { apiFetch } from '../utils/apiFetch';
+import { transformTripForUI } from '../utils/tripUtils';
 import AlertDialogBox from './alertDialog/alertDialogBox';
 import ConfirmDialog from './confirmDialog';
 
-export interface Trip {
-  id: string; // 必填：用於 key
-  userId: string; // 必填：可以追蹤誰的行程
-  title: string; // 必填：行程標題
-  destination: string | null; // 選填或 null：行程目的地
-  startDate: string; // 必填：開始日期
-  startTimezone: string; // 必填：開始日期時區
-  displayStartDate: string; //程式給：轉時區的開始日期
-  endDate: string; // 必填：結束日期
-  endTimezone: string; // 必填：結束日期時區
-  displayEndDate: string; //程式給：轉時區的結束日期
-  note: string | null; // 選填或 null：備註
-  coverImage: string | null; // 選填或 null：封面圖片
-  status: string; //程式帶：旅程進行狀態
-  collaborators?: any[]; // 選填：合作人列表
-  isDeleted?: number; // 選填：是否刪除
-  createdAt?: string; // 選填
-  updatedAt?: string; // 選填
-}
+// export interface Trip {
+//   id: string; // 必填：用於 key
+//   userId: string; // 必填：可以追蹤誰的行程
+//   title: string; // 必填：行程標題
+//   destination: string | null; // 選填或 null：行程目的地
+//   startDate: string; // 必填：開始日期
+//   startTimezone: string; // 必填：開始日期時區
+//   displayStartDate: string; //程式給：轉時區的開始日期
+//   endDate: string; // 必填：結束日期
+//   endTimezone: string; // 必填：結束日期時區
+//   displayEndDate: string; //程式給：轉時區的結束日期
+//   note: string | null; // 選填或 null：備註
+//   coverImage: string | null; // 選填或 null：封面圖片
+//   status: string; //程式帶：旅程進行狀態
+//   collaborators?: any[]; // 選填：合作人列表
+//   isDeleted?: number; // 選填：是否刪除
+//   createdAt?: string; // 選填
+//   updatedAt?: string; // 選填
+// }
 
 // TripCardProps 直接傳整個 trip
 export interface TripCardProps {
-  trip: Trip;
+  trip: TripForUI;
   onDeleteSuccess: (id: string) => void;
 }
 
@@ -52,15 +55,23 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
   const [loading, setLoading] = useState(false);
   const [isOpenDeletePlan, setIsOpenDeletePlan] = useState(false);
   const router = useRouter();
+  const { setCurrentTrip } = useTripContext();
 
   // 功能：查看詳細旅程
   const handleViewDetail = async () => {
-    setLoading(true);
     try {
       // 呼叫後端驗證該旅程是否屬於當前使用者
-      const data = await apiFetch(`${API_BASE}/plans/${trip.id}/items`, {
-        method: 'GET',
-      });
+      const data = await apiFetch<Trip>(
+        `http://localhost:3007/api/plans/${trip.id}`,
+        {
+          // const data = await apiFetch<Trip>(`${API_BASE}/plans/${trip.id}`, {
+          method: 'GET',
+        }
+      );
+
+      const tripForUI = transformTripForUI(data);
+      console.log(tripForUI);
+      setCurrentTrip(tripForUI);
 
       // 通過驗證 → 跳轉到動態路由
       router.push(`/travel-planner/${trip.id}`);
@@ -71,16 +82,14 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
         description: err.message || '請稍後再試',
         confirmText: '確認',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   // 功能：處理刪除旅程
   const handleDelete = useCallback(async () => {
     try {
-      // const data = await fetch(`http://localhost:3007/api/plans/${trip.id}`, {
-      const data = await apiFetch(`${API_BASE}/plans/${trip.id}`, {
+      const data = await fetch(`http://localhost:3007/api/plans/${trip.id}`, {
+        // const data = await apiFetch(`${API_BASE}/plans/${trip.id}`, {
         method: 'DELETE',
       });
 
