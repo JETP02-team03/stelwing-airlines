@@ -19,6 +19,30 @@ const router = express.Router();
 
 // #endregion
 
+async function authorizeTrip(userId: number, paramsPlanId: string) {
+    // const userId = 2;
+    const planId = Number(paramsPlanId);
+
+    if (!planId || isNaN(planId)) throw new Error('沒有提供有效的旅程 ID');
+
+    try {
+      const plan = await prisma.plan.findUnique({ 
+        where: { id: planId },
+      });
+
+      if (!plan) throw new Error('此筆旅程資料不存在');
+
+      if (plan.userId !== BigInt(userId)) throw new Error('沒有權限操作此資料');
+
+      return plan;
+
+    } catch (err: any) {
+        console.error('authorizeTrip error:', err);
+        // 再拋出錯誤給上層 handler 處理
+        throw new Error(err.message || '驗證旅程時發生錯誤');
+    }
+}
+
 // | GET | /api/plans | 讀取所有旅程 |
 router.get("/", async (req: Request, res: Response) => {
     const userId = 2;
@@ -103,6 +127,41 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(500).json(errorResponse);
   }
 })
+
+// | GET | /api/plans/:planId | 讀取單一旅程 |
+router.get('/:planId', async (req, res) => {
+  const { planId } = req.params;
+  const userId = 2; // TODO: 改成從 JWT 或 session 取得
+
+  try {
+    const plan = await authorizeTrip(userId, planId);
+
+    const response: ApiResponse<null> = {
+      success: true,
+      message: '此 user 有權限查看此旅程',
+      data: serializeBigInt(plan)
+    };
+    res.status(200).json(response);
+
+  } catch (err: any) {
+    const message = err.message || '驗證失敗';
+    
+    // 根據錯誤內容判斷正確 HTTP 狀態碼
+    let status = 500;
+
+    if (message.includes('旅程 ID')) status = 400;        // 無效 ID
+    else if (message.includes('不存在')) status = 404;     // 找不到資料
+    else if (message.includes('沒有權限')) status = 403;    // 沒有權限
+
+    const errorResponse: ApiErrorResponse = {
+      success: false,
+      error: message,
+      message: '此 user 沒有權限查看此旅程',
+    };
+
+    res.status(status).json(errorResponse);
+  }
+});
 
 // | DELETE | /api/plans/:planId | 刪除旅程 |
 router.delete('/:id', async (req: Request, res: Response) => {
