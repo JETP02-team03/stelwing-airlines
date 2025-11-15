@@ -8,7 +8,7 @@ import SearchBar from './components/SearchBar';
 import { HotelCardData } from './interfaces/HotelCardData';
 import { calculateNights } from './utils/dateUtils';
 
-// 修正時區差一天
+// 修正時區差一天 (此函式邏輯保持不變)
 const formatDateLocal = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -19,6 +19,7 @@ const formatDateLocal = (date: Date) => {
 export default function Page() {
   const router = useRouter();
 
+  // 飯店資料 (保持不變)
   const hotels: HotelCardData[] = [
     {
       id: 1,
@@ -111,22 +112,49 @@ export default function Page() {
     },
   ];
 
-  // 從 localStorage 讀取上次搜尋的日期
+  // ------------------------------------------------------------
+  // ✅ 修正 1: 狀態初始化為 undefined，確保 SSR 一致
+  // ------------------------------------------------------------
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
-  >(() => {
-    if (typeof window === 'undefined') return undefined;
-    const saved = localStorage.getItem('booking_search');
-    if (!saved) return undefined;
-    const parsed = JSON.parse(saved);
-    return parsed.checkin && parsed.checkout
-      ? { from: new Date(parsed.checkin), to: new Date(parsed.checkout) }
-      : undefined;
-  });
+  >(undefined);
 
   const [guests, setGuests] = React.useState(2);
   const [rooms, setRooms] = React.useState(1);
 
+  // ------------------------------------------------------------
+  // ✅ 修正 2: 使用 useEffect 在客戶端載入 localStorage 資料
+  // ------------------------------------------------------------
+  React.useEffect(() => {
+    // 此程式碼只會在客戶端 (瀏覽器) 執行
+    const saved = localStorage.getItem('booking_search');
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved);
+
+      // 載入日期
+      if (parsed.checkin && parsed.checkout) {
+        const checkinDate = new Date(parsed.checkin);
+        const checkoutDate = new Date(parsed.checkout);
+
+        // 檢查日期有效性
+        if (!isNaN(checkinDate.getTime()) && !isNaN(checkoutDate.getTime())) {
+          setSelectedRange({ from: checkinDate, to: checkoutDate });
+        }
+      }
+
+      // 載入其他數值 (Guests & Rooms)
+      if (parsed.guests && parsed.guests > 0) setGuests(parsed.guests);
+      if (parsed.rooms && parsed.rooms > 0) setRooms(parsed.rooms);
+    } catch (error) {
+      console.error('Failed to parse localStorage booking_search:', error);
+    }
+  }, []); // 僅在元件首次掛載時執行
+
+  // ------------------------------------------------------------
+  // updateLocalStorage (保持不變)
+  // ------------------------------------------------------------
   const updateLocalStorage = (
     updates: Partial<{
       checkin: string;

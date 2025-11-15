@@ -1,6 +1,7 @@
 'use client';
 
 import { Calendar, Moon, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { HotelDetailData } from '../interfaces/HotelDetailData';
 
 interface HotelDetailBookingCardProps {
@@ -11,7 +12,7 @@ interface HotelDetailBookingCardProps {
     nights: number;
     guests: number;
     rooms: number;
-    roomType: string; // 必須加上！
+    roomType: string;
     smokingPreference?: string;
   };
   onInputChange: (field: string, value: any) => void;
@@ -26,7 +27,23 @@ export default function HotelDetailBookingCard({
   onSubmit,
   isSubmitting,
 }: HotelDetailBookingCardProps) {
+  const [mounted, setMounted] = useState(false);
+  // 在組件掛載後設置 mounted 為 true
+  useEffect(() => setMounted(true), []);
+
   const totalPrice = hotel.price * formData.nights * formData.rooms;
+
+  // 格式化價格的輔助函式，使用 mounted 狀態
+  const renderFormattedPrice = () => {
+    // 只有在客戶端掛載後，才進行 locale 相關的格式化
+    if (mounted) {
+      return `$${totalPrice.toLocaleString()}`;
+    }
+    // SSR 期間或未掛載時，顯示一個非確定性的佔位符（例如 '...' 或 '0'），確保客戶端能匹配
+    // 因為您原始的錯誤訊息是顯示 "+ 7,000- 10,500"，
+    // 我使用一個簡單的佔位符，讓伺服器和客戶端在水合作用前保持一致。
+    return '$0';
+  };
 
   return (
     <aside className="lg:w-80 flex-shrink-0">
@@ -35,8 +52,9 @@ export default function HotelDetailBookingCard({
 
         <div className="flex justify-between items-end mb-4 border-b pb-4">
           <span className="text-sm text-gray-600">總金額 (含稅)</span>
+          {/* **修改點 1:** 使用 renderFormattedPrice 處理水合作用問題 */}
           <span className="text-4xl font-extrabold text-[#303D49]">
-            ${totalPrice.toLocaleString()}
+            {renderFormattedPrice()}
           </span>
         </div>
 
@@ -70,25 +88,15 @@ export default function HotelDetailBookingCard({
             />
           </div>
 
-          {/* 住宿晚數 */}
+          {/* 住宿晚數 (原本可選 → 改為僅顯示，不可修改) */}
           <div>
             <label className="text-sm font-medium block mb-1 flex items-center gap-2">
               <Moon size={16} className="text-gray-500" />
               住宿晚數
             </label>
-            <select
-              value={formData.nights}
-              onChange={(e) =>
-                onInputChange('nights', parseInt(e.target.value))
-              }
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition"
-            >
-              {[...Array(30)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1} 晚
-                </option>
-              ))}
-            </select>
+            <div className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+              {formData.nights} 晚
+            </div>
           </div>
 
           {/* 住宿人數 */}
@@ -132,43 +140,51 @@ export default function HotelDetailBookingCard({
           </div>
         </div>
 
-        {/* 右側訂單摘要 - 完全聯動 */}
+        {/* 右側摘要 */}
         <div className="mt-6 border-t pt-4 space-y-2 text-sm text-gray-700">
           <div className="flex justify-between">
             <span>飯店名稱</span>
             <span className="font-medium">{hotel.name}</span>
           </div>
+
           <div className="flex justify-between">
             <span>房型</span>
-            <span>{formData.roomType}</span> {/* 這裡聯動！ */}
+            <span>{formData.roomType}</span>
           </div>
+
           <div className="flex justify-between">
             <span>入住</span>
-            <span>{formData.checkIn}</span>
+            {/* 這裡原本就使用了 mounted 檢查，保持不變 */}
+            <span>{mounted ? formData.checkIn : ''}</span>
           </div>
+
           <div className="flex justify-between">
             <span>退房</span>
-            <span>{formData.checkOut}</span>
+            {/* 這裡原本就使用了 mounted 檢查，保持不變 */}
+            <span>{mounted ? formData.checkOut : ''}</span>
           </div>
+
           <div className="flex justify-between">
             <span>住宿晚數</span>
             <span className="font-semibold text-[#DCBB87]">
               {formData.nights} 晚
             </span>
           </div>
+
           <div className="flex justify-between">
             <span>人數</span>
             <span>{formData.guests} 人</span>
           </div>
+
           <div className="flex justify-between">
             <span>房間數</span>
             <span>{formData.rooms} 間</span>
           </div>
+
           <div className="border-t pt-2 flex justify-between font-bold text-lg">
             <span>總金額</span>
-            <span className="text-[#DCBB87]">
-              ${totalPrice.toLocaleString()}
-            </span>
+            {/* **修改點 2:** 使用 renderFormattedPrice 處理水合作用問題 */}
+            <span className="text-[#DCBB87]">{renderFormattedPrice()}</span>
           </div>
         </div>
 

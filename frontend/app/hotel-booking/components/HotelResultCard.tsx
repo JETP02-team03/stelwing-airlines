@@ -139,7 +139,7 @@ export default function HotelResultCard({
                 iconsMap[key] && (
                   <div
                     key={key}
-                    className="bg-[#F1F1F1] rounded-md p-1 flex items-center justify-center hover:bg-[#E0D7C1] transition-all duration-200"
+                    className="bg-[#F1F1F1] rounded-lg p-1 flex items-center justify-center hover:bg-[#E0D7C1] transition-all duration-200"
                     style={{ width: 28, height: 28 }}
                     title={amenityLabels[key]}
                   >
@@ -164,7 +164,7 @@ export default function HotelResultCard({
             }}
             disabled={isBooking}
             className={`
-              px-4 py-1 font-semibold rounded-md transition-all duration-300 flex items-center gap-2
+              px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2
               ${
                 isBooking
                   ? 'bg-gray-400 cursor-not-allowed text-white'

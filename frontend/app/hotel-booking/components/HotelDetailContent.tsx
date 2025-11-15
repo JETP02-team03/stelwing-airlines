@@ -256,7 +256,7 @@ export default function HotelDetailContent({
                     : 'bg-white text-gray-700 border-gray-300 hover:border-[#DCBB87]'
                 }`}
               >
-                🛏️ 大床房
+                大床房
               </button>
               <button
                 type="button"
@@ -267,7 +267,7 @@ export default function HotelDetailContent({
                     : 'bg-white text-gray-700 border-gray-300 hover:border-[#DCBB87]'
                 }`}
               >
-                🛏️🛏️ 雙床房
+                雙床房
               </button>
             </div>
           </div>
@@ -285,7 +285,7 @@ export default function HotelDetailContent({
                     : 'bg-white text-gray-700 border-gray-300 hover:border-[#DCBB87]'
                 }`}
               >
-                🚭 禁菸房
+                禁菸房
               </button>
               <button
                 type="button"
@@ -296,7 +296,7 @@ export default function HotelDetailContent({
                     : 'bg-white text-gray-700 border-gray-300 hover:border-[#DCBB87]'
                 }`}
               >
-                🚬 吸菸房
+                吸菸房
               </button>
             </div>
           </div>
@@ -359,7 +359,7 @@ export default function HotelDetailContent({
       <svg width="0" height="0" className="absolute">
         <defs>
           <linearGradient id="halfGradient">
-            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#DCBB87" />
             <stop offset="50%" stopColor="#d1d5db" />
           </linearGradient>
         </defs>

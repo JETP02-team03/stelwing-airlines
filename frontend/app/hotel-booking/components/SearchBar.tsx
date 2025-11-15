@@ -2,40 +2,23 @@
 
 import { Calendar as CalendarIcon, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Calendar, { DateRange } from './Calendar';
 
 interface SearchBarProps {
   selectedRange?: DateRange;
   onDateChange?: (range: DateRange | undefined) => void;
-  guests?: number; // 新增：從外部接收人數
-  onGuestsChange?: (g: number) => void; // 新增：人數改變的回調
-  rooms?: number; // 新增：從外部接收房間數
-  onRoomsChange?: (r: number) => void; // 新增：房間數改變的回調
 }
 
 export default function SearchBar({
   selectedRange,
   onDateChange,
-  guests: propGuests = 2, // 默認值
-  onGuestsChange,
-  rooms: propRooms = 1, // 默認值
-  onRoomsChange,
 }: SearchBarProps) {
   const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
-  const [adults, setAdults] = useState(propGuests); // 從 props 初始化
-  const [rooms, setRooms] = useState(propRooms); // 從 props 初始化
-
-  // 當 props 改變時，更新內部狀態
-  useEffect(() => {
-    setAdults(propGuests);
-  }, [propGuests]);
-
-  useEffect(() => {
-    setRooms(propRooms);
-  }, [propRooms]);
+  const [adults, setAdults] = useState(2);
+  const [rooms, setRooms] = useState(1);
 
   const formatDate = (date: Date | undefined, placeholder: string) => {
     if (!date) return placeholder;
@@ -46,51 +29,9 @@ export default function SearchBar({
 
   const handleDateSelect = (range: DateRange | undefined) => {
     if (onDateChange) onDateChange(range);
-    // 當日期改變時，保存到 localStorage
-    if (range?.from && range?.to) {
-      const searchData = {
-        checkin: range.from.toISOString().split('T')[0],
-        checkout: range.to.toISOString().split('T')[0],
-        guests: adults,
-        rooms,
-      };
-      localStorage.setItem('booking_search', JSON.stringify(searchData));
-    }
   };
 
-  // 修改人數改變邏輯：調用回調並保存
-  const handleAdultsChange = (newAdults: number) => {
-    setAdults(newAdults);
-    if (onGuestsChange) onGuestsChange(newAdults);
-    // 保存到 localStorage
-    updateLocalStorage({ guests: newAdults });
-  };
-
-  // 修改房間數改變邏輯：調用回調並保存
-  const handleRoomsChange = (newRooms: number) => {
-    setRooms(newRooms);
-    if (onRoomsChange) onRoomsChange(newRooms);
-    // 保存到 localStorage
-    updateLocalStorage({ rooms: newRooms });
-  };
-
-  // 通用更新 localStorage 函數
-  const updateLocalStorage = (
-    updates: Partial<{
-      checkin: string;
-      checkout: string;
-      guests: number;
-      rooms: number;
-    }>
-  ) => {
-    const existing = JSON.parse(localStorage.getItem('booking_search') || '{}');
-    localStorage.setItem(
-      'booking_search',
-      JSON.stringify({ ...existing, ...updates })
-    );
-  };
-
-  // 🌟 搜尋按鈕事件：帶參數跳轉，並確保 localStorage 已更新
+  // 🌟 搜尋按鈕事件：帶參數跳轉
   const handleSearch = () => {
     if (!selectedRange?.from || !selectedRange?.to) {
       alert('請選擇入住與退房日期');
@@ -99,15 +40,6 @@ export default function SearchBar({
 
     const checkin = selectedRange.from.toISOString().split('T')[0];
     const checkout = selectedRange.to.toISOString().split('T')[0];
-
-    // 保存完整搜尋條件到 localStorage
-    const searchData = {
-      checkin,
-      checkout,
-      guests: adults,
-      rooms,
-    };
-    localStorage.setItem('booking_search', JSON.stringify(searchData));
 
     // 🚀 帶參數跳轉
     router.push(
@@ -171,16 +103,14 @@ export default function SearchBar({
                   <span>成人</span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        handleAdultsChange(Math.max(1, adults - 1))
-                      }
+                      onClick={() => setAdults(Math.max(1, adults - 1))}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       -
                     </button>
                     <span>{adults}</span>
                     <button
-                      onClick={() => handleAdultsChange(adults + 1)}
+                      onClick={() => setAdults(adults + 1)}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       +
@@ -193,14 +123,14 @@ export default function SearchBar({
                   <span>房間</span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleRoomsChange(Math.max(1, rooms - 1))}
+                      onClick={() => setRooms(Math.max(1, rooms - 1))}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       -
                     </button>
                     <span>{rooms}</span>
                     <button
-                      onClick={() => handleRoomsChange(rooms + 1)}
+                      onClick={() => setRooms(rooms + 1)}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       +
