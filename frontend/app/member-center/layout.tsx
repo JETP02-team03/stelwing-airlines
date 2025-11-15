@@ -1,74 +1,3 @@
-// "use client";
-
-// import React, { useEffect, useState } from "react";
-// import Link from "next/link";
-// import { useRouter } from "next/navigation";
-// import { ChevronRight } from "lucide-react";
-// import MemberTabs from "./components/MemberTabs";
-
-// export default function MemberCenterLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   const [loading, setLoading] = useState(true); // ✅ 新增：控制載入狀態
-//   const router = useRouter(); // ✅ 新增：讓我們可以在程式裡導頁
-
-//   // ✅ 新增：登入驗證邏輯
-//   useEffect(() => {
-//     const token = localStorage.getItem("token"); // 檢查是否有登入憑證
-//     if (!token) {
-//       router.push("/member-center/login"); // 沒 token → 導向登入頁
-//       return;
-//     }
-
-//     // 驗證 token 是否有效
-//     fetch("http://localhost:3007/api/auth/verify", {
-//       headers: { Authorization: `Bearer ${token}` },
-//     })
-//       .then((res) => res.json())
-//       .then((data) => {
-//         if (!data.ok) {
-//           router.push("/member-center/login"); // token 無效 → 重新登入
-//         }
-//       })
-//       .catch(() => router.push("/member-center/login")) // 伺服器錯誤也導回登入
-//       .finally(() => setLoading(false)); // 結束載入
-//   }, [router]);
-
-//   // ✅ 新增：顯示「檢查登入中」畫面（避免閃爍）
-//   if (loading)
-//     return (
-//       <div className="flex items-center justify-center min-h-screen text-[#666] text-lg">
-//         檢查登入中...
-//       </div>
-//     );
-
-//   // ✅ 以下保留原本的版型不動
-//   return (
-//     <div className="min-h-screen bg-[#F5F5F5]">
-//       <div className="w-full max-w-[1440px] mx-auto py-10 px-4 sm:px-6 lg:px-8">
-//         {/* Breadcrumb */}
-//         <div className="flex items-center gap-2 text-sm text-[#666666] mb-6">
-//           <Link href="/" className="hover:text-[#DCBB87] transition-colors">
-//             首頁
-//           </Link>
-//           <ChevronRight size={16} />
-//           <span className="text-[#1F2E3C]">會員中心</span>
-//         </div>
-
-//         {/* Page Title */}
-//         <h1 className="text-[24px] text-[#1F2E3C] mb-8">會員中心</h1>
-
-//         {/* Tabs */}
-//         <MemberTabs />
-
-//         {/* Content */}
-//         <div className="pt-6">{children}</div>
-//       </div>
-//     </div>
-//   );
-// }
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -76,6 +5,8 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import MemberTabs from "./components/MemberTabs";
+import Breadcrumb from "@/app/components/Breadcrumb";
+
 
 export default function MemberCenterLayout({
   children,
@@ -125,18 +56,26 @@ export default function MemberCenterLayout({
     );
   }
 
+  // ✅ ✨✨✨ 新增這一段：登入與註冊頁不渲染 layout（直接顯示內容）
+  if (
+    pathname === "/member-center/login" ||
+    pathname === "/member-center/register"
+  ) {
+    return <>{children}</>;
+  }
+  // ✅ ✨✨✨ 結束新增區塊
+
   // ✅ 下面是你原本的UI，完全保留
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
-      <div className="w-full max-w-[1440px] mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1312px] w-full px-4 sm:px-6 lg:px-[64px] py-10">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#666666] mb-6">
-          <Link href="/" className="hover:text-[#DCBB87] transition-colors">
-            首頁
-          </Link>
-          <ChevronRight size={16} />
-          <span className="text-[#1F2E3C]">會員中心</span>
-        </div>
+        <Breadcrumb
+          items={[
+            { label: "首頁", href: "/" },
+            { label: "會員中心" },
+          ]}
+        />
 
         {/* Page Title */}
         <h1 className="text-[24px] text-[#1F2E3C] mb-8">會員中心</h1>

@@ -2,21 +2,28 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { FareDetailsFromStore } from '../components/FareDetailsModal';
+import FlightInfoBar from '../components/FlightInfoBar';
+import StepActions from '../components/StepActions';
+
+/* ===================== Types ===================== */
+type TripType = 'OB' | 'IB' | 'outbound' | 'inbound' | null;
 
 type BookingDetail = {
   detailId: number | string;
-  tripType: 'outbound' | 'inbound' | null;
+  tripType: TripType;
   flight: {
     flightId: number | string;
     flightNumber: string;
-    flightDate: string; // YYYY-MM-DD
+    flightDate: string;
     originIata: string;
     destinationIata: string;
-    depTimeUtc: string; // ISO
-    arrTimeUtc: string; // ISO
+    depTimeUtc: string;
+    arrTimeUtc: string;
     status: string;
   };
 };
+
 type BookingDTO = {
   pnr: string;
   currency: string;
@@ -28,22 +35,15 @@ type BookingDTO = {
 };
 
 type FareStore = {
-  flightId?: number;
-  flightNo?: string;
   finalFare?: number;
-  currency?: string;
-  cabin?: string;
-  leg?: {
-    originCode: string;
-    destinationCode: string;
-    depTime: string;
-    arrTime: string;
-  };
 };
 
 const fmtMoney = (n: number) =>
-  `TWD ${Number(n || 0).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`;
+  `TWD ${Number(n || 0).toLocaleString('zh-TW', {
+    maximumFractionDigits: 0,
+  })}`;
 
+/* ===================== Page ===================== */
 export default function CheckoutPage() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -52,17 +52,19 @@ export default function CheckoutPage() {
   const [data, setData] = useState<BookingDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // 右側表單（聯絡資訊 / 付款）
   const [contact, setContact] = useState({
     firstName: '',
     lastName: '',
     phone: '',
     email: '',
   });
-  const [payMethod, setPayMethod] = useState<'card' | 'linepay'>('card');
+
+  const [payMethod, setPayMethod] = useState<'card' | 'linepay' | 'ecpay'>(
+    'card'
+  );
   const [card, setCard] = useState({ number: '', exp: '', cvc: '' });
 
-  // 1) 讀取 booking
+  /* ===== 1) 讀取訂單 ===== */
   useEffect(() => {
     if (!pnr) {
       setError('缺少 PNR');
@@ -71,25 +73,22 @@ export default function CheckoutPage() {
     (async () => {
       try {
         const res = await fetch(
-          `http://localhost:3007/api/flight-booking/${encodeURIComponent(pnr)}`,
+          `http://localhost:3007/api/flight-booking/bookings/${encodeURIComponent(
+            pnr
+          )}`,
           { cache: 'no-store' }
         );
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.includes('application/json')) {
-          const t = await res.text();
-          throw new Error(`Unexpected response: ${t.slice(0, 120)}...`);
-        }
         const json = await res.json();
         if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
-        setData(json);
+        setData(json.data ?? json);
       } catch (e: any) {
         console.error(e);
-        setError(e?.message || '載入訂單失敗');
+        setError(e.message || '讀取訂單失敗');
       }
     })();
   }, [pnr]);
 
-  // 2) 從 PassengerPage 暫存帶聯絡人
+  /* ===== 2) 從 passenger 帶入聯絡人 ===== */
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem('stelwing.passenger.form');
@@ -105,12 +104,10 @@ export default function CheckoutPage() {
           email: parsed?.contact?.email || '',
         });
       }
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, []);
 
-  // 3) 取票價（優先 sessionStorage）
+  /* ===== 3) 票價 ===== */
   const obFareStore: FareStore | null = useMemo(() => {
     try {
       const s = sessionStorage.getItem('fare_outbound');
@@ -128,33 +125,40 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // 4) 整理去回程資料給左側卡使用
+  /* ===== 4) 整理 segments ===== */
   const segments = useMemo(() => {
-    if (!data) return { ob: null as any, ib: null as any, total: 0 };
+    if (!data)
+      return { ob: null as any, ib: null as any, total: 0, currency: 'TWD' };
+
+    const details = Array.isArray(data.details) ? data.details : [];
     const currency = data.currency || 'TWD';
 
-    const ob = data.details.find((d) => d.tripType === 'outbound');
-    const ib = data.details.find((d) => d.tripType === 'inbound');
+    const ob =
+      details.find((d) => d.tripType === 'OB' || d.tripType === 'outbound') ||
+      null;
+    const ib =
+      details.find((d) => d.tripType === 'IB' || d.tripType === 'inbound') ||
+      null;
 
-    // 小計：若 sessionStorage 有 finalFare 則用；否則用平均拆分
     const segCount = [ob, ib].filter(Boolean).length || 1;
     const avg = Math.round((data.totalAmount || 0) / segCount);
 
     const obFare = Math.round(
-      (obFareStore?.finalFare as number) ?? (segCount ? avg : 0)
+      (obFareStore?.finalFare as number | undefined) ?? (segCount ? avg : 0)
     );
     const ibFare = Math.round(
-      (ibFareStore?.finalFare as number) ?? (segCount > 1 ? avg : 0)
+      (ibFareStore?.finalFare as number | undefined) ?? (segCount > 1 ? avg : 0)
     );
 
-    const mapSeg = (d?: BookingDetail | null, fare?: number) => {
+    const mapSeg = (d: BookingDetail | null, fare?: number) => {
       if (!d) return null;
       const f = d.flight;
       const dep = new Date(f.depTimeUtc);
       const arr = new Date(f.arrTimeUtc);
+      const isInbound = d.tripType === 'IB' || d.tripType === 'inbound';
+
       return {
-        title: d.tripType === 'inbound' ? '回程' : '去程',
-        flightNo: f.flightNumber,
+        title: isInbound ? '回程' : '去程',
         origin: f.originIata,
         destination: f.destinationIata,
         depTime: dep.toLocaleTimeString('zh-TW', {
@@ -165,176 +169,181 @@ export default function CheckoutPage() {
           hour: '2-digit',
           minute: '2-digit',
         }),
+        flightNo: f.flightNumber,
         fare: fare || 0,
-        currency,
       };
     };
 
     return {
       ob: mapSeg(ob, obFare),
       ib: mapSeg(ib, ibFare),
-      total: Math.round((obFare || 0) + (ibFare || 0)),
+      total: Math.round(obFare + ibFare),
       currency,
     };
   }, [data, obFareStore, ibFareStore]);
 
-  const onPrev = () => router.back();
+  /* ===== 5) 付款 ===== */
   const onPay = () => {
-    // 這裡你之後串真實金流；先做 UI 動作
-    alert('模擬付款成功！(此區可串接金流或導至 3D 驗證頁)');
-    router.push('/'); // 或導到謝謝頁
+    if (payMethod === 'ecpay') {
+      alert('已切換至綠界金流（ECPay）模擬付款流程');
+    } else if (payMethod === 'linepay') {
+      alert('已切換至 LinePay 模擬付款流程');
+    } else {
+      alert('模擬信用卡付款成功！（此區可串接金流或導至 3D 驗證頁）');
+    }
+    router.push('/');
   };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <h1 className="text-xl font-bold mb-2">結帳確認</h1>
-        <p className="text-red-600">{error}</p>
-      </div>
-    );
-  }
-  if (!data) {
-    return <div className="p-6">載入訂單中...</div>;
-  }
+  const onPrev = () => router.back();
+
+  /* ===== Render ===== */
+  if (error) return <div className="p-6 text-red-500 text-lg">{error}</div>;
+  if (!data) return <div className="p-6">載入中...</div>;
 
   return (
     <div className="min-h-screen bg-[#F7F7F7]">
-      <div className="mx-auto w-full max-w-6xl px-4 md:px-6 py-6 md:py-8">
-        <h2 className="text-xl md:text-2xl font-bold text-[color:var(--sw-primary)] mb-2">
-          結帳確認
+      <FlightInfoBar />
+
+      <div className="mx-auto w-full max-w-6xl px-4 md:px-6 py-8">
+        <h2 className="text-2xl font-bold text-[color:var(--sw-primary)] mb-6">
+          確認與付款
         </h2>
-        <div className="text-sm text-[color:var(--sw-primary)]/70 mb-6">
-          PNR：<span className="font-semibold">{data.pnr}</span>
-          <span className="ml-4">
-            總額：{fmtMoney(segments.total || data.totalAmount)}
-          </span>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* 左側：航段明細卡 */}
+          {/* ================= 左側：深色航段卡 ================= */}
           <section className="md:col-span-7">
-            <div className="rounded-2xl border border-[color:var(--sw-grey)]/30 bg-[color:var(--sw-primary)] text-[color:var(--sw-white)] p-5 md:p-6 space-y-6 shadow-sm">
-              {/* 去程 */}
+            <div className="rounded-2xl bg-[color:var(--sw-primary)] text-white px-6 py-7 space-y-7 shadow-sm">
+              {/* ===== 去程 ===== */}
               {segments.ob && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm opacity-90">
-                    <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm opacity-90">
+                    <span className="tracking-[0.2em] text-xs border px-2 py-0.5 rounded-full border-white/40">
                       去程
                     </span>
-                    <span>
-                      {segments.ob.origin} → {segments.ob.destination}
-                    </span>
-                    <span className="ml-auto font-semibold">
+                    <span className="font-semibold">
                       小計 {fmtMoney(segments.ob.fare)}
                     </span>
                   </div>
-                  <div className="rounded-xl bg-white/5 p-4">
+
+                  <div className="text-sm opacity-90">
+                    {segments.ob.origin} → {segments.ob.destination}
+                  </div>
+
+                  <div className="border-t border-white/15 pt-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm opacity-90">
-                        出發{' '}
-                        <span className="font-semibold">
+                      <div>
+                        <div className="text-xs opacity-70">出發</div>
+                        <div className="text-xl font-bold mt-1">
                           {segments.ob.depTime}
-                        </span>
+                        </div>
                       </div>
-                      <div className="text-sm opacity-90">
-                        抵達{' '}
-                        <span className="font-semibold">
+                      <div className="text-xs opacity-70">3 小時 25 分</div>
+                      <div className="text-right">
+                        <div className="text-xs opacity-70">抵達</div>
+                        <div className="text-xl font-bold mt-1">
                           {segments.ob.arrTime}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-2 text-xs opacity-80">
-                      航班 {segments.ob.flightNo}
-                    </div>
-                    {/* 費用列（靜態示意，可改接後端費用細項） */}
-                    <div className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
-                      <div className="opacity-90">機上加值服務</div>
-                      <div className="text-right opacity-90">TWD 350</div>
-                      <div className="opacity-90">票價</div>
-                      <div className="text-right opacity-90">
+
+                    <div className="mt-4 grid grid-cols-2 gap-y-1 text-sm opacity-90">
+                      <div>機上加值服務</div>
+                      <div className="text-right">TWD 350</div>
+                      <div>票價</div>
+                      <div className="text-right">
                         {fmtMoney(Math.max(segments.ob.fare - 700, 0))}
                       </div>
-                      <div className="opacity-90">稅金與其他費用</div>
-                      <div className="text-right opacity-90">TWD 350</div>
+                      <div>稅金與其他費用</div>
+                      <div className="text-right">TWD 350</div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between font-semibold">
+
+                    <div className="mt-4 flex items-center justify-between text-sm font-semibold">
                       <span>小計</span>
-                      <span>{fmtMoney(segments.ob.fare)}</span>
+                      <span className="text-[color:var(--sw-accent)]">
+                        {fmtMoney(segments.ob.fare)}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 回程 */}
+              {/* ===== 回程 ===== */}
               {segments.ib && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm opacity-90">
-                    <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs">
+                <div className="space-y-4 pt-4 border-t border-white/15">
+                  <div className="flex items-center justify-between text-sm opacity-90">
+                    <span className="tracking-[0.2em] text-xs border px-2 py-0.5 rounded-full border-white/40">
                       回程
                     </span>
-                    <span>
-                      {segments.ib.origin} → {segments.ib.destination}
-                    </span>
-                    <span className="ml-auto font-semibold">
+                    <span className="font-semibold">
                       小計 {fmtMoney(segments.ib.fare)}
                     </span>
                   </div>
-                  <div className="rounded-xl bg-white/5 p-4">
+
+                  <div className="text-sm opacity-90">
+                    {segments.ib.origin} → {segments.ib.destination}
+                  </div>
+
+                  <div className="border-t border-white/15 pt-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm opacity-90">
-                        出發{' '}
-                        <span className="font-semibold">
+                      <div>
+                        <div className="text-xs opacity-70">出發</div>
+                        <div className="text-xl font-bold mt-1">
                           {segments.ib.depTime}
-                        </span>
+                        </div>
                       </div>
-                      <div className="text-sm opacity-90">
-                        抵達{' '}
-                        <span className="font-semibold">
+                      <div className="text-xs opacity-70">3 小時 25 分</div>
+                      <div className="text-right">
+                        <div className="text-xs opacity-70">抵達</div>
+                        <div className="text-xl font-bold mt-1">
                           {segments.ib.arrTime}
-                        </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-2 text-xs opacity-80">
-                      航班 {segments.ib.flightNo}
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
-                      <div className="opacity-90">機上加值服務</div>
-                      <div className="text-right opacity-90">TWD 350</div>
-                      <div className="opacity-90">票價</div>
-                      <div className="text-right opacity-90">
+
+                    <div className="mt-4 grid grid-cols-2 gap-y-1 text-sm opacity-90">
+                      <div>機上加值服務</div>
+                      <div className="text-right">TWD 350</div>
+                      <div>票價</div>
+                      <div className="text-right">
                         {fmtMoney(Math.max(segments.ib.fare - 700, 0))}
                       </div>
-                      <div className="opacity-90">稅金與其他費用</div>
-                      <div className="text-right opacity-90">TWD 350</div>
+                      <div>稅金與其他費用</div>
+                      <div className="text-right">TWD 350</div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between font-semibold">
+
+                    <div className="mt-4 flex items-center justify-between text-sm font-semibold">
                       <span>小計</span>
-                      <span>{fmtMoney(segments.ib.fare)}</span>
+                      <span className="text-[color:var(--sw-accent)]">
+                        {fmtMoney(segments.ib.fare)}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 總計 */}
-              <div className="pt-3 border-t border-white/15 flex items-center justify-between text-lg font-extrabold">
+              {/* ===== 總計 ===== */}
+              <div className="pt-4 mt-4 border-t border-white/20 flex items-center justify-between text-lg font-extrabold">
                 <span>總計</span>
-                <span>{fmtMoney(segments.total || data.totalAmount)}</span>
+                <span className="text-[color:var(--sw-accent)]">
+                  {fmtMoney(segments.total)}
+                </span>
               </div>
             </div>
           </section>
 
-          {/* 右側：聯絡資訊 + 付款方式 */}
+          {/* ================= 右側：白色卡片區 ================= */}
           <section className="md:col-span-5 space-y-6">
-            {/* 聯絡資訊 */}
-            <div className="rounded-2xl border border-[color:var(--sw-grey)]/30 bg-white p-5 md:p-6">
-              <h3 className="font-semibold mb-4">聯絡資訊</h3>
+            {/* ===== 聯絡資訊 ===== */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-[color:var(--sw-primary)]">
+                聯絡資訊
+              </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    姓
-                  </label>
+                  <label className="text-xs opacity-70">姓</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     value={contact.lastName}
                     onChange={(e) =>
                       setContact({ ...contact, lastName: e.target.value })
@@ -343,11 +352,9 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    名
-                  </label>
+                  <label className="text-xs opacity-70">名</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     value={contact.firstName}
                     onChange={(e) =>
                       setContact({ ...contact, firstName: e.target.value })
@@ -355,12 +362,11 @@ export default function CheckoutPage() {
                     placeholder="First name"
                   />
                 </div>
+
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    電話號碼
-                  </label>
+                  <label className="text-xs opacity-70">聯絡電話</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     value={contact.phone}
                     onChange={(e) =>
                       setContact({ ...contact, phone: e.target.value })
@@ -368,59 +374,99 @@ export default function CheckoutPage() {
                     placeholder="Phone number"
                   />
                 </div>
+
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    EMAIL
-                  </label>
+                  <label className="text-xs opacity-70">EMAIL</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     value={contact.email}
                     onChange={(e) =>
                       setContact({ ...contact, email: e.target.value })
                     }
-                    placeholder="Your Email"
+                    placeholder="Your email"
                   />
                 </div>
               </div>
             </div>
 
-            {/* 付款方式 */}
-            <div className="rounded-2xl border border-[color:var(--sw-grey)]/30 bg-white p-5 md:p-6">
-              <h3 className="font-semibold mb-4">付款方式</h3>
+            {/* ===== 付款方式 ===== */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+              <h3 className="font-semibold text-lg text-[color:var(--sw-primary)]">
+                付款方式
+              </h3>
 
               <div className="space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="pay"
-                    checked={payMethod === 'card'}
-                    onChange={() => setPayMethod('card')}
-                    className="accent-[color:var(--sw-accent)]"
-                  />
-                  信用卡付款
+                {/* 信用卡 */}
+                <label
+                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
+                    payMethod === 'card'
+                      ? 'border-[color:var(--sw-accent)] bg-[color:var(--sw-accent)]/5'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="pay"
+                      checked={payMethod === 'card'}
+                      onChange={() => setPayMethod('card')}
+                      className="accent-[color:var(--sw-accent)]"
+                    />
+                    信用卡付款
+                  </div>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="pay"
-                    checked={payMethod === 'linepay'}
-                    onChange={() => setPayMethod('linepay')}
-                    className="accent-[color:var(--sw-accent)]"
-                  />
-                  LinePay
+
+                {/* LinePay */}
+                <label
+                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
+                    payMethod === 'linepay'
+                      ? 'border-[color:var(--sw-accent)] bg-[color:var(--sw-accent)]/5'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="pay"
+                      checked={payMethod === 'linepay'}
+                      onChange={() => setPayMethod('linepay')}
+                      className="accent-[color:var(--sw-accent)]"
+                    />
+                    LinePay
+                  </div>
+                </label>
+
+                {/* 綠界 */}
+                <label
+                  className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
+                    payMethod === 'ecpay'
+                      ? 'border-[color:var(--sw-accent)] bg-[color:var(--sw-accent)]/5'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="pay"
+                      checked={payMethod === 'ecpay'}
+                      onChange={() => setPayMethod('ecpay')}
+                      className="accent-[color:var(--sw-accent)]"
+                    />
+                    綠界金流（ECPay）
+                  </div>
                 </label>
               </div>
 
-              {/* 卡片資料（選信用卡時可填） */}
+              {/* 卡片資料 */}
               <div
-                className={`mt-4 grid grid-cols-1 md:grid-cols-12 gap-3 ${payMethod === 'card' ? '' : 'opacity-50 pointer-events-none'}`}
+                className={`grid grid-cols-1 md:grid-cols-12 gap-3 ${
+                  payMethod === 'card' ? '' : 'opacity-50 pointer-events-none'
+                }`}
               >
                 <div className="md:col-span-12">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    信用卡號
-                  </label>
+                  <label className="text-xs opacity-70">信用卡號</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     placeholder="1234 1234 1234 1234"
                     value={card.number}
                     onChange={(e) =>
@@ -429,22 +475,18 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    有效期限
-                  </label>
+                  <label className="text-xs opacity-70">有效期限</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     placeholder="MM/YY"
                     value={card.exp}
                     onChange={(e) => setCard({ ...card, exp: e.target.value })}
                   />
                 </div>
                 <div className="md:col-span-6">
-                  <label className="text-xs text-[color:var(--sw-primary)]/70">
-                    CVC
-                  </label>
+                  <label className="text-xs opacity-70">CVC</label>
                   <input
-                    className="mt-1 w-full border rounded-lg px-3 py-2"
+                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                     placeholder="CVC code"
                     value={card.cvc}
                     onChange={(e) => setCard({ ...card, cvc: e.target.value })}
@@ -453,23 +495,20 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* 底部操作列 */}
-            <div className="flex items-center justify-between pt-2">
-              <button
-                className="sw-btn sw-btn--outline rounded-full"
-                onClick={onPrev}
-              >
-                上一步
-              </button>
-              <button
-                className="sw-btn sw-btn--gold-primary rounded-full"
-                onClick={onPay}
-              >
-                付款
-              </button>
-            </div>
+            {/* ===== 底部按鈕 ===== */}
+            <StepActions
+              className="mt-4"
+              onPrev={onPrev}
+              onNext={onPay}
+              prevText="上一步"
+              nextText="付款"
+              nextDisabled={false}
+            />
           </section>
         </div>
+
+        {/* 查看明細 modal */}
+        <FareDetailsFromStore />
       </div>
     </div>
   );

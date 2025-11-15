@@ -7,7 +7,7 @@ import { useDFStore } from './context/DFStoreContext';
 
 export default function DutyFreeShopPage() {
   const router = useRouter(); // ✅ 要放在 component 內！
-  const { products } = useDFStore();
+  const { products, addToCart } = useDFStore();
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
@@ -38,7 +38,6 @@ export default function DutyFreeShopPage() {
 
   return (
     <DFHomePage
-      products={products}
       filteredProducts={filteredProducts}
       selectedCategory={selectedCategory}
       selectedSubcategory={selectedSubcategory}
@@ -49,6 +48,7 @@ export default function DutyFreeShopPage() {
         setSelectedSubcategory(sub);
       }}
       onProductClick={handleProductClick}
+      onAddToCart={(product) => addToCart(product, 1)}
       onSearchToggle={() => setSearchOpen(!searchOpen)}
       onSearchChange={setSearchQuery}
       onClearFilter={() => {

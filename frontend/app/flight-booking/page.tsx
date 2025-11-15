@@ -331,7 +331,7 @@ export default function FlightBookingPage() {
   const ibSeg = toSeg('回程', selectedInbound);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
+    <div>
       <FlightInfoBar />
 
       <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-8 space-y-10">

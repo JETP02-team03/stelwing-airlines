@@ -1,676 +1,356 @@
 "use client";
 
-import { useState } from 'react';
-import svgPaths from './imports/svg-9y1u5cw3xd';
+import { useEffect, useState } from "react";
+import { Award, TrendingUp, Calendar, Camera } from "lucide-react"; // ✅【新增】Camera
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import MileageOverview from "./components/MileageOverview";
+import MileageTabs from "./components/MileageTabs";
+import MileageTable from "./components/MileageTable";
 
-// ---------------------------
-// 會員資訊內容
-// ---------------------------
-function MemberInfoContent() {
-  return (
-    <div className="relative w-full rounded-bl-[8px] rounded-br-[8px]">
-      <div className="p-[32px]">
-        <h2 className="text-[20px] font-bold mb-[12px]">會員資訊</h2>
-        <p className="text-[16px] text-gray-700">這裡顯示會員的基本資料（例如姓名、電話、信箱）。</p>
+// ✅【保留】性別與等級顯示對照表
+const genderLabels = { male: "男", female: "女", other: "其他", M: "男", F: "女", X: "其他" };
+const levelLabels = { Green: "普卡會員", Silver: "銀卡會員", Gold: "金卡會員", Platinum: "白金會員" };
+
+export default function MemberInfoPage() {
+  const router = useRouter();
+
+  // ✅【保留】會員資料（動態）
+  const [member, setMember] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("rule");
+  // =========================
+  // ✅【新增】頭像彈窗所需狀態
+  // =========================
+  const [avatarOptions, setAvatarOptions] = useState<any[]>([]);          // ✅ 圖庫清單
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);      // ✅ Modal 開關
+  const [selectedAvatarId, setSelectedAvatarId] = useState<number | null>(null); // ✅ 選擇中的 avatarId
+
+  // ✅【保留】載入會員資料
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/member-center/login");
+      return;
+    }
+
+    fetch("http://localhost:3007/api/auth/verify", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.ok) {
+          router.push("/member-center/login");
+          return;
+        }
+
+        // ⚠️ /verify 目前只回傳基本欄位（你後端的 select）
+        //    這裡先用安全預設，之後你擴充 /verify 回傳 avatar 資料就會自動帶出
+        setMember({
+          memberId: data.member.memberId,
+          name: `${data.member.lastName || ""}${data.member.firstName || ""}`,
+          email: data.member.email,
+          level: data.member.membershipLevel || "Green",
+          mileage: data.member.mileage || 0, // ✅ 從後端撈哩程
+          gender: data.member.gender || "other",
+          birthDate: data.member.birthDate || "",
+          phone: data.member.phoneNumber || "",
+          address: data.member.address || "",
+          registerDate: data.member.createdAt || "",
+          lastLogin: data.member.lastLogin || "",
+          avatar: {
+            imagePath: data.member.avatar?.imagePath || "/avatars/default.png",
+            label: data.member.avatar?.label || "預設頭像",
+          },
+        });
+      })
+      .catch(() => router.push("/member-center/login"))
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  // =========================
+  // ✅【新增】載入頭像圖庫（只跑一次）
+  // =========================
+  useEffect(() => {
+    fetch("http://localhost:3007/api/auth/avatars")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.ok) setAvatarOptions(data.avatars || []);
+      })
+      .catch((err) => console.error("頭像圖庫載入錯誤:", err));
+  }, []);
+
+  // =========================
+  // ✅【新增】開啟頭像 Modal（預選現在的 avatarChoice）
+  // =========================
+  const openAvatarModal = () => {
+    if (member?.avatarChoice) {
+      setSelectedAvatarId(Number(member.avatarChoice));
+    } else {
+      setSelectedAvatarId(null);
+    }
+    setIsAvatarModalOpen(true);
+  };
+
+  // =========================
+  // ✅【新增】儲存頭像
+  // =========================
+  const handleSaveAvatar = async () => {
+    if (!member || !selectedAvatarId) return;
+
+    try {
+      const res = await fetch("http://localhost:3007/api/auth/update-avatar", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: member.memberId,
+          avatarChoice: selectedAvatarId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.ok) {
+        // 從圖庫找出選取的那一張，更新本地狀態
+        const newly = avatarOptions.find((a) => a.avatarId === selectedAvatarId);
+        setMember((prev: any) => ({
+          ...prev,
+          avatarChoice: selectedAvatarId,
+          avatar: newly
+            ? { imagePath: newly.imagePath, label: newly.label }
+            : prev.avatar,
+        }));
+        setIsAvatarModalOpen(false);
+      } else {
+        alert(data?.message || "更新頭像失敗");
+      }
+    } catch (err) {
+      console.error("更新頭像錯誤:", err);
+      alert("伺服器連線錯誤，請稍後再試");
+    }
+  };
+
+  // ✅【保留】載入中/錯誤顯示
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-[#1F2E3C]">
+        資料載入中...
       </div>
-    </div>
-  );
-}
-
-// ---------------------------
-// 機票訂單內容
-// ---------------------------
-// 机票订单内容组件
-function FlightOrdersContent() {
-  const orders = [
-    { id: 1, orderNo: '#0123_45678', flightInfo: '台北(桃園)  - 東京成田  12/4 - 12/12  (來回機票）', payment: '信用卡', status: '已完成', date: '2023-03-12', time: '12:24:22 AM' },
-    { id: 2, orderNo: '#0123_45678', flightInfo: '台北(桃園)  - 東京成田  12/4 - 12/12  (來回機票）', payment: '現金', status: '退款中', date: '2023-03-12', time: '12:26:22 AM' },
-    { id: 3, orderNo: '#0123_45678', flightInfo: '台北(桃園)  - 東京成田  12/4 - 12/12  (來回機票）', payment: '信用卡', status: '已取消', date: '2023-03-12', time: '12:26:22 AM' },
-  ];
-
-  return (
-    <div className="relative w-full rounded-bl-[8px] rounded-br-[8px]">
-      <div className="box-border content-stretch flex flex-col gap-[10px] items-start overflow-clip p-[32px] relative rounded-[inherit] w-full">
-        {/* 表格 */}
-        <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full">
-          {/* 表头 */}
-          <div className="bg-[#1f2e3c] h-[50px] relative rounded-tl-[8px] rounded-tr-[8px] shrink-0 w-full">
-            <div className="flex flex-col justify-center overflow-clip rounded-[inherit] size-full">
-              <div className="box-border content-stretch flex flex-col gap-[20px] h-[50px] items-start justify-center p-[3px] relative w-full">
-                <div className="content-stretch flex gap-[7px] items-center relative shrink-0 w-full">
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center pl-[10px] pr-[5px] py-[10px] w-[37px]">
-                    <p className="font-['Campton:SemiBold',sans-serif] text-[12px] text-white uppercase">ID</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[146px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>訂單號碼</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] flex-1">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>航班資訊</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center px-[10px] py-[10px] w-[142px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-center text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>付款方式</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[121px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>狀態</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[155px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>成立日期</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[100px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>電子機票</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div aria-hidden="true" className="absolute border border-[#5f5f5f] border-solid inset-0 pointer-events-none rounded-tl-[8px] rounded-tr-[8px] shadow-[0px_0px_2px_0px_rgba(0,0,0,0.25)]" />
-          </div>
-
-          {/* 表格内容 */}
-          <div className="content-stretch flex flex-col gap-[5px] items-start w-full">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white relative shrink-0 w-full">
-                <div className="box-border flex gap-[20px] items-start px-[10px] py-[5px] w-full">
-                  <div className="box-border flex flex-col gap-[10px] items-start px-[5px] py-[10px]">
-                    <p className="font-['Campton:Book',sans-serif] text-[12px] text-black">{order.id}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start px-[5px] py-[10px] w-[120px]">
-                    <p className="font-['Noto_Sans:Regular',sans-serif] text-[#141718]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.orderNo}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start p-[10px] flex-1">
-                    <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.flightInfo}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[114px]">
-                    <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.payment}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex flex-col gap-[10px] items-start p-[10px]">
-                    <div className="box-border flex flex-col gap-[10px] h-[30px] items-center justify-center p-[2.5px] rounded-[6px]">
-                      <div aria-hidden="true" className={`absolute border ${order.status === '已完成' ? 'border-[#28a745]' : order.status === '退款中' ? 'border-[#f60621]' : 'border-[#c5c8c8]'} border-solid inset-0 pointer-events-none rounded-[6px]`} />
-                      <div className="bg-white box-border flex gap-[10px] items-center justify-center p-[10px] rounded-[5px] w-[70px]">
-                        <p className={`font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] ${order.status === '已完成' ? 'text-[#28a745]' : order.status === '退款中' ? 'text-[#f60621]' : 'text-[#c5c8c8]'}`} style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.status}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[130px]">
-                    <div className="font-['Campton:Book',sans-serif] text-[12px] text-black text-center">
-                      <p className="mb-0">{order.date}</p>
-                      <p>{order.time}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[100px]">
-                    <button className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-black underline hover:opacity-70 transition-opacity" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>前往查看</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+    );
+  if (!member)
+    return (
+      <div className="flex justify-center items-center min-h-screen text-[#B91C1C]">
+        無法取得會員資料，請重新登入
       </div>
-      <div aria-hidden="true" className="absolute border-2 border-[#dcbb87] border-solid inset-0 pointer-events-none rounded-bl-[8px] rounded-br-[8px]" />
-    </div>
-  );
-}
-
-// ---------------------------
-// 住宿訂單內容
-// ---------------------------
-// 住宿订单内容组件
-function AccommodationOrdersContent() {
-  return (
-    <div className="relative w-full rounded-bl-[8px] rounded-br-[8px]">
-      <div className="box-border content-stretch flex flex-col gap-[10px] items-start overflow-clip p-[32px] relative rounded-[inherit] w-full">
-        {/* 表格 */}
-        <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full">
-          {/* 表头 */}
-          <div className="bg-[#1f2e3c] h-[50px] relative rounded-tl-[8px] rounded-tr-[8px] shrink-0 w-full">
-            <div className="flex flex-col justify-center overflow-clip rounded-[inherit] size-full">
-              <div className="box-border content-stretch flex flex-col gap-[20px] h-[50px] items-start justify-center p-[3px] relative w-full">
-                <div className="content-stretch flex gap-[7px] items-center relative shrink-0 w-full">
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center pl-[10px] pr-[5px] py-[10px] w-[37px]">
-                    <p className="font-['Campton:SemiBold',sans-serif] text-[12px] text-white uppercase">ID</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[146px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>訂單號碼</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] flex-1">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>訂房資料</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center px-[10px] py-[10px] w-[142px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-center text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>付款方式</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[121px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>狀態</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[155px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>成立日期</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[51px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>編輯</p>
-                  </div>
-                  <div className="flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[51px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>刪除</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div aria-hidden="true" className="absolute border border-[#5f5f5f] border-solid inset-0 pointer-events-none rounded-tl-[8px] rounded-tr-[8px] shadow-[0px_0px_2px_0px_rgba(0,0,0,0.25)]" />
-          </div>
-
-          {/* 表格内容 */}
-          <div className="bg-white box-border flex gap-[20px] items-start justify-center px-[10px] py-[5px] w-full">
-            <div className="box-border flex flex-col gap-[10px] items-center px-[5px] py-[10px]">
-              <p className="font-['Campton:Book',sans-serif] text-[12px] text-black">1</p>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="box-border flex gap-[10px] items-start px-[5px] py-[10px] w-[120px]">
-              <p className="font-['Noto_Sans:Regular',sans-serif] text-[#141718]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>#0123_45678</p>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="box-border flex gap-[10px] items-start p-[10px] flex-1">
-              <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>Solana Smart INN 成田空港</p>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[114px]">
-              <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>信用卡</p>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="box-border flex flex-col gap-[10px] items-start p-[10px]">
-              <div className="box-border flex flex-col gap-[10px] h-[30px] items-center justify-center p-[2.5px] rounded-[6px]">
-                <div aria-hidden="true" className="absolute border border-[#28a745] border-solid inset-0 pointer-events-none rounded-[6px]" />
-                <div className="bg-white box-border flex gap-[10px] items-center justify-center p-[10px] rounded-[5px] w-[70px]">
-                  <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-[#28a745]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>已完成</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[130px]">
-              <div className="font-['Campton:Book',sans-serif] text-[12px] text-black text-center">
-                <p className="mb-0">2023-03-12</p>
-                <p>12:26:22 AM</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center self-stretch w-[1px]">
-              <div className="flex-none h-full rotate-[90deg]">
-                <div className="h-full w-[50px]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                    <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <button className="box-border flex gap-[10px] h-[48px] items-center justify-center p-[10px] w-[51px] hover:opacity-70 transition-opacity">
-              <div className="relative shrink-0 size-[24px]">
-                <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-                  <path d="M13 3.00011L16 6.00011M17.385 4.58511C17.7788 4.19126 18.0001 3.65709 18.0001 3.10011C18.0001 2.54312 17.7788 2.00895 17.385 1.61511C16.9912 1.22126 16.457 1 15.9 1C15.343 1 14.8088 1.22126 14.415 1.61511L6 10.0001V13.0001H9L17.385 4.58511Z" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                  <path d="M4 5.00011H3C2.46957 5.00011 1.96086 5.21082 1.58579 5.58589C1.21071 5.96097 1 6.46967 1 7.00011V16.0001C1 16.5305 1.21071 17.0392 1.58579 17.4143C1.96086 17.7894 2.46957 18.0001 3 18.0001H12C12.5304 18.0001 13.0391 17.7894 13.4142 17.4143C13.7893 17.0392 14 16.5305 14 16.0001V15.0001" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                </svg>
-              </div>
-            </button>
-            <button className="box-border flex gap-[10px] h-[48px] items-center justify-center p-[10px] w-[51px] hover:opacity-70 transition-opacity">
-              <div className="overflow-clip relative shrink-0 size-[24px]">
-                <div className="absolute inset-[20.833%]">
-                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14 14">
-                    <path clipRule="evenodd" d="M0.292893 0.292893C0.683418 -0.0976309 1.31658 -0.0976309 1.70711 0.292893L7 5.58579L12.2929 0.292893C12.6834 -0.0976311 13.3166 -0.0976311 13.7071 0.292893C14.0976 0.683418 14.0976 1.31658 13.7071 1.70711L8.41421 7L13.7071 12.2929C14.0976 12.6834 14.0976 13.3166 13.7071 13.7071C13.3166 14.0976 12.6834 14.0976 12.2929 13.7071L7 8.41421L1.70711 13.7071C1.31658 14.0976 0.683418 14.0976 0.292893 13.7071C-0.0976309 13.3166 -0.0976309 12.6834 0.292893 12.2929L5.58579 7L0.292893 1.70711C-0.0976311 1.31658 -0.0976311 0.683418 0.292893 0.292893Z" fill="#6C7275" fillRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div aria-hidden="true" className="absolute border-2 border-[#dcbb87] border-solid inset-0 pointer-events-none rounded-bl-[8px] rounded-br-[8px]" />
-    </div>
-  );
-}
-
-// ---------------------------
-// 免稅商品訂單內容
-// ---------------------------
-// 免税商品订单内容组件
-function DutyFreeOrdersContent() {
-  const orders = [
-    { id: 1, orderNo: '#0123_45678', product: 'Chanel N°5系列 典藏香水-50mL', payment: '信用卡', status: '已完成', statusColor: '#28a745', date: '2023-03-12', time: '12:24:22 AM' },
-    { id: 1, orderNo: '#0123_45678', product: 'Chanel N°5系列 典藏香水-50mL', payment: '現金', status: '退款中', statusColor: '#f60621', date: '2023-03-12', time: '12:26:22 AM' },
-    { id: 1, orderNo: '#0123_45678', product: 'Chanel N°5系列 典藏香水-50mL', payment: '信用卡', status: '已取消', statusColor: '#c5c8c8', date: '2023-03-12', time: '12:26:22 AM' },
-    { id: 1, orderNo: '#0123_45678', product: 'Chanel N°5系列 典藏香水-50mL', payment: '信用卡', status: '已完成', statusColor: '#28a745', date: '2023-03-12', time: '12:24:22 AM' },
-  ];
+    );
 
   return (
-    <div className="relative w-full rounded-bl-[8px] rounded-br-[8px]">
-      <div className="box-border content-stretch flex flex-col gap-[10px] items-start overflow-clip p-[32px] relative rounded-[inherit] w-full">
-        {/* 表格 */}
-        <div className="content-stretch flex flex-col gap-[10px] items-start relative shrink-0 w-full">
-          {/* 表头 */}
-          <div className="bg-[#1f2e3c] h-[50px] relative rounded-tl-[8px] rounded-tr-[8px] shrink-0 w-full">
-            <div className="flex flex-col justify-center overflow-clip rounded-[inherit] size-full">
-              <div className="box-border content-stretch flex flex-col gap-[20px] h-[50px] items-start justify-center p-[3px] relative w-full">
-                <div className="content-stretch flex gap-[7px] items-center relative shrink-0 w-full">
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center pl-[10px] pr-[5px] py-[10px] w-[37px]">
-                    <p className="font-['Campton:SemiBold',sans-serif] text-[12px] text-white uppercase">ID</p>
+    <>
+      <div className="bg-white rounded-b-lg shadow-sm">
+        <div className="flex flex-col lg:flex-row min-h-[300px]">
+          {/* 左側基本資料 */}
+          <div className="w-full lg:w-[235px] border-b lg:border-b-0 lg:border-r-2 border-[#D4D4D4] p-6 flex flex-col items-center">
+            {/* =========================
+                ✅【修改】頭像可點擊，右下角加相機鈕 → 開啟 Modal
+               ========================= */}
+            <div className="relative">
+              <img
+                src={member.avatar.imagePath}
+                alt={member.avatar.label}
+                className="w-20 h-20 lg:w-24 lg:h-24 rounded-full object-cover border-4 border-[#DCBB87] mb-4 cursor-pointer hover:opacity-80 transition"
+                onClick={openAvatarModal} // ✅ 點頭像開彈窗
+              />
+              <button
+                type="button"
+                onClick={openAvatarModal}
+                className="absolute bottom-2 right-2 bg-[#DCBB87] hover:bg-[#C5A872] text-[#1F2E3C] p-2 rounded-full shadow"
+                aria-label="更換頭像"
+              >
+                <Camera size={16} />
+              </button>
+            </div>
+
+            <h3 className="text-[#1F2E3C] -mt-1 mb-2 text-center text-sm lg:text-base">
+              {member.name || "未填寫姓名"}
+            </h3>
+            <div className="px-3 py-1 rounded-full text-xs lg:text-sm bg-[#DCBB87] text-[#1F2E3C]">
+              {levelLabels[member.level] || "一般會員"}
+            </div>
+
+            {/* Info group */}
+            <div className="mt-6 w-full space-y-4 border-t border-[#E5E5E5] pt-4">
+              <div className="flex items-center gap-3">
+                <Award className="text-[#DCBB87]" size={16} />
+                <div className="flex-1">
+                  <div className="text-[10px] lg:text-xs text-[#999]">會員編號</div>
+                  <div className="text-xs lg:text-sm">
+                    ST-{String(member.memberId).padStart(6, '0')}
                   </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <TrendingUp className="text-[#DCBB87]" size={16} />
+                <div className="flex-1">
+                  <div className="text-[10px] text-[#999]">哩程數</div>
+                  <div className="text-xs">{member.mileage?.toLocaleString() || 0} 哩</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Calendar className="text-[#DCBB87]" size={16} />
+                <div className="flex-1">
+                  <div className="text-[10px] lg:text-xs text-[#999]">註冊日期</div>
+                  <div className="text-xs lg:text-sm">
+                    {member.registerDate
+                      ? new Date(member.registerDate).toLocaleDateString("zh-TW")
+                      : "—"}
                   </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[146px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>訂單號碼</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] flex-1">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>商品</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center px-[10px] py-[10px] w-[142px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-center text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>付款方式</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center px-[10px] py-[10px] w-[121px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>狀態</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[155px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>成立日期</p>
-                  </div>
-                  <div className="flex h-[43px] items-center justify-center w-[1px]">
-                    <div className="flex-none rotate-[90deg]">
-                      <div className="h-0 w-[43px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 43 1">
-                          <line stroke="#999999" strokeWidth="0.5" x2="43" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-[10px] h-[35px] items-center justify-center p-[10px] w-[51px]">
-                    <p className="font-['Noto_Sans:Bold','Noto_Sans_JP:Bold',sans-serif] font-bold text-white" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>刪除</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Calendar className="text-[#DCBB87]" size={16} />
+                <div className="flex-1">
+                  <div className="text-[10px] lg:text-xs text-[#999]">最後登入</div>
+                  <div className="text-xs lg:text-sm">
+                    {member.lastLogin
+                    ? new Date(member.lastLogin).toLocaleString("zh-TW")
+                    : "—"}
                   </div>
                 </div>
               </div>
             </div>
-            <div aria-hidden="true" className="absolute border border-[#5f5f5f] border-solid inset-0 pointer-events-none rounded-tl-[8px] rounded-tr-[8px] shadow-[0px_0px_2px_0px_rgba(0,0,0,0.25)]" />
           </div>
 
-          {/* 表格内容 */}
-          <div className="content-stretch flex flex-col gap-[5px] items-start w-full">
-            {orders.map((order, idx) => (
-              <div key={idx} className="bg-white relative shrink-0 w-full">
-                <div className="box-border flex gap-[20px] items-start px-[10px] py-[5px] w-full">
-                  <div className="box-border flex flex-col gap-[10px] items-start px-[5px] py-[10px]">
-                    <p className="font-['Campton:Book',sans-serif] text-[12px] text-black">{order.id}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start px-[5px] py-[10px] w-[120px]">
-                    <p className="font-['Noto_Sans:Regular',sans-serif] text-[#141718]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.orderNo}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start p-[10px] flex-1">
-                    <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.product}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[114px]">
-                    <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px] text-black" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100" }}>{order.payment}</p>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex flex-col gap-[10px] items-start p-[10px]">
-                    <div className="box-border flex flex-col gap-[10px] h-[30px] items-center justify-center p-[2.5px] rounded-[6px]">
-                      <div aria-hidden="true" className={`absolute border border-solid inset-0 pointer-events-none rounded-[6px]`} style={{ borderColor: order.statusColor }} />
-                      <div className="bg-white box-border flex gap-[10px] items-center justify-center p-[10px] rounded-[5px] w-[70px]">
-                        <p className="font-['Noto_Sans:Regular','Noto_Sans_JP:Regular',sans-serif] text-[12px]" style={{ fontVariationSettings: "'CTGR' 0, 'wdth' 100", color: order.statusColor }}>{order.status}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="box-border flex gap-[10px] items-start justify-center p-[10px] w-[130px]">
-                    <div className="font-['Campton:Book',sans-serif] text-[12px] text-black text-center">
-                      <p className="mb-0">{order.date}</p>
-                      <p>{order.time}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center self-stretch w-[1px]">
-                    <div className="flex-none h-full rotate-[90deg]">
-                      <div className="h-full w-[50px]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 50 1">
-                          <line stroke="#E9ECEF" strokeWidth="0.5" x2="50" y1="0.25" y2="0.25" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="box-border flex gap-[10px] h-[48px] items-center justify-center p-[10px] w-[51px] hover:opacity-70 transition-opacity">
-                    <div className="overflow-clip relative shrink-0 size-[24px]">
-                      <div className="absolute inset-[20.833%]">
-                        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14 14">
-                          <path clipRule="evenodd" d="M0.292893 0.292893C0.683418 -0.0976309 1.31658 -0.0976309 1.70711 0.292893L7 5.58579L12.2929 0.292893C12.6834 -0.0976311 13.3166 -0.0976311 13.7071 0.292893C14.0976 0.683418 14.0976 1.31658 13.7071 1.70711L8.41421 7L13.7071 12.2929C14.0976 12.6834 14.0976 13.3166 13.7071 13.7071C13.3166 14.0976 12.6834 14.0976 12.2929 13.7071L7 8.41421L1.70711 13.7071C1.31658 14.0976 0.683418 14.0976 0.292893 13.7071C-0.0976309 13.3166 -0.0976309 12.6834 0.292893 12.2929L5.58579 7L0.292893 1.70711C-0.0976311 1.31658 -0.0976311 0.683418 0.292893 0.292893Z" fill="#6C7275" fillRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
+          {/* 右側詳細資料 */}
+          <div className="flex-1 p-6 relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+              <div>
+                <div className="text-xs text-[#666] mb-1">姓名</div>
+                <div>{member.name || "未填寫"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-[#666] mb-1">性別</div>
+                <div>{genderLabels[member.gender as keyof typeof genderLabels] || "未設定"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-[#666] mb-1">生日</div>
+                <div>
+                  {member.birthDate
+                    ? new Date(member.birthDate).toLocaleDateString("zh-TW")
+                    : "未填寫"}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div aria-hidden="true" className="absolute border-2 border-[#dcbb87] border-solid inset-0 pointer-events-none rounded-bl-[8px] rounded-br-[8px]" />
-    </div>
-  );
-}
+              <div>
+                <div className="text-xs text-[#666] mb-1">電話</div>
+                <div>{member.phone || "未填寫"}</div>
+              </div>
 
-// ---------------------------
-// 主頁面
-// ---------------------------
-export default function MemberCenterPage() {
-  const [activeTab, setActiveTab] = useState('info');
+              <div className="sm:col-span-2 lg:col-span-4">
+                <div className="text-xs text-[#666] mb-1">Email</div>
+                <div>{member.email}</div>
+              </div>
 
-  return (
-    <div className="bg-white relative w-full min-h-screen">
-      <div className="max-w-[1440px] mx-auto px-[65px] py-[60px]">
-        <p className="text-[#dcbb87] text-[12px] mb-[20px]">首頁 &gt; 會員中心</p>
-        <p className="text-black text-[24px] mb-[32px]">會員中心</p>
+              <div className="sm:col-span-2 lg:col-span-4">
+                <div className="text-xs text-[#666] mb-1">地址</div>
+                <div>{member.address || "未填寫"}</div>
+              </div>
+            </div>
 
-        {/* Tabs */}
-        <div className="flex mb-0">
-          {[
-            { key: 'info', label: '會員資訊' },
-            { key: 'flights', label: '機票訂單' },
-            { key: 'accommodation', label: '住宿訂單' },
-            { key: 'dutyfree', label: '免稅商品訂單' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-[24px] py-[8px] w-[328px] rounded-t-lg transition-colors ${activeTab === tab.key ? 'bg-[#dcbb87]' : 'bg-white'
-                }`}
+            {/* ✅ 保留你的 UI：更改 → 前往 profile */}
+            <Link
+              href="/member-center/profile"
+              className="
+                absolute lg:bottom-6 lg:right-6
+                mt-6 lg:mt-0
+                px-5 py-2 text-sm
+                bg-[#DCBB87] text-[#1F2E3C]
+                hover:bg-[#C5A872]
+                rounded-full
+                transition-colors
+                text-center
+              "
             >
-              <p className="text-[20px] font-bold text-black">{tab.label}</p>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab內容 */}
-        <div className="relative w-full">
-          {activeTab === 'info' && <MemberInfoContent />}
-          {activeTab === 'flights' && <FlightOrdersContent />}
-          {activeTab === 'accommodation' && <AccommodationOrdersContent />}
-          {activeTab === 'dutyfree' && <DutyFreeOrdersContent />}
+              修改
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+      {/* --- 哩程系統 --- */}
+      <MileageOverview
+        mileage={member.mileage}
+        level={levelLabels[member.level]}
+        nextLevelPercent={12}
+      />
+
+      <MileageTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      {activeTab === "rule" && (
+        <div className="p-6 border border-[#BA9A60] rounded-xl mt-4">
+          <h3 className="font-semibold text-[#1F2E3C] mb-3">哩程說明</h3>
+          <ul className="text-sm text-[#444] space-y-2">
+            <li>．每消費 NT$30 可累積 1 哩程</li>
+            <li>．哩程可用於兌換機票、升等、免稅商品等優惠</li>
+            <li>．哩程有效期限為 2 年，請於期限內使用</li>
+          </ul>
+        </div>
+      )}
+
+      {activeTab === "detail" && (
+        <div className="mt-4">
+          <MileageTable />
+        </div>
+      )}
+      {/* =========================
+          ✅【新增】頭像選擇 Modal
+         ========================= */}
+      {isAvatarModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-[90%] max-w-[520px]">
+            <h2 className="text-lg font-semibold text-[#1F2E3C] mb-4">選擇你的頭像</h2>
+
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mb-6">
+              {avatarOptions.map((a) => (
+                <button
+                  key={a.avatarId}
+                  type="button"
+                  onClick={() => setSelectedAvatarId(a.avatarId)}
+                  className={`w-[88px] h-[88px] flex items-center justify-center rounded-full border-4 transition ${
+                    selectedAvatarId === a.avatarId
+                      ? "border-[#DCBB87]"
+                      : "border-transparent hover:border-[#BA9A60]"
+                  }`}
+                  aria-label={a.label}
+                  title={a.label}
+                >
+                  <img
+                    src={a.imagePath}
+                    alt={a.label}
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsAvatarModalOpen(false)}
+                className="px-4 py-2 text-[#1F2E3C] border border-gray-300 rounded hover:bg-gray-100"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSaveAvatar}
+                disabled={!selectedAvatarId}
+                className="px-4 py-2 bg-[#DCBB87] text-[#1F2E3C] rounded hover:bg-[#C5A872] disabled:opacity-60"
+              >
+                儲存變更
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

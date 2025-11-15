@@ -1,53 +1,46 @@
 'use client';
 
-// 🌟 導入 Link 組件以替換 <a> 標籤
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-// 🌟 導入 React 的 use Hook (解決 Next.js 15+ 參數警告)
+import { useParams, useRouter } from 'next/navigation';
 import * as React from 'react';
-
-// 請根據您的實際結構調整導入路徑
+import { HotelBookingStepper } from '../components/HotelBookingStepper';
 import HotelDetailBookingCard from '../components/HotelDetailBookingCard';
 import HotelDetailContent from '../components/HotelDetailContent';
-import {
-  HotelDetailData,
-  mockHotelDetailData,
-} from '../interfaces/HotelDetailData';
+import { HotelDetailData } from '../interfaces/HotelDetailData';
+import { convertHotelToDetailData } from '../interfaces/hotelUtils';
+import { allMockHotels } from '../interfaces/mockHotels';
+import { calculateNights, formatDateLocal } from '../utils/dateUtils';
 
-interface HotelDetailPageProps {
-  params: Promise<{ id: string }> | { id: string };
-}
-
-/**
- * 模擬從 ID 獲取飯店數據的函式。
- * 實際應用中,您會在這裡發起 API 請求。
- */
 const fetchHotelData = (id: string): HotelDetailData | null => {
-  // 由於我們只有一個模擬數據,這裡我們簡單地返回它。
-  // 臨時修正:允許任何非空 ID 返回模擬數據
-  if (id) {
-    return mockHotelDetailData;
-  }
-  return null;
+  const hotel = allMockHotels.find((h) => h.id === parseInt(id));
+  return hotel ? convertHotelToDetailData(hotel) : null;
 };
 
-export default function HotelDetailPage({ params }: HotelDetailPageProps) {
-  // 🌟 修正 Next.js 15+ 參數警告:使用 React.use() 解包 params
-  const unwrappedParams =
-    params instanceof Promise
-      ? (React.use(params) as { id: string })
-      : (params as { id: string });
+export default function HotelDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const hotelId = Array.isArray(params?.id) ? params.id[0] : params?.id || '';
+  const hotel = fetchHotelData(hotelId);
 
-  const hotel = fetchHotelData(unwrappedParams.id);
+  // 從 localStorage 讀取「首頁」選擇的初始值
+  const savedSearch =
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('booking_search') || '{}')
+      : {};
 
-  // 🌟 統一狀態管理 (整合所有表單數據)
+  // 初始日期：用首頁選的，若無則預設今天 + 3 天
+  const initialCheckIn = savedSearch.checkin || formatDateLocal(new Date());
+  const initialCheckOut =
+    savedSearch.checkout ||
+    formatDateLocal(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000));
+
+  // 使用 state 管理可修改的日期
   const [formData, setFormData] = React.useState({
-    // 預訂資訊
-    checkIn: '2025/12/24',
-    checkOut: '2025/12/27',
-    nights: 3,
-    guests: 2,
-    // 登記者資料
+    checkIn: initialCheckIn,
+    checkOut: initialCheckOut,
+    nights: calculateNights(initialCheckIn, initialCheckOut),
+    guests: savedSearch.guests || 2,
+    rooms: savedSearch.rooms || 1,
     name: '',
     phone: '',
     email: '',
@@ -58,10 +51,28 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // 🌟 處理輸入變更
+  if (!hotel)
+    return <div className="text-center text-white p-10">飯店不存在</div>;
+
+  // 允許使用者修改日期，並即時更新 nights
   const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // 清除該欄位的錯誤
+    const newFormData = { ...formData, [field]: value };
+
+    if (field === 'checkIn' || field === 'checkOut') {
+      const checkIn = field === 'checkIn' ? value : formData.checkIn;
+      const checkOut = field === 'checkOut' ? value : formData.checkOut;
+
+      // 確保 checkOut 不早於 checkIn
+      if (new Date(checkOut) < new Date(checkIn)) {
+        newFormData.checkOut = checkIn;
+      }
+
+      newFormData.nights = calculateNights(checkIn, newFormData.checkOut);
+    }
+
+    setFormData(newFormData);
+
+    // 清除對應錯誤
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -71,64 +82,45 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
     }
   };
 
-  // 🌟 表單驗證
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = '請輸入姓名';
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = '請輸入電話';
-    } else if (!/^09\d{8}$/.test(formData.phone.replace(/-/g, ''))) {
+    if (!formData.name.trim()) newErrors.name = '請輸入姓名';
+    if (!formData.phone.trim()) newErrors.phone = '請輸入電話';
+    else if (!/^09\d{8}$/.test(formData.phone.replace(/-/g, '')))
       newErrors.phone = '請輸入有效的手機號碼 (09xxxxxxxx)';
-    }
-    if (!formData.email.trim()) {
-      newErrors.email = '請輸入電子郵件';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email.trim()) newErrors.email = '請輸入電子郵件';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = '請輸入有效的電子郵件';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // 🌟 提交處理
   const handleSubmit = () => {
-    if (!validateForm()) {
-      // 滾動到第一個錯誤欄位
-      const firstErrorField = Object.keys(errors)[0];
-      if (firstErrorField) {
-        const element = document.getElementById(firstErrorField);
-        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
+    if (!validateForm()) return;
+
+    // 送出前更新 booking_final（包含使用者修改後的日期）
+    localStorage.setItem(
+      'booking_final',
+      JSON.stringify({
+        ...formData,
+        hotelId: hotel.id,
+        hotelName: hotel.name,
+        price: hotel.price,
+        image: hotel.images?.[0],
+      })
+    );
 
     setIsSubmitting(true);
-    // 模擬提交
     setTimeout(() => {
-      alert(
-        `預訂成功!\n\n訂房資訊:\n姓名: ${formData.name}\n電話: ${formData.phone}\n郵件: ${formData.email}\n入住: ${formData.checkIn}\n退房: ${formData.checkOut}\n房型: ${formData.roomType}\n吸菸需求: ${formData.smokingPreference}\n總金額: $${hotel?.price.toLocaleString()}`
-      );
       setIsSubmitting(false);
-    }, 1500);
+      router.push(`/hotel-booking/${hotel.id}/payment`);
+    }, 1000);
   };
 
-  if (!hotel) {
-    // 如果找不到飯店 (例如 ID 不存在),使用 Next.js 的 notFound() 處理 404
-    notFound();
-  }
-
   return (
-    <div
-      className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative"
-      // 使用您網頁中常見的背景圖和樣式
-      style={{ backgroundImage: "url('/images/hotel/bg1.jpeg')" }}
-    >
-      <div className="flex flex-col w-full min-h-screen bg-black/70 p-4 md:p-8">
-        {/* 麵包屑/頂部導航 - 🌟 替換為 Next.js 的 Link 組件 */}
-        <nav className="text-sm text-gray-400 mb-6 max-w-6xl mx-auto w-full">
+    <div className="min-h-screen bg-[url('/images/hotel/bg2.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/70 bg-blend-darken pb-10">
+      <div className="flex flex-col w-full min-h-screen px-4 md:px-8 pt-6">
+        <nav className="text-sm text-gray-300 mb-6 max-w-6xl mx-auto w-full">
           <Link
             href="/"
             className="hover:underline hover:text-white transition"
@@ -137,7 +129,7 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
           </Link>{' '}
           &gt;{' '}
           <Link
-            href="/hotel"
+            href="/hotel-booking/search"
             className="hover:underline hover:text-white transition"
           >
             飯店列表
@@ -145,41 +137,35 @@ export default function HotelDetailPage({ params }: HotelDetailPageProps) {
           &gt; <span className="text-white font-medium">{hotel.name}</span>
         </nav>
 
-        {/* 主要內容容器 (左右分欄) */}
-        <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mb-8">
-          {/* 左側:內容區 (圖片、描述、設施、登記者資料) */}
+        <HotelBookingStepper currentStep={1} />
+
+        <div className="w-full max-w-6xl mx-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8 mt-6">
+          {/* 左側：可修改日期 + 即時更新晚數 */}
           <HotelDetailContent
             hotel={hotel}
-            formData={{
-              name: formData.name,
-              phone: formData.phone,
-              email: formData.email,
-              roomType: formData.roomType,
-              smokingPreference: formData.smokingPreference,
-            }}
+            formData={formData}
             errors={errors}
             onInputChange={handleInputChange}
           />
 
-          {/* 右側:預訂卡片區 (價格、日期、訂單輸入) */}
+          {/* 右側：顯示即時總價 */}
           <HotelDetailBookingCard
             hotel={hotel}
-            formData={{
-              checkIn: formData.checkIn,
-              checkOut: formData.checkOut,
-              nights: formData.nights,
-              guests: formData.guests,
-            }}
+            formData={formData}
             onInputChange={handleInputChange}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
           />
         </div>
 
-        {/* 🌟 底部資訊 */}
-        <footer className="text-center text-gray-400 text-sm pb-4">
-          <p>© 2025 飯店預訂系統. All rights reserved.</p>
-        </footer>
+        <div className="text-start mt-4">
+          <button
+            onClick={() => router.back()}
+            className="border border-[#D4A574] hover:bg-[#C69563] text-white font-semibold px-8 py-1 rounded-full transition-all hover:shadow-lg active:scale-95"
+          >
+            上一步
+          </button>
+        </div>
       </div>
     </div>
   );

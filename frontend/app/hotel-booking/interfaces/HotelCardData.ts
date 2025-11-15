@@ -1,3 +1,12 @@
+export type AmenityKey =
+  | 'wifi'
+  | 'parking'
+  | 'cafe'
+  | 'restaurant'
+  | 'frontDesk24h'
+  | 'luggageStorage'
+  | 'shuttleService';
+
 export interface HotelCardData {
   id: number;
   name: string;
@@ -17,13 +26,7 @@ export interface HotelCardData {
   roomType?: string;
   notes?: string;
   busFree?: boolean;
-  amenities?: {
-    wifi?: boolean;
-    parking?: boolean;
-    cafe?: boolean;
-    restaurant?: boolean;
-    frontDesk24h?: boolean;
-    luggageStorage?: boolean;
-    shuttleService?: boolean;
-  };
+
+  // ✅ 改成更通用的定義，避免 AmenityKey 索引錯誤
+  amenities?: Partial<Record<AmenityKey, boolean>>;
 }

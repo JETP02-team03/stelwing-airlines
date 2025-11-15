@@ -203,7 +203,7 @@ export default function PassengerPage() {
   const goNext = () => router.push(`/flight-booking/extras?${qs}`);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
+    <div>
       {/* 與前一頁一致的金額＋查看明細 */}
       <FlightInfoBar />
 
@@ -292,7 +292,7 @@ export default function PassengerPage() {
                       onChange={(e) =>
                         setContact({ ...contact, phone: e.target.value })
                       }
-                      className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 outline-none placeholder:opacity-60"
+                      className="flex-1 bg-white/10 border border-white/20 rounded-lg py-2 outline-none placeholder:opacity-60"
                       placeholder="0912-345-678"
                     />
                   </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import 'leaflet/dist/leaflet.css';
 import {
   Car,
   Clock,
@@ -9,8 +10,8 @@ import {
   Utensils,
   Wifi,
 } from 'lucide-react';
-import Image from 'next/image';
-import React from 'react';
+import dynamic from 'next/dynamic';
+import React, { useEffect, useState } from 'react';
 import {
   AmenityKey,
   MAX_PRICE,
@@ -19,8 +20,24 @@ import {
   amenityLabels,
 } from '../interfaces/constants';
 
+// 動態載入 react-leaflet，避免 SSR 問題
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+);
+const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), {
+  ssr: false,
+});
+
 interface FilterSidebarProps {
-  // 接收父層狀態
   priceMin: number;
   onPriceMinChange: (value: number) => void;
   priceMax: number;
@@ -30,12 +47,10 @@ interface FilterSidebarProps {
   selectedAmenities: AmenityKey[];
   onSelectedAmenitiesChange: (amenities: AmenityKey[]) => void;
   onClearAll: () => void;
-
   isMobileOpen: boolean;
   onClose: () => void;
 }
 
-// 設施圖標映射
 const amenityIconMap: Record<AmenityKey, React.ReactNode> = {
   wifi: <Wifi size={16} />,
   parking: <Car size={16} />,
@@ -46,7 +61,6 @@ const amenityIconMap: Record<AmenityKey, React.ReactNode> = {
   luggageStorage: <Package size={16} />,
 };
 
-// 動態生成設施列表
 const amenityList: {
   key: AmenityKey;
   label: string;
@@ -70,7 +84,30 @@ export default function FilterSidebar({
   isMobileOpen,
   onClose,
 }: FilterSidebarProps) {
+  const [isClient, setIsClient] = useState(false);
   const ratings = [4.5, 4, 3.5, 3] as const;
+
+  // 確保只在 client 端渲染地圖
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 修復 Leaflet 圖標問題
+  useEffect(() => {
+    if (isClient) {
+      import('leaflet').then((L) => {
+        delete (L as any).Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl:
+            'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          iconUrl:
+            'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          shadowUrl:
+            'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+      });
+    }
+  }, [isClient]);
 
   const toggleRating = (rate: number) => {
     const updated = selectedRatings.includes(rate)
@@ -95,7 +132,6 @@ export default function FilterSidebar({
         />
       )}
 
-      {/* ⚙️ 外層容器：保留 w-70，並確保高度填滿並可滾動，增加深色背景來視覺化拉伸 */}
       <div
         className={`
           fixed lg:static inset-y-0 left-0 w-70 space-y-9 z-50 
@@ -104,23 +140,31 @@ export default function FilterSidebar({
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        {/* 🗺️ 地圖 */}
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-full h-45 relative cursor-pointer">
-          <Image
-            src="/images/hotel/map.jpeg"
-            alt="地圖找房"
-            fill
-            className="object-cover rounded-lg"
-            sizes="(max-width: 1024px) 100vw, 320px"
-          />
-          <div className="absolute inset-0 flex justify-center items-center bg-black/30 text-white font-semibold text-lg z-10 rounded-lg">
-            地圖找房
-          </div>
+        {/* 地圖區域 */}
+        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-full h-64 relative">
+          {isClient ? (
+            <MapContainer
+              center={[25.033, 121.5654]}
+              zoom={15}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <Marker position={[25.033, 121.5654]}>
+                <Popup>酒店位置：這裡是您的酒店</Popup>
+              </Marker>
+            </MapContainer>
+          ) : (
+            <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 text-sm">
+              載入地圖中...
+            </div>
+          )}
         </div>
 
-        {/* ⚙️ 篩選內容 */}
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 w-full space-y-6">
-          {/* 標題與清除 */}
+        {/* 篩選內容 */}
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-7 h-190 w-full space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-800">篩選條件</h3>
             <button
@@ -131,7 +175,7 @@ export default function FilterSidebar({
             </button>
           </div>
 
-          {/* 💰 價格滑桿 */}
+          {/* 價格滑桿 */}
           <div>
             <h4 className="font-semibold mb-10 text-gray-700">
               價格範圍（每晚）
@@ -145,28 +189,26 @@ export default function FilterSidebar({
                   right: `${100 - Math.max(minPercent, maxPercent)}%`,
                 }}
               />
-              {/* 🔸 最小值滑桿 */}
               <input
                 type="range"
                 min={MIN_PRICE}
                 max={MAX_PRICE}
                 step={PRICE_STEP}
                 value={priceMin}
-                onChange={(e) => onPriceMinChange(Number(e.target.value))} // 呼叫父層 setter
+                onChange={(e) => onPriceMinChange(Number(e.target.value))}
                 className="absolute w-full h-6 bg-transparent appearance-none z-20 pointer-events-auto cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                   [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md
                   [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white 
                   [&::-moz-range-thumb]:rounded-lg [&::-moz-range-thumb]:border-0"
               />
-              {/* 🔸 最大值滑桿 */}
               <input
                 type="range"
                 min={MIN_PRICE}
                 max={MAX_PRICE}
                 step={PRICE_STEP}
                 value={priceMax}
-                onChange={(e) => onPriceMaxChange(Number(e.target.value))} // 呼叫父層 setter
+                onChange={(e) => onPriceMaxChange(Number(e.target.value))}
                 className="absolute w-full h-6 bg-transparent appearance-none z-10 pointer-events-auto cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                   [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md
@@ -174,7 +216,6 @@ export default function FilterSidebar({
                   [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
               />
 
-              {/* 金額標籤 */}
               <div className="absolute top-0 w-full h-0 pointer-events-none">
                 <div
                   className="absolute bg-[#DCBB87] text-white text-xs px-2 py-1 rounded-lg"
@@ -192,9 +233,9 @@ export default function FilterSidebar({
             </div>
           </div>
 
-          {/* 🌟 評分 */}
+          {/* 評分 */}
           <div>
-            <h4 className="font-semibold mb-3  text-gray-700">最低評分</h4>
+            <h4 className="font-semibold mb-3 text-gray-700">最低評分</h4>
             <ul className="space-y-1 text-gray-700 text-sm">
               {ratings.map((r) => (
                 <li key={r}>
@@ -202,7 +243,7 @@ export default function FilterSidebar({
                     <input
                       type="checkbox"
                       checked={selectedRatings.includes(r)}
-                      onChange={() => toggleRating(r)} // 呼叫 toggleRating 函式
+                      onChange={() => toggleRating(r)}
                       className="w-4 h-4 text-[#DCBB87] rounded-lg focus:ring-[#DCBB87]"
                     />
                     {r}星以上
@@ -212,7 +253,7 @@ export default function FilterSidebar({
             </ul>
           </div>
 
-          {/* 🏨 設施 */}
+          {/* 設施 */}
           <div>
             <h4 className="font-semibold mb-3 text-gray-700">設施</h4>
             <ul className="space-y-1 text-gray-700 text-sm">
@@ -240,7 +281,6 @@ export default function FilterSidebar({
           </div>
         </div>
 
-        {/* 📱 手機版按鈕：只負責關閉側邊欄 */}
         <button
           onClick={onClose}
           className="lg:hidden w-full py-3 bg-[#DCBB87] rounded-lg font-semibold text-white hover:bg-[#C49D67] transition"

@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   images: {
     // 從遠端連結圖片用的設定
     remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com' }],
+  
+    // ✅ 11/11若晴新增這行讓 Next.js 正常顯示 public 裡的 SVG、PNG，圖片壓縮優化，
+    unoptimized: true,
   },
 };
 

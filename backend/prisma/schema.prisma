@@ -34,10 +34,9 @@ model Member {
   passportExpiry DateTime? @map("passport_expiry")
   password       String    @map("password") @db.VarChar(255)
 
-  // FK（標量）可以 @map
+  // ✅ 11/11若晴修改這裡：關聯名稱統一成「MemberAvatarChoice」，方便後端查詢
   avatarChoice Int?          @map("avatar_choice")
-  // 關聯欄位不可 @map
-  avatarOption AvatarOption? @relation(fields: [avatarChoice], references: [avatarId])
+  avatar       AvatarOption? @relation("MemberAvatarChoice", fields: [avatarChoice], references: [avatarId])
 
   mileage         Int?      @default(0) @map("mileage")
   membershipLevel Level?    @default(Green) @map("membership_level")
@@ -82,7 +81,8 @@ model AvatarOption {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
-  members Member[]
+  // 修改11/11✅ 關聯名稱統一成「MemberAvatarChoice」
+  members Member[] @relation("MemberAvatarChoice")
 
   @@map("avatar_options")
 }

@@ -9,30 +9,30 @@ import SearchView from '../components/ui/SearchView';
 import TabButton from '../components/ui/TabButton';
 
 // 卡片元件 - 行李規定
-import CarryOnCard from '../components/cards/CarryOnCard';
-import CheckedLuggageCard from '../components/cards/CheckedLuggageCard';
-import ProhibitedItemsCard from '../components/cards/ProhibitedItemsCard';
+import CarryOnCard from '../components/FAQ-notice/CarryOnCard';
+import CheckedLuggageCard from '../components/FAQ-notice/CheckedLuggageCard';
+import ProhibitedItemsCard from '../components/FAQ-notice/ProhibitedItemsCard';
 
 // 卡片元件 - 機場資訊
-import BookingProcessCard from '../components/cards/BookingProcessCard';
-import ImportantInfoCard from '../components/cards/ImportantInfoCard';
-import PowerSpecsCard from '../components/cards/PowerSpecsCard';
+import BookingProcessCard from '../components/FAQ-notice/BookingProcessCard';
+import ImportantInfoCard from '../components/FAQ-notice/ImportantInfoCard';
+import PowerSpecsCard from '../components/FAQ-notice/PowerSpecsCard';
 
 // 卡片元件 - 出入境須知
-import CustomsProcessCard from '../components/cards/CustomsProcessCard';
-import { CustomsRulesCard } from '../components/cards/CustomsRulesCard';
-import EntryRequirementsCard from '../components/cards/EntryRequirementsCard';
+import CustomsProcessCard from '../components/FAQ-notice/CustomsProcessCard';
+import { CustomsRulesCard } from '../components/FAQ-notice/CustomsRulesCard';
+import EntryRequirementsCard from '../components/FAQ-notice/EntryRequirementsCard';
 
 // 卡片元件 - 緊急聯絡
-import EmbassyContactCard from '../components/cards/EmbassyContactCard';
-import EmergencyNumbersCard from '../components/cards/EmergencyNumbersCard';
-import TravelAssistanceCard from '../components/cards/TravelAssistanceCard';
+import EmbassyContactCard from '../components/FAQ-notice/EmbassyContactCard';
+import EmergencyNumbersCard from '../components/FAQ-notice/EmergencyNumbersCard';
+import TravelAssistanceCard from '../components/FAQ-notice/TravelAssistanceCard';
 
 // 卡片元件 - 安全提醒
-import CommonScamsCard from '../components/cards/CommonScamsCard';
-import CommunicationSafetyCard from '../components/cards/CommunicationSafetyCard';
-import FinancialSafetyCard from '../components/cards/FinancialSafetyCard';
-import SafetyTipsCard from '../components/cards/SafetyTipsCard';
+import CommonScamsCard from '../components/FAQ-notice/CommonScamsCard';
+import CommunicationSafetyCard from '../components/FAQ-notice/CommunicationSafetyCard';
+import FinancialSafetyCard from '../components/FAQ-notice/FinancialSafetyCard';
+import SafetyTipsCard from '../components/FAQ-notice/SafetyTipsCard';
 
 export default function FAQPage() {
   const [selectedTab, setSelectedTab] = useState('行李規定');

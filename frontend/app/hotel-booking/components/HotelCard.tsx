@@ -12,6 +12,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // ⭐ 改這行
 import { useState } from 'react';
 import { AmenityKey, amenityLabels } from '../interfaces/constants';
 import { HotelCardData } from '../interfaces/HotelCardData';
@@ -26,10 +27,15 @@ export default function HotelCard({
   showDetails = false,
 }: HotelCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const router = useRouter(); // ✅ 現在不會報錯
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFavorite(!isFavorite);
+  };
+
+  const goToDetail = () => {
+    router.push(`/search?id=${hotel.id}`);
   };
 
   const iconsMap: Record<AmenityKey, React.ReactNode> = {
@@ -43,7 +49,10 @@ export default function HotelCard({
   };
 
   return (
-    <div className="relative flex-shrink-0 w-[200px] h-[384px] rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer">
+    <div
+      onClick={goToDetail}
+      className="relative flex-shrink-0 w-[200px] h-[384px] rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+    >
       <div className="absolute inset-0">
         {hotel.image ? (
           <Image
@@ -68,8 +77,8 @@ export default function HotelCard({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h3 className="text-white font-bold text-lg drop-shadow-lg text-center h-25 leading-snug flex items-start justify-center">
+        <div className="space-y-1">
+          <h3 className="text-white font-bold text-lg drop-shadow-lg text-center h-25 leading-snug flex justify-center">
             {hotel.name}
           </h3>
 
@@ -113,7 +122,7 @@ export default function HotelCard({
               </div>
               <button
                 className="bg-[#D4A574] hover:bg-[#C69563] text-white font-semibold px-4 py-1 rounded-lg text-sm transition-all shadow-lg hover:shadow-xl active:scale-95"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()} // 阻止按鈕點擊觸發卡片跳轉
               >
                 預訂
               </button>

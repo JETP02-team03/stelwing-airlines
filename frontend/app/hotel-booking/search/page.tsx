@@ -1,28 +1,77 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DateRange } from '../components/Calendar';
 import FilterSidebar from '../components/FilterSidebar';
 import HotelResultCard from '../components/HotelResultCard';
 import SearchBar from '../components/SearchBar';
-// 🌟 導入常量和類型
 import { AmenityKey, MAX_PRICE, MIN_PRICE } from '../interfaces/constants';
-// 🌟 導入集中管理的飯店數據和介面
 import { allMockHotels } from '../interfaces/mockHotels';
-// ❗ 移除了原本寫在本地的 interface Hotel 和 const hotels 陣列。
+
+const formatDateLocal = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function HotelPage() {
-  const [showFilter, setShowFilter] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // 所有的篩選狀態都由父層 (HotelPage) 管理
+  const [showFilter, setShowFilter] = useState(false);
   const [priceMin, setPriceMin] = useState(MIN_PRICE);
   const [priceMax, setPriceMax] = useState(MAX_PRICE);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<AmenityKey[]>([]);
 
+  // 新增：loading 狀態
+  const [bookingHotelId, setBookingHotelId] = useState<number | null>(null);
+
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
-    undefined
+    () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('booking_search');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.checkin && parsed.checkout
+            ? { from: new Date(parsed.checkin), to: new Date(parsed.checkout) }
+            : undefined;
+        }
+      }
+      return undefined;
+    }
   );
+
+  const [guests, setGuests] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('booking_search');
+      return saved ? JSON.parse(saved).guests || 2 : 2;
+    }
+    return 2;
+  });
+
+  const [rooms, setRooms] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('booking_search');
+      return saved ? JSON.parse(saved).rooms || 1 : 1;
+    }
+    return 1;
+  });
+
+  const hotelRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [highlightedHotelId, setHighlightedHotelId] = useState<number | null>(
+    null
+  );
+
+  // 初始化高亮
+  useEffect(() => {
+    const initialId =
+      parseInt(searchParams.get('scrollToHotelId') || '') ||
+      parseInt(localStorage.getItem('scrollToHotelId') || '');
+    if (!isNaN(initialId)) setHighlightedHotelId(initialId);
+  }, [searchParams]);
 
   const clearAllFilters = useCallback(() => {
     setPriceMin(MIN_PRICE);
@@ -32,52 +81,115 @@ export default function HotelPage() {
   }, []);
 
   const filteredHotels = useMemo(() => {
-    // 🔒 自動修正 min/max 順序，確保篩選正確
     const min = Math.min(priceMin, priceMax);
     const max = Math.max(priceMin, priceMax);
-
-    // 🌟 使用導入的 allMockHotels 陣列進行篩選
     return allMockHotels.filter((hotel) => {
-      // 1. 價格篩選
       if (hotel.price < min || hotel.price > max) return false;
-
-      // 2. 評分篩選
       if (
         selectedRatings.length > 0 &&
         !selectedRatings.some((r) => hotel.rating >= r)
       )
         return false;
-
-      // 3. 設施篩選 (要求飯店包含所有選定的設施)
       if (
         selectedAmenities.length > 0 &&
         !selectedAmenities.every((a) => hotel.amenities.includes(a))
       )
         return false;
-
       return true;
     });
-  }, [priceMin, priceMax, selectedRatings, selectedAmenities]); // 依賴於所有篩選狀態
+  }, [priceMin, priceMax, selectedRatings, selectedAmenities]);
+
+  const updateLocalStorage = (
+    updates: Partial<{
+      checkin: string;
+      checkout: string;
+      guests: number;
+      rooms: number;
+    }>
+  ) => {
+    const existing = JSON.parse(localStorage.getItem('booking_search') || '{}');
+    localStorage.setItem(
+      'booking_search',
+      JSON.stringify({ ...existing, ...updates })
+    );
+  };
+
+  const handleDateChange = (range: DateRange | undefined) => {
+    setSelectedRange(range);
+    if (range?.from && range?.to) {
+      updateLocalStorage({
+        checkin: formatDateLocal(range.from),
+        checkout: formatDateLocal(range.to),
+        guests,
+        rooms,
+      });
+    }
+  };
+
+  const handleGuestsChange = (newGuests: number) => {
+    setGuests(newGuests);
+    updateLocalStorage({ guests: newGuests });
+  };
+
+  const handleRoomsChange = (newRooms: number) => {
+    setRooms(newRooms);
+    updateLocalStorage({ rooms: newRooms });
+  };
+
+  // 高亮效果 (純 Tailwind)
+  useEffect(() => {
+    if (highlightedHotelId !== null) {
+      const el = hotelRefs.current[highlightedHotelId];
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 移除之前高亮
+        Object.values(hotelRefs.current).forEach((e) => {
+          if (e) {
+            e.classList.remove('border-4', 'border-[#DCBB87]', 'rounded-lg');
+          }
+        });
+
+        // 設置高亮
+        el.classList.add('border-4', 'border-[#DCBB87]', 'rounded-lg');
+      }
+    }
+  }, [highlightedHotelId, filteredHotels]);
+
+  // 點擊「預訂」或「卡片」→ 高亮 + loading + 延遲 800ms → 原本路由
+  const goToDetail = async (hotelId: number) => {
+    setHighlightedHotelId(hotelId); // 觸發高亮
+    setBookingHotelId(hotelId); // 觸發 loading
+    localStorage.setItem('booking_selectedHotelId', hotelId.toString());
+
+    // 延遲 800ms
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // 保留你原本的路由：/hotel-booking/${hotelId}
+    router.push(`/hotel-booking/${hotelId}?${searchParams.toString()}`);
+    setBookingHotelId(null); // 清除 loading
+  };
 
   return (
     <div
-      className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative "
+      className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative"
       style={{ backgroundImage: "url('/images/hotel/bg1.jpeg')" }}
     >
       <div className="flex flex-col w-full h-full bg-black/70 min-h-screen p-4 md:p-8">
         <SearchBar
           selectedRange={selectedRange}
-          onDateChange={setSelectedRange}
+          onDateChange={handleDateChange}
+          guests={guests}
+          onGuestsChange={handleGuestsChange}
+          rooms={rooms}
+          onRoomsChange={handleRoomsChange}
         />
 
-        {/* ⭐ 主要內容區塊：加上最大寬度 max-w-6xl 和水平置中 mx-auto */}
         <div className="flex-1 flex flex-col md:flex-row w-full max-w-6xl mx-auto mt-4 md:mt-6">
-          {/* ⭐ 篩選側邊欄包裹層：保留 w-auto */}
           <div className="w-auto flex-shrink-0 h-full">
             <FilterSidebar
               isMobileOpen={showFilter}
               onClose={() => setShowFilter(false)}
-              // 傳遞狀態值和更新函式給 FilterSidebar
               priceMin={priceMin}
               onPriceMinChange={setPriceMin}
               priceMax={priceMax}
@@ -86,24 +198,16 @@ export default function HotelPage() {
               onSelectedRatingsChange={setSelectedRatings}
               selectedAmenities={selectedAmenities}
               onSelectedAmenitiesChange={setSelectedAmenities}
-              onClearAll={clearAllFilters} // 傳遞清除所有篩選的函式
+              onClearAll={clearAllFilters}
             />
           </div>
 
-          {/* ⭐ 主內容區：確保卡片水平置中，並移除多餘的 space-x-6 */}
           <main className="flex-1 overflow-y-auto space-y-6 px-4 md:px-8 flex flex-col items-center">
-            <button
-              onClick={() => setShowFilter(true)}
-              className="md:hidden mb-4 border rounded-md px-4 py-2 bg-white text-gray-800 font-bold w-full"
-            >
-              篩選條件
-            </button>
-
             {filteredHotels.length === 0 ? (
               <div className="text-center py-12 text-gray-300">
                 <p className="text-lg mb-4">沒有符合條件的飯店</p>
                 <button
-                  onClick={clearAllFilters} // 使用新的清除函式
+                  onClick={clearAllFilters}
                   className="text-[#DCBB87] underline"
                 >
                   清除篩選條件
@@ -111,18 +215,26 @@ export default function HotelPage() {
               </div>
             ) : (
               filteredHotels.map((hotel) => (
-                <HotelResultCard key={hotel.id} hotel={hotel} />
+                <div
+                  key={hotel.id}
+                  ref={(el) => {
+                    hotelRefs.current[hotel.id] = el;
+                  }}
+                  className="w-full"
+                >
+                  <div
+                    onClick={() => goToDetail(hotel.id)}
+                    className="cursor-pointer"
+                  >
+                    <HotelResultCard
+                      hotel={hotel}
+                      onBookClick={() => goToDetail(hotel.id)}
+                      isBooking={bookingHotelId === hotel.id}
+                    />
+                  </div>
+                </div>
               ))
             )}
-
-            <div className="flex justify-between mt-8 pb-6 w-full max-w-4xl">
-              <button className="border border-[#D4A574] text-[#D4A574] px-6 py-2 rounded-full hover:bg-[#D4A574] hover:text-white transition-all font-semibold">
-                上一步
-              </button>
-              <button className="border border-[#D4A574] text-[#D4A574] px-6 py-2 rounded-full hover:bg-[#D4A574] hover:text-white transition-all font-semibold">
-                下一步
-              </button>
-            </div>
           </main>
         </div>
       </div>

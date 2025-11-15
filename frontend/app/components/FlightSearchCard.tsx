@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { JSX, useMemo, useRef, useState } from 'react';
+import { ymdInTZ } from '../utils/date';
+
+const TZ = 'Asia/Taipei';
+const TODAY_YMD = ymdInTZ(new Date(), TZ); //SSR/Client 一致
 
 export type TripType = 'roundtrip' | 'oneway';
 export type CabinClass = 'Economy' | 'Business';

@@ -4,10 +4,18 @@
 import PageTabs from "./components/PageTabs";
 import FilterSidebar from "./components/FilterSidebar";
 import Masonry from "./components/Masonry";
+import Breadcrumb from "@/app/components/Breadcrumb";
 
 export default function TravelCommunityPage() {
   return (
     <main className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: "首頁", href: "/" },
+          { label: "旅遊分享" },
+        ]}
+      />
+
       {/* 次導航（吃滿 1440 的一整列） */}
       <PageTabs />
 

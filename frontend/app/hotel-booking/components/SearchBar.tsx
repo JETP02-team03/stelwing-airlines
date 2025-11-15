@@ -5,34 +5,48 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Calendar, { DateRange } from './Calendar';
 
+// 修正 1: 更新 SearchBarProps 介面，以接受 Page.tsx 傳入的屬性
 interface SearchBarProps {
   selectedRange?: DateRange;
   onDateChange?: (range: DateRange | undefined) => void;
+  // 新增 Guests 和 Rooms 相關屬性
+  guests: number; // 注意：Page.tsx 使用 guests，所以這裡使用 guests 而非 adults
+  onGuestsChange: (newGuests: number) => void;
+  rooms: number;
+  onRoomsChange: (newRooms: number) => void;
 }
 
 export default function SearchBar({
   selectedRange,
   onDateChange,
+  // 修正 2: 在解構中接收 guests, onGuestsChange, rooms, onRoomsChange
+  guests,
+  onGuestsChange,
+  rooms,
+  onRoomsChange,
 }: SearchBarProps) {
   const router = useRouter();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
-  const [adults, setAdults] = useState(2);
-  const [rooms, setRooms] = useState(1);
+
+  // 修正 3: 移除內部關於 adults/rooms 的 useState，因為它們現在由 props 控制
+  // 已經通過 props 接收：const [adults, setAdults] = useState(2);
+  // 已經通過 props 接收：const [rooms, setRooms] = useState(1);
 
   const formatDate = (date: Date | undefined, placeholder: string) => {
     if (!date) return placeholder;
+    // 雖然這裡使用了 toLocaleString，但在 Next.js 頁面中，這通常不會造成 hydration error，
+    // 因為這是在 'use client' 組件中，且只在客戶端渲染時才真正運行。
     const month = date.toLocaleString('en-US', { month: 'short' });
     const day = date.getDate();
     return `${month} ${day}`;
   };
 
-  // 修改這裡：選完日期不自動關閉
   const handleDateSelect = (range: DateRange | undefined) => {
     if (onDateChange) onDateChange(range);
-    // 不再自動關閉日曆
   };
 
+  // 🌟 搜尋按鈕事件：帶參數跳轉
   const handleSearch = () => {
     if (!selectedRange?.from || !selectedRange?.to) {
       alert('請選擇入住與退房日期');
@@ -42,8 +56,9 @@ export default function SearchBar({
     const checkin = selectedRange.from.toISOString().split('T')[0];
     const checkout = selectedRange.to.toISOString().split('T')[0];
 
+    // 修正 4: 使用傳入的 guests 屬性 (來自 Page.tsx)
     router.push(
-      `/search?checkin=${checkin}&checkout=${checkout}&adults=${adults}&rooms=${rooms}`
+      `/hotel-booking/search?checkin=${checkin}&checkout=${checkout}&adults=${guests}&rooms=${rooms}`
     );
   };
 
@@ -57,7 +72,7 @@ export default function SearchBar({
 
           {/* 搜尋欄 */}
           <div className="flex flex-wrap justify-center gap-3 py-4 relative">
-            {/* 日期區 */}
+            {/* 日期區 (保持不變) */}
             <div className="flex items-center bg-white rounded-lg gap-0 overflow-hidden">
               {/* Check in */}
               <button
@@ -90,8 +105,9 @@ export default function SearchBar({
               onClick={() => setShowGuestPicker(!showGuestPicker)}
             >
               <Users size={20} className="text-gray-600" />
+              {/* 修正 5: 顯示傳入的 guests 屬性 */}
               <span className="font-medium">
-                {adults} Adults / {rooms} room
+                {guests} Adults / {rooms} room
               </span>
             </button>
 
@@ -103,14 +119,16 @@ export default function SearchBar({
                   <span>成人</span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setAdults(Math.max(1, adults - 1))}
+                      // 修正 6: 使用 onGuestsChange 更新外部狀態
+                      onClick={() => onGuestsChange(Math.max(1, guests - 1))}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       -
                     </button>
-                    <span>{adults}</span>
+                    <span>{guests}</span>
                     <button
-                      onClick={() => setAdults(adults + 1)}
+                      // 修正 7: 使用 onGuestsChange 更新外部狀態
+                      onClick={() => onGuestsChange(guests + 1)}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       +
@@ -123,14 +141,16 @@ export default function SearchBar({
                   <span>房間</span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setRooms(Math.max(1, rooms - 1))}
+                      // 修正 8: 使用 onRoomsChange 更新外部狀態
+                      onClick={() => onRoomsChange(Math.max(1, rooms - 1))}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       -
                     </button>
                     <span>{rooms}</span>
                     <button
-                      onClick={() => setRooms(rooms + 1)}
+                      // 修正 9: 使用 onRoomsChange 更新外部狀態
+                      onClick={() => onRoomsChange(rooms + 1)}
                       className="px-2 py-1 bg-gray-200 rounded"
                     >
                       +
@@ -150,7 +170,7 @@ export default function SearchBar({
             )}
           </div>
 
-          {/* 搜尋按鈕換行 */}
+          {/* 搜尋按鈕 */}
           <div className="w-full flex justify-center mt-2">
             <button
               onClick={handleSearch}
@@ -162,7 +182,7 @@ export default function SearchBar({
         </div>
       </div>
 
-      {/* 日曆彈窗 */}
+      {/* 日曆彈窗 (保持不變) */}
       {showCalendar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2">
           <div
