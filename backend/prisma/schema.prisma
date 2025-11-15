@@ -237,6 +237,7 @@ model MealOption {
   @@map("meal_options")
 }
 
+// 黃蕾的旅程規劃
 model Plan {
   id            BigInt   @id @default(autoincrement()) @map("id")
   userId        BigInt   @map("user_id")
@@ -252,5 +253,29 @@ model Plan {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  items PlanItem[]
+
   @@map("plan")
+}
+
+model PlanItem {
+  id               BigInt   @id @default(autoincrement()) @map("id")
+  planId           BigInt   @map("plan_id")
+  title            String   @map("title")
+  allDay           Boolean  @map("all_day")
+  startTime        DateTime @map("start_time")
+  startTimezone    String   @map("start_timezone")
+  endTime          DateTime @map("end_time")
+  endTimezone      String   @map("end_timezone")
+  note             String?  @map("note") @db.Text
+  locationTextchar String?  @map("location_textchar")
+  locationUrl      String?  @map("location_url")
+  typeId           Int?     @map("type_id")
+  isDeleted        Int      @default(0) @map("is_deleted")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@map("plan_items")
 }
