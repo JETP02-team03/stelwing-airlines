@@ -121,7 +121,6 @@ interface Product {
 }
 
 interface DFHomePageProps {
-  products: Product[];
   filteredProducts: Product[];
   selectedCategory: string;
   selectedSubcategory: string;
@@ -129,6 +128,7 @@ interface DFHomePageProps {
   searchQuery: string;
   onCategoryClick: (category: string, subcategory: string) => void;
   onProductClick: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
   onSearchToggle: () => void;
   onSearchChange: (query: string) => void;
   onClearFilter: () => void;
@@ -142,6 +142,7 @@ export function DFHomePage({
   searchQuery,
   onCategoryClick,
   onProductClick,
+  onAddToCart,
   onSearchToggle,
   onSearchChange,
   onClearFilter,
@@ -226,6 +227,7 @@ export function DFHomePage({
               key={product.id}
               {...product}
               onClick={() => onProductClick(product)}
+              onAddToCart={() => onAddToCart(product)}
             />
           ))}
         </div>
