@@ -3,6 +3,7 @@
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
 import CreatePlanForm from '../components/createPlanForm';
 import EditDialog from '../components/editDialog';
 import TripCard from '../components/tripCard';
@@ -97,25 +98,27 @@ export default function ListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [error, setError] = useState(null);
   const [isOpenCreatePlan, setIsOpenCreatePlan] = useState(false); //彈出視窗 UI 套件版
+  const router = useRouter();
 
-  // data：fetch 後端取得資料
-  useEffect(() => {
-    async function fetchTrips() {
-      try {
-        // 呼叫共用 apiFetch
-        // const data = await apiFetch<Trip[]>('http://localhost:3007/api/plans', {
-        const data = await apiFetch<Trip[]>(`${API_BASE}/plans`, {
-          method: 'GET',
-        });
+  // API：fetch 取得列表資料
+  const fetchTrips = async () => {
+    try {
+      // 呼叫共用 apiFetch
+      const data = await apiFetch<Trip[]>('http://localhost:3007/api/plans', {
+        // const data = await apiFetch<Trip[]>(`${API_BASE}/plans`, {
+        method: 'GET',
+      });
 
-        // apiFetch 成功回傳的就是後端 data 部分
-        setTrips(data);
-      } catch (err: any) {
-        // apiFetch 拋出的錯誤會進 catch
-        setError(err.message || '無法取得旅程資料');
-      }
+      // apiFetch 成功回傳的就是後端 data 部分
+      setTrips(data);
+    } catch (err: any) {
+      // apiFetch 拋出的錯誤會進 catch
+      setError(err.message || '無法取得旅程資料');
     }
+  };
 
+  // data：首次 render 畫面 fetch 取資料
+  useEffect(() => {
     fetchTrips();
   }, [API_BASE]);
 
@@ -130,8 +133,10 @@ export default function ListPage() {
       : tripsForUI.filter((t) => t.status === activeTab);
 
   // 功能：新增旅程 form 成功新增後關閉彈出視窗
-  const handleFormSuccess = () => {
+  const handleFormSuccess = (newTripId: string) => {
+    // fetchTrips();
     setIsOpenCreatePlan(false);
+    router.push(`/travel-planner/${newTripId}`);
   };
 
   // 功能：刪除旅程成功後更新列表

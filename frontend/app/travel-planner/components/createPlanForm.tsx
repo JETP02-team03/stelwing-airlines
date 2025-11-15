@@ -5,6 +5,7 @@ import { timezones } from '../src/data/timezone';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
 import { useAlertDialog } from '../components/alertDialog/useAlertDialog';
+import { Trip } from '../types';
 import { apiFetch } from '../utils/apiFetch';
 import AlertDialogBox from './alertDialog/alertDialogBox';
 
@@ -14,7 +15,7 @@ import AlertDialogBox from './alertDialog/alertDialogBox';
 export default function CreatePlanForm({
   onSuccess,
 }: {
-  onSuccess: () => void;
+  onSuccess: (newTripId: string) => void;
 }) {
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const { alert, showAlert } = useAlertDialog();
@@ -71,7 +72,7 @@ export default function CreatePlanForm({
         endDate: endDateTime.toUTC().toISO(),
       };
 
-      const data = await apiFetch(`http://localhost:3007/api/plans`, {
+      const data = await apiFetch<Trip>(`http://localhost:3007/api/plans`, {
         // const data = await apiFetch(`${API_BASE}/plans`, {
         method: 'POST',
         body: JSON.stringify(adjustedData),
@@ -82,7 +83,7 @@ export default function CreatePlanForm({
         title: '新增成功',
         description: '點擊確認跳轉行程規劃頁面',
         confirmText: '確認',
-        onConfirm: onSuccess,
+        onConfirm: () => onSuccess(data.id),
       });
     } catch (err: any) {
       showAlert({
