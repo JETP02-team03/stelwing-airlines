@@ -21,7 +21,7 @@ const router = express.Router();
 
 // | GET | /api/plans | 讀取所有旅程 |
 router.get("/", async (req: Request, res: Response) => {
-    const userId = 1;
+    const userId = 2;
 
     if (!userId) return res.status(404).json({ message: "沒有提供User ID" }) //之後有 JWT 驗證時拉掉
 
@@ -31,9 +31,10 @@ router.get("/", async (req: Request, res: Response) => {
             userId: userId,
             isDeleted: 0,
         },
-        orderBy: {
-            startDate: "desc",
-        }
+        orderBy: [
+          { startDate: 'desc' },  // 先依開始日期降冪
+          { endDate: 'desc' }     // 開始日期相同時再依結束日期降冪
+        ]
       })
 
       const response: ApiResponse = {
@@ -55,7 +56,7 @@ router.get("/", async (req: Request, res: Response) => {
 
 // | POST | /api/plans | 新增旅程 |
 router.post("/", async (req: Request, res: Response) => {
-  const userId = 1; //之後改為從 JWT 取 userID
+  const userId = 2; //之後改為從 JWT 取 userID
 
   if (!userId) return res.status(404).json({ message: "沒有提供User ID" }) //之後有 JWT 驗證時拉掉
 
@@ -105,7 +106,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 // | DELETE | /api/plans/:planId | 刪除旅程 |
 router.delete('/:id', async (req: Request, res: Response) => {
-  const userId = 1; //之後改為從 JWT 取 userID
+  const userId = 2; //之後改為從 JWT 取 userID
   const planId = Number(req.params.id);
   
   // 驗證：(有沒有提供 userId)、有沒有提供 tripId、tripId 是不是數字

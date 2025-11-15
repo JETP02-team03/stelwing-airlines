@@ -5,7 +5,9 @@ import listPlugin from '@fullcalendar/list';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 import TripCardSortSample from '../components/tripCardShortSample';
+import TripItemCard from '../components/tripItemCard';
 
 // export interface SamplePageProps {}
 // {  }: SamplePageProps
@@ -193,11 +195,13 @@ export default function SamplePage() {
     },
   ];
 
+  const [isOpenItemCard, setIsOpenItemCard] = useState(false);
+
   return (
     <>
-      <div className="flex-1 flex px-16 py-8 w-full overflow-hidden">
+      <div className="flex-1 flex px-16 py-8 w-full">
         <section
-          className="flex-1 border border-solid border-black rounded-2xl
+          className="flex-1 min-h-full border border-solid border-black rounded-2xl
           w-full flex 
           overflow-hidden"
         >
@@ -276,20 +280,12 @@ export default function SamplePage() {
               eventClick={(info) => {
                 // 阻止預設的導向行為（例如連到網址）
                 info.jsEvent.preventDefault();
-
-                // 這裡可以取到被點擊的事件資料
-                console.log(info.event.title);
-                console.log(info.event.start);
-                console.log(info.event.end);
-
-                // 你可以這樣開啟彈窗或導頁
-                alert(
-                  `行程：${info.event.title}\n日期：${info.event.start?.toLocaleDateString()}`
-                );
+                setIsOpenItemCard(true);
               }}
             />
           </div>
         </section>
+        {isOpenItemCard && <TripItemCard />}
       </div>
     </>
   );

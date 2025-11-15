@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
@@ -8,86 +9,87 @@ import EditDialog from '../components/editDialog';
 import TripCard from '../components/tripCard';
 import type { Trip } from '../types';
 import { apiFetch } from '../utils/apiFetch';
+
 // export interface ListPageProps {}
 
 export default function ListPage() {
-  const mockTrips = [
-    {
-      id: '1',
-      userId: '1',
-      title: '12 月東京旅：一般',
-      destination: '日本：東京、輕井澤、富士山、鐮倉',
-      startDate: '2025-12-11T16:00:00.000Z',
-      startTimezone: 'Asia/Taipei',
-      endDate: '2025-12-27T00:00:00.000Z',
-      endTimezone: 'Asia/Taipei',
-      note: '',
-      coverImage: '',
-      isDeleted: 0,
-      createdAt: '2025-10-30T07:35:38.608Z',
-      updatedAt: '2025-10-30T07:35:38.608Z',
-    },
-    {
-      id: '2',
-      userId: '1',
-      title: '12 月東京旅：雨備',
-      destination: '日本：東京、輕井澤、富士山、鐮倉',
-      startDate: '2025-12-12T00:00:00.000Z',
-      startTimezone: 'Asia/Taipei',
-      endDate: '2025-12-27T00:00:00.000Z',
-      endTimezone: 'Asia/Taipei',
-      note: '雨天就去迪士尼',
-      coverImage: '',
-      isDeleted: 0,
-      createdAt: '2025-10-30T07:35:38.608Z',
-      updatedAt: '2025-10-30T07:35:38.608Z',
-    },
-    {
-      id: '3',
-      userId: '1',
-      title: '加拿大躲熊熊',
-      destination: '溫哥華',
-      startDate: '2025-11-01T07:00:00.000Z',
-      startTimezone: 'America/Vancouver',
-      endDate: '2025-11-05T00:00:00.000Z',
-      endTimezone: 'America/Vancouver',
-      note: '此時此刻應該尚未開始',
-      coverImage: '',
-      isDeleted: 0,
-      createdAt: '2025-10-30T07:35:38.608Z',
-      updatedAt: '2025-10-30T07:35:38.608Z',
-    },
-    {
-      id: '4',
-      userId: '1',
-      title: '10 月泰國清邁',
-      destination: '清邁',
-      startDate: '2025-10-03T00:00:00.000Z',
-      startTimezone: 'Asia/Taipei',
-      endDate: '2025-10-05T00:00:00.000Z',
-      endTimezone: 'Asia/Taipei',
-      note: '大阿啊啊啊啊象',
-      coverImage: '',
-      isDeleted: 0,
-      createdAt: '2025-10-30T07:35:38.608Z',
-      updatedAt: '2025-10-30T07:35:38.608Z',
-    },
-    {
-      id: '5',
-      userId: '1',
-      title: '只有我想去尼泊爾',
-      destination: 'Kathmandu、Pokhara、Chitwan',
-      startDate: '2025-09-11T00:00:00.000Z',
-      startTimezone: 'Asia/Taipei',
-      endDate: '2025-09-21T00:00:00.000Z',
-      endTimezone: 'Asia/Kathmandu',
-      note: '尼泊爾的湖',
-      coverImage: '',
-      isDeleted: 0,
-      createdAt: '2025-10-30T07:35:38.608Z',
-      updatedAt: '2025-10-30T07:35:38.608Z',
-    },
-  ];
+  // const mockTrips = [
+  //   {
+  //     id: '1',
+  //     userId: '1',
+  //     title: '12 月東京旅：一般',
+  //     destination: '日本：東京、輕井澤、富士山、鐮倉',
+  //     startDate: '2025-12-11T16:00:00.000Z',
+  //     startTimezone: 'Asia/Taipei',
+  //     endDate: '2025-12-27T00:00:00.000Z',
+  //     endTimezone: 'Asia/Taipei',
+  //     note: '',
+  //     coverImage: '',
+  //     isDeleted: 0,
+  //     createdAt: '2025-10-30T07:35:38.608Z',
+  //     updatedAt: '2025-10-30T07:35:38.608Z',
+  //   },
+  //   {
+  //     id: '2',
+  //     userId: '1',
+  //     title: '12 月東京旅：雨備',
+  //     destination: '日本：東京、輕井澤、富士山、鐮倉',
+  //     startDate: '2025-12-12T00:00:00.000Z',
+  //     startTimezone: 'Asia/Taipei',
+  //     endDate: '2025-12-27T00:00:00.000Z',
+  //     endTimezone: 'Asia/Taipei',
+  //     note: '雨天就去迪士尼',
+  //     coverImage: '',
+  //     isDeleted: 0,
+  //     createdAt: '2025-10-30T07:35:38.608Z',
+  //     updatedAt: '2025-10-30T07:35:38.608Z',
+  //   },
+  //   {
+  //     id: '3',
+  //     userId: '1',
+  //     title: '加拿大躲熊熊',
+  //     destination: '溫哥華',
+  //     startDate: '2025-11-01T07:00:00.000Z',
+  //     startTimezone: 'America/Vancouver',
+  //     endDate: '2025-11-05T00:00:00.000Z',
+  //     endTimezone: 'America/Vancouver',
+  //     note: '此時此刻應該尚未開始',
+  //     coverImage: '',
+  //     isDeleted: 0,
+  //     createdAt: '2025-10-30T07:35:38.608Z',
+  //     updatedAt: '2025-10-30T07:35:38.608Z',
+  //   },
+  //   {
+  //     id: '4',
+  //     userId: '1',
+  //     title: '10 月泰國清邁',
+  //     destination: '清邁',
+  //     startDate: '2025-10-03T00:00:00.000Z',
+  //     startTimezone: 'Asia/Taipei',
+  //     endDate: '2025-10-05T00:00:00.000Z',
+  //     endTimezone: 'Asia/Taipei',
+  //     note: '大阿啊啊啊啊象',
+  //     coverImage: '',
+  //     isDeleted: 0,
+  //     createdAt: '2025-10-30T07:35:38.608Z',
+  //     updatedAt: '2025-10-30T07:35:38.608Z',
+  //   },
+  //   {
+  //     id: '5',
+  //     userId: '1',
+  //     title: '只有我想去尼泊爾',
+  //     destination: 'Kathmandu、Pokhara、Chitwan',
+  //     startDate: '2025-09-11T00:00:00.000Z',
+  //     startTimezone: 'Asia/Taipei',
+  //     endDate: '2025-09-21T00:00:00.000Z',
+  //     endTimezone: 'Asia/Kathmandu',
+  //     note: '尼泊爾的湖',
+  //     coverImage: '',
+  //     isDeleted: 0,
+  //     createdAt: '2025-10-30T07:35:38.608Z',
+  //     updatedAt: '2025-10-30T07:35:38.608Z',
+  //   },
+  // ];
 
   interface TripForUI extends Trip {
     status: string;
@@ -180,6 +182,15 @@ export default function ListPage() {
     setIsOpenCreatePlan(false);
   };
 
+  // 功能：刪除旅程成功後更新列表
+  const handleTripDeleted = (deletedId: string) => {
+    // 此函式接受一個參數 deletedId，代表我在刪旅程時會提供一個 id
+    // 然後要將旅程列表資料更新，用到 setTrip
+    // setTrip 的新值是什麼，是當下 prev 值篩選過後的結果
+    // 篩選的條件是，列表裡的 trip.id 要不為 deletedId 才留下來
+    setTrips((prev) => prev.filter((trip) => trip.id !== deletedId));
+  };
+
   // return 畫面
   return (
     <>
@@ -191,7 +202,22 @@ export default function ListPage() {
           overflow-hidden"
         >
           {/* 搜尋及排序 */}
-          <div className="p-4">search！</div>
+          <div className="px-10 py-4 flex justify-center">
+            {/* 搜尋框 */}
+            <div className="flex gap-2 items-center">
+              <label htmlFor="search">搜尋標題或目的地</label>
+              <div className="border border-(--sw-primary) flex items-center rounded-lg overflow-hidden">
+                <input
+                  id="search"
+                  type="text"
+                  className="h-full p-2 focus:outline-none focus:ring-0"
+                />
+                <button className="p-2 text-white bg-(--sw-primary)">
+                  <Search />
+                </button>
+              </div>
+            </div>
+          </div>
           {/* 主內容 */}
           <div className="flex-1 flex p-10 bg-(--sw-primary)">
             <div className="flex-1 flex flex-col">
@@ -228,7 +254,11 @@ export default function ListPage() {
                   {filteredTrips.length > 0 ? (
                     filteredTrips.map((t) => (
                       // 關鍵：一定要給 key（即使不傳資料也要 key）
-                      <TripCard key={t.id} trip={t} />
+                      <TripCard
+                        key={t.id}
+                        trip={t}
+                        onDeleteSuccess={handleTripDeleted}
+                      />
                     ))
                   ) : (
                     <div className="text-(--sw-white)">尚無旅程規劃</div>

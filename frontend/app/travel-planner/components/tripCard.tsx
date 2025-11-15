@@ -30,6 +30,7 @@ export interface Trip {
 // TripCardProps 直接傳整個 trip
 export interface TripCardProps {
   trip: Trip;
+  onDeleteSuccess: (id: string) => void;
 }
 
 const STATUS_BACKGROUND_COLORS: Record<string, string> = {
@@ -44,11 +45,12 @@ const STATUS_TEXT_COLORS: Record<string, string> = {
   已結束: '--sw-white', // 藍
 };
 
-export default function TripCard({ trip }: TripCardProps) {
+export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const { alert, showAlert } = useAlertDialog();
   const [isOpenDeletePlan, setIsOpenDeletePlan] = useState(false);
 
+  // 功能：處理刪除旅程
   const handleDelete = useCallback(async () => {
     try {
       // const data = await fetch(`http://localhost:3007/api/plans/${trip.id}`, {
@@ -56,7 +58,7 @@ export default function TripCard({ trip }: TripCardProps) {
         method: 'DELETE',
       });
 
-      console.log(data);
+      onDeleteSuccess(trip.id);
 
       showAlert({
         title: '刪除成功',
@@ -72,10 +74,11 @@ export default function TripCard({ trip }: TripCardProps) {
         onConfirm: () => setIsOpenDeletePlan(false),
       });
     }
-  }, [API_BASE, trip.id, showAlert]);
+  }, [API_BASE, trip.id, showAlert, onDeleteSuccess]);
 
   return (
     <>
+      {/* 主體：旅程卡片 */}
       <div className="rounded-lg bg-ticket py-4 flex">
         {/* 第 1 塊：飛機窗圖片 */}
         <div className="px-4">

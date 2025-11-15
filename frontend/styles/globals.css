@@ -249,6 +249,16 @@ body {
   );
 }
 
+.bg-ticket-side {
+  background: linear-gradient(
+    90deg,
+    #e1e2e2 0%,
+    #e1e2e2 4%,
+    white 4%,
+    white 100%
+  );
+}
+
 /* .bg-ticket:hover {
   background: linear-gradient(
     180deg,

@@ -13,9 +13,9 @@ export default function AlertDialogBox({ alert }: AlertDialogBoxProps) {
       <AlertDialog.Root open={alert.open}>
         <AlertDialog.Portal>
           {/* 背後的黑色遮罩 */}
-          <AlertDialog.Overlay className="fixed inset-0 bg-black/50" />
+          <AlertDialog.Overlay className="fixed inset-0 bg-black/50 z-900" />
           {/* 訊息視窗本體 */}
-          <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ticket rounded-xl p-6 shadow-xl w-[90%] max-w-sm">
+          <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-ticket rounded-xl p-6 shadow-xl w-[90%] max-w-sm z-950">
             <AlertDialog.Title className="text-lg font-semibold">
               {alert.title}
             </AlertDialog.Title>
