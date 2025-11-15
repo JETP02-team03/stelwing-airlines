@@ -187,18 +187,18 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
                     border-l border-dashed border-(--sw-primary)"
         >
           <button
-            className="sw-btn border border-solid border-(--sw-grey)"
             onClick={handleViewDetail}
+            disabled={loading}
+            className="sw-btn border border-solid border-(--sw-grey)"
           >
-            <h6 className="sw-h6">查看詳細行程</h6>
+            <h6 className="sw-h6">{loading ? '驗證中...' : '查看詳細行程'}</h6>
           </button>
 
           <button
-            onClick={handleViewDetail}
-            disabled={loading}
-            className="sw-btn"
+            className="sw-btn border border-solid border-(--sw-grey)"
+            onClick={handleDelete}
           >
-            {loading ? '驗證中...' : '查看詳細行程'}
+            <h6 className="sw-h6">刪除整趟旅程</h6>
           </button>
         </div>
       </div>
