@@ -31,18 +31,21 @@ export default function HotelDetailBookingCard({
   // 在組件掛載後設置 mounted 為 true
   useEffect(() => setMounted(true), []);
 
+  // totalPrice 僅根據傳入的 props (來自 URL 參數或上層元件的穩定狀態) 計算
   const totalPrice = hotel.price * formData.nights * formData.rooms;
 
-  // 格式化價格的輔助函式，使用 mounted 狀態
+  // 格式化價格的輔助函式，解決水合作用問題
   const renderFormattedPrice = () => {
-    // 只有在客戶端掛載後，才進行 locale 相關的格式化
+    // SSR 階段: 渲染原始價格字串，不進行 locale 格式化
+    const rawPriceString = `$${totalPrice.toString()}`;
+
+    // CSR 階段 (mounted = true): 使用 locale 格式化，確保顯示美觀
     if (mounted) {
       return `$${totalPrice.toLocaleString()}`;
     }
-    // SSR 期間或未掛載時，顯示一個非確定性的佔位符（例如 '...' 或 '0'），確保客戶端能匹配
-    // 因為您原始的錯誤訊息是顯示 "+ 7,000- 10,500"，
-    // 我使用一個簡單的佔位符，讓伺服器和客戶端在水合作用前保持一致。
-    return '$0';
+
+    // SSR 階段 (mounted = false): 渲染不變的原始價格，避免不一致
+    return rawPriceString;
   };
 
   return (
@@ -52,7 +55,7 @@ export default function HotelDetailBookingCard({
 
         <div className="flex justify-between items-end mb-4 border-b pb-4">
           <span className="text-sm text-gray-600">總金額 (含稅)</span>
-          {/* **修改點 1:** 使用 renderFormattedPrice 處理水合作用問題 */}
+          {/* 使用 renderFormattedPrice */}
           <span className="text-4xl font-extrabold text-[#303D49]">
             {renderFormattedPrice()}
           </span>
@@ -88,12 +91,13 @@ export default function HotelDetailBookingCard({
             />
           </div>
 
-          {/* 住宿晚數 (原本可選 → 改為僅顯示，不可修改) */}
+          {/* 住宿晚數 (僅顯示，不可修改) */}
           <div>
             <label className="text-sm font-medium block mb-1 flex items-center gap-2">
               <Moon size={16} className="text-gray-500" />
               住宿晚數
             </label>
+            {/* 這裡使用 div 顯示，確保它是只讀的 */}
             <div className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
               {formData.nights} 晚
             </div>
@@ -154,14 +158,12 @@ export default function HotelDetailBookingCard({
 
           <div className="flex justify-between">
             <span>入住</span>
-            {/* 這裡原本就使用了 mounted 檢查，保持不變 */}
-            <span>{mounted ? formData.checkIn : ''}</span>
+            <span>{formData.checkIn}</span>
           </div>
 
           <div className="flex justify-between">
             <span>退房</span>
-            {/* 這裡原本就使用了 mounted 檢查，保持不變 */}
-            <span>{mounted ? formData.checkOut : ''}</span>
+            <span>{formData.checkOut}</span>
           </div>
 
           <div className="flex justify-between">
@@ -183,7 +185,7 @@ export default function HotelDetailBookingCard({
 
           <div className="border-t pt-2 flex justify-between font-bold text-lg">
             <span>總金額</span>
-            {/* **修改點 2:** 使用 renderFormattedPrice 處理水合作用問題 */}
+            {/* 使用 renderFormattedPrice 處理水合作用問題 */}
             <span className="text-[#DCBB87]">{renderFormattedPrice()}</span>
           </div>
         </div>
