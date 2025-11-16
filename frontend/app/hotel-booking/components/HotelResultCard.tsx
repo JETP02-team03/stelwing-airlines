@@ -43,6 +43,8 @@ export default function HotelResultCard({
 }: HotelResultCardProps) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
+  // 控制全屏圖片預覽模態框的狀態
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   useEffect(() => {
     const favorites: number[] = JSON.parse(
@@ -74,9 +76,18 @@ export default function HotelResultCard({
   };
 
   return (
-    <div className="flex w-full max-w-4xl items-center px-4 bg-white rounded-lg shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden">
-      {/* 左側飯店圖 */}
-      <div className="relative w-50 h-40 flex-shrink-0">
+    <div className="flex w-full max-w-4xl items-center px-4 bg-white rounded shadow-md hover:shadow-xl transition overflow-hidden">
+      {/* 左側飯店圖 - 點擊時開啟圖片放大模態框 (已加入阻止冒泡) */}
+      <div
+        className="relative w-50 h-40 flex-shrink-0 cursor-pointer"
+        onClick={(e) => {
+          // 接收事件參數 e
+          e.stopPropagation(); // 阻止事件冒泡，確保圖片點擊不會觸發路由跳轉
+          if (hotel.image) {
+            setIsImageModalOpen(true);
+          }
+        }}
+      >
         {hotel.image ? (
           <Image
             src={hotel.image}
@@ -89,7 +100,7 @@ export default function HotelResultCard({
             }}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 rounded-lg">
             無圖片
           </div>
         )}
@@ -156,11 +167,11 @@ export default function HotelResultCard({
           </div>
           <div className="text-xs text-gray-500 mb-0.5">/night</div>
 
-          {/* 預訂按鈕：loading + 延遲 */}
+          {/* 預訂按鈕：點擊時執行 onBookClick (包含您需要的路由跳轉邏輯) */}
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onBookClick();
+              e.stopPropagation(); // 阻止冒泡，確保只觸發預訂邏輯
+              onBookClick(); // 執行預訂，通常這裡會包含 router.push(...)
             }}
             disabled={isBooking}
             className={`
@@ -198,6 +209,42 @@ export default function HotelResultCard({
           </button>
         </div>
       </div>
+
+      {/* 🖼️ 圖片預覽模態框 (Modal) */}
+      {isImageModalOpen && hotel.image && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex justify-center items-center backdrop-blur-sm"
+          onClick={(e) => {
+            e.stopPropagation(); // 確保點擊背景不會觸發父級路由
+            setIsImageModalOpen(false);
+          }}
+        >
+          <div className="relative max-w-7xl max-h-[90vh] p-4">
+            <Image
+              src={hotel.image}
+              alt={hotel.name + ' - 放大預覽'}
+              width={1200}
+              height={800}
+              className="object-contain w-full h-full rounded-lg"
+              onClick={(e) => e.stopPropagation()} // 防止點擊圖片本身關閉模態框
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  '/images/hotel/fallback.jpeg';
+              }}
+            />
+            {/* 關閉按鈕 - 確保點擊 X 不會跳轉 */}
+            <button
+              className="absolute top-4 right-4 text-white text-3xl p-2 rounded-full bg-black/50 hover:bg-black/80 transition"
+              onClick={(e) => {
+                e.stopPropagation(); // 💥 阻止點擊 X 後事件冒泡到父級 Link/onClick
+                setIsImageModalOpen(false);
+              }}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
