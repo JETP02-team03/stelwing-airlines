@@ -134,7 +134,7 @@ export default function HotelResultCard({
           {hotel.distance && <span>・{hotel.distance}</span>}
           {hotel.busFree && (
             <span className="ml-2 px-2 py-0.5 rounded-lg bg-[#DCBB87] text-black font-semibold text-xs">
-              免稅
+              免費接駁
             </span>
           )}
         </div>
@@ -167,7 +167,7 @@ export default function HotelResultCard({
           </div>
           <div className="text-xs text-gray-500 mb-0.5">/night</div>
 
-          {/* 預訂按鈕：點擊時執行 onBookClick (包含您需要的路由跳轉邏輯) */}
+          {/* 預訂按鈕：已修正，增加金色邊框、手型鼠標和陰影 */}
           <button
             onClick={(e) => {
               e.stopPropagation(); // 阻止冒泡，確保只觸發預訂邏輯
@@ -175,11 +175,11 @@ export default function HotelResultCard({
             }}
             disabled={isBooking}
             className={`
-              px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2
+              px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer // ✨ 增加 shadow-lg 和 cursor-pointer
               ${
                 isBooking
-                  ? 'bg-gray-400 cursor-not-allowed text-white shadow-amber-900'
-                  : 'bg-[#1E2A33] text-[#DCBB87] hover:bg-[#303D49]'
+                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  : 'bg-[#1E2A33] text-[#DCBB87] hover:bg-[#303D49] border-2 border-[#DCBB87]' // ✨ 增加金色邊框
               }
             `}
           >

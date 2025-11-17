@@ -178,7 +178,7 @@ export default function HotelDetailContent({
             <User size={24} />
             主要登記者資料
           </h3>
-          <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+          <div className="space-y-4 p-6 rounded-lg">
             {/* 姓名 */}
             <div>
               <label className="text-sm font-medium block mb-1" htmlFor="name">
@@ -190,7 +190,7 @@ export default function HotelDetailContent({
                 placeholder="請輸入姓名"
                 value={formData.name}
                 onChange={(e) => onInputChange('name', e.target.value)}
-                className={`w-full p-3 border rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
+                className={`w-full p-3 border rounded-md focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -210,7 +210,7 @@ export default function HotelDetailContent({
                 placeholder="09xxxxxxxx"
                 value={formData.phone}
                 onChange={(e) => onInputChange('phone', e.target.value)}
-                className={`w-full p-3 border rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
+                className={`w-full p-3 border rounded-md  focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
                   errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -230,7 +230,7 @@ export default function HotelDetailContent({
                 placeholder="example@email.com"
                 value={formData.email}
                 onChange={(e) => onInputChange('email', e.target.value)}
-                className={`w-full p-3 border rounded-md bg-white focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
+                className={`w-full p-3 border rounded-md  focus:border-[#DCBB87] focus:ring-1 focus:ring-[#DCBB87] transition ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
               />

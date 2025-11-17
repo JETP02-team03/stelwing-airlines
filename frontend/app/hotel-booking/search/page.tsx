@@ -288,10 +288,7 @@ export default function HotelPage() {
                   }}
                   className="w-full"
                 >
-                  <div
-                    onClick={() => goToDetail(hotel.id)}
-                    className="cursor-pointer"
-                  >
+                  <div>
                     <HotelResultCard
                       hotel={hotel}
                       onBookClick={() => goToDetail(hotel.id)}
