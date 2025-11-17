@@ -178,7 +178,7 @@ export default function HotelResultCard({
               px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2
               ${
                 isBooking
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  ? 'bg-gray-400 cursor-not-allowed text-white shadow-amber-900'
                   : 'bg-[#1E2A33] text-[#DCBB87] hover:bg-[#303D49]'
               }
             `}
