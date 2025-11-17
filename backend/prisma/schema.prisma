@@ -265,8 +265,8 @@ model PlanItem {
   allDay           Boolean  @map("all_day")
   startTime        DateTime @map("start_time")
   startTimezone    String   @map("start_timezone")
-  endTime          DateTime @map("end_time")
-  endTimezone      String   @map("end_timezone")
+  endTime          DateTime? @map("end_time")
+  endTimezone      String?   @map("end_timezone")
   note             String?  @map("note") @db.Text
   locationTextchar String?  @map("location_textchar")
   locationUrl      String?  @map("location_url")
