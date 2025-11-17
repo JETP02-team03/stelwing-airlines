@@ -8,7 +8,6 @@ import SearchBar from './components/SearchBar';
 import { HotelCardData } from './interfaces/HotelCardData';
 import { calculateNights } from './utils/dateUtils';
 
-// 修正時區差一天 (此函式邏輯保持不變)
 const formatDateLocal = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -18,8 +17,8 @@ const formatDateLocal = (date: Date) => {
 
 export default function Page() {
   const router = useRouter();
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
-  // 飯店資料 (保持不變)
   const hotels: HotelCardData[] = [
     {
       id: 1,
@@ -112,49 +111,20 @@ export default function Page() {
     },
   ];
 
-  // ------------------------------------------------------------
-  // ✅ 修正 1: 狀態初始化為 undefined，確保 SSR 一致
-  // ------------------------------------------------------------
+  // ✅ 初始狀態全部為 undefined，不載入 localStorage
   const [selectedRange, setSelectedRange] = React.useState<
     DateRange | undefined
   >(undefined);
-
   const [guests, setGuests] = React.useState(2);
   const [rooms, setRooms] = React.useState(1);
 
-  // ------------------------------------------------------------
-  // ✅ 修正 2: 使用 useEffect 在客戶端載入 localStorage 資料
-  // ------------------------------------------------------------
+  // ✅ 首頁不自動載入 localStorage，保持乾淨的初始狀態
   React.useEffect(() => {
-    // 此程式碼只會在客戶端 (瀏覽器) 執行
-    const saved = localStorage.getItem('booking_search');
-    if (!saved) return;
+    // 首頁只需要設定 isLoaded，不讀取 localStorage
+    // 這樣每次訪問首頁都是全新的狀態
+    setIsLoaded(true);
+  }, []);
 
-    try {
-      const parsed = JSON.parse(saved);
-
-      // 載入日期
-      if (parsed.checkin && parsed.checkout) {
-        const checkinDate = new Date(parsed.checkin);
-        const checkoutDate = new Date(parsed.checkout);
-
-        // 檢查日期有效性
-        if (!isNaN(checkinDate.getTime()) && !isNaN(checkoutDate.getTime())) {
-          setSelectedRange({ from: checkinDate, to: checkoutDate });
-        }
-      }
-
-      // 載入其他數值 (Guests & Rooms)
-      if (parsed.guests && parsed.guests > 0) setGuests(parsed.guests);
-      if (parsed.rooms && parsed.rooms > 0) setRooms(parsed.rooms);
-    } catch (error) {
-      console.error('Failed to parse localStorage booking_search:', error);
-    }
-  }, []); // 僅在元件首次掛載時執行
-
-  // ------------------------------------------------------------
-  // updateLocalStorage (保持不變)
-  // ------------------------------------------------------------
   const updateLocalStorage = (
     updates: Partial<{
       checkin: string;
@@ -176,7 +146,7 @@ export default function Page() {
     if (range?.from && range?.to) {
       updateLocalStorage({
         checkin: formatDateLocal(range.from),
-        checkout: formatDateLocal(range.to), // 正確使用 formatDateLocal
+        checkout: formatDateLocal(range.to),
         guests,
         rooms,
       });
@@ -198,11 +168,21 @@ export default function Page() {
     router.push('/hotel-booking/search');
   };
 
-  // 計算晚數（11/13 → 11/15 = 2晚）
   const getNights = () => {
     if (!selectedRange?.from || !selectedRange?.to) return 1;
     return calculateNights(selectedRange.from, selectedRange.to);
   };
+
+  // ✅ 簡化載入邏輯
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-[url('/images/hotel/bg1.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/70 bg-blend-darken pb-10">
+        <div className="text-white py-12 px-4 flex items-center justify-center">
+          <div className="animate-pulse">載入中...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[url('/images/hotel/bg1.jpeg')] bg-cover bg-center sm:bg-top bg-no-repeat bg-black/70 bg-blend-darken pb-10">

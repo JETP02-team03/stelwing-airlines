@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import * as React from 'react';
 
-// ==================== 星期與月份文字 (常數) ====================
 const DAYS = ['Sun', 'Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = [
   'Jan',
@@ -20,11 +19,8 @@ const MONTHS = [
   'Dec',
 ];
 
-// ==================== 日期輔助函式 ====================
+export type DateRange = { from?: Date; to?: Date };
 
-/**
- * 取得當月實際應顯示的所有日期 (不補下個月，只顯示前面空格)
- */
 function getDaysInMonthExact(year: number, month: number): (Date | null)[] {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -32,25 +28,12 @@ function getDaysInMonthExact(year: number, month: number): (Date | null)[] {
   const startingDayOfWeek = firstDay.getDay();
 
   const days: (Date | null)[] = [];
-
-  // 1️⃣ 前面補空白（用 null 表示）
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-
-  // 2️⃣ 填入本月日期
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push(new Date(year, month, i));
-  }
-  while (days.length < 42) {
-    days.push(null);
-  }
+  for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+  while (days.length < 42) days.push(null);
   return days;
 }
 
-/**
- * 檢查兩個 Date 物件是否為同一天
- */
 function isSameDay(date1: Date, date2: Date): boolean {
   if (!date1 || !date2) return false;
   return (
@@ -60,9 +43,6 @@ function isSameDay(date1: Date, date2: Date): boolean {
   );
 }
 
-/**
- * 檢查日期是否在選取範圍內 (from 和 to 之間)
- */
 function isInRange(date: Date, range?: DateRange): boolean {
   if (!range?.from || !range?.to) return false;
   const start = range.from < range.to ? range.from : range.to;
@@ -80,7 +60,6 @@ function isRangeEnd(date: Date, range?: DateRange): boolean {
   return isSameDay(date, range.to);
 }
 
-// ==================== 單一月曆 ====================
 function SingleCalendar({
   year,
   month,
@@ -93,8 +72,6 @@ function SingleCalendar({
   onSelect?: (range: DateRange | undefined) => void;
 }) {
   const days = getDaysInMonthExact(year, month);
-  const currentMonth = month;
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -103,11 +80,8 @@ function SingleCalendar({
     if (!selected?.from || (selected.from && selected.to)) {
       onSelect({ from: date, to: undefined });
     } else {
-      if (date < selected.from) {
-        onSelect({ from: date, to: selected.from });
-      } else {
-        onSelect({ from: selected.from, to: date });
-      }
+      if (date < selected.from) onSelect({ from: date, to: selected.from });
+      else onSelect({ from: selected.from, to: date });
     }
   };
 
@@ -145,12 +119,9 @@ function SingleCalendar({
       {/* 日期格 */}
       <div className="grid grid-cols-7 gap-0">
         {days.map((date, index) => {
-          if (!date) {
-            // 🔸 無日期的空格
-            return <div key={index} className="h-6 w-10" />;
-          }
+          if (!date) return <div key={index} className="h-6 w-10" />;
 
-          const isCurrentMonth = date.getMonth() === currentMonth;
+          const isCurrentMonth = date.getMonth() === month;
           const inRange = isInRange(date, selected);
           const isStart = isRangeStart(date, selected);
           const isEnd = isRangeEnd(date, selected);
@@ -171,10 +142,11 @@ function SingleCalendar({
             buttonClass += ' hover:bg-gray-200/50';
           }
 
+          // ✅ 選中的日期加背景 + 框線
           if (!isPastDate && isCurrentMonth && (isStart || isEnd)) {
             buttonStyle.backgroundColor = 'var(--calendar-selected)';
             buttonStyle.color = '#ffffff';
-            buttonClass += ' font-semibold';
+            buttonClass += ' font-semibold border-2 border-[#DCBB87]';
           }
 
           const isClickable = !isPastDate && isCurrentMonth;
@@ -187,16 +159,16 @@ function SingleCalendar({
               key={index}
               className="relative h-8 flex items-center justify-center"
             >
-              {!isPastDate && isCurrentMonth && inRange && (
-                <div
-                  className={`
-                    absolute inset-y-1 z-0 
-                    ${isStart ? 'left-1/2 rounded-l-full' : 'left-0'}
-                    ${isEnd ? 'right-1/2 rounded-r-full' : 'right-0'}
-                  `}
-                  style={{ backgroundColor: 'var(--calendar-range)' }}
-                />
-              )}
+              {!isPastDate &&
+                isCurrentMonth &&
+                inRange &&
+                !isStart &&
+                !isEnd && (
+                  <div
+                    className={`absolute inset-y-1 z-0 ${isStart ? 'left-1/2 rounded-l-full' : 'left-0'} ${isEnd ? 'right-1/2 rounded-r-full' : 'right-0'}`}
+                    style={{ backgroundColor: 'var(--calendar-range)' }}
+                  />
+                )}
               <button
                 onClick={clickHandler}
                 style={buttonStyle}
@@ -213,16 +185,12 @@ function SingleCalendar({
   );
 }
 
-// ==================== 型別定義 ====================
-export type DateRange = { from?: Date; to?: Date };
-
 type DualCalendarProps = {
   selected?: DateRange;
   onSelect?: (range: DateRange | undefined) => void;
   className?: string;
 };
 
-// ==================== 雙月曆 ====================
 export default function Calendar({
   selected,
   onSelect,

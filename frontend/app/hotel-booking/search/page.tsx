@@ -25,45 +25,102 @@ export default function HotelPage() {
   const [priceMax, setPriceMax] = useState(MAX_PRICE);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<AmenityKey[]>([]);
-
-  // 新增：loading 狀態
   const [bookingHotelId, setBookingHotelId] = useState<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // ✅ 設定預設日期
+  const getDefaultDates = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeDaysLater = new Date(today);
+    threeDaysLater.setDate(today.getDate() + 3);
+    return { from: today, to: threeDaysLater };
+  };
 
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
-    () => {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('booking_search');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          return parsed.checkin && parsed.checkout
-            ? { from: new Date(parsed.checkin), to: new Date(parsed.checkout) }
-            : undefined;
-        }
-      }
-      return undefined;
-    }
+    undefined
   );
-
-  const [guests, setGuests] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('booking_search');
-      return saved ? JSON.parse(saved).guests || 2 : 2;
-    }
-    return 2;
-  });
-
-  const [rooms, setRooms] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('booking_search');
-      return saved ? JSON.parse(saved).rooms || 1 : 1;
-    }
-    return 1;
-  });
+  const [guests, setGuests] = useState(2);
+  const [rooms, setRooms] = useState(1);
 
   const hotelRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [highlightedHotelId, setHighlightedHotelId] = useState<number | null>(
     null
   );
+
+  // ✅ 在客戶端載入資料
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const saved = localStorage.getItem('booking_search');
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+
+        // 載入日期
+        if (parsed.checkin && parsed.checkout) {
+          const checkinDate = new Date(parsed.checkin);
+          const checkoutDate = new Date(parsed.checkout);
+
+          if (!isNaN(checkinDate.getTime()) && !isNaN(checkoutDate.getTime())) {
+            setSelectedRange({ from: checkinDate, to: checkoutDate });
+          } else {
+            // 日期無效，使用預設值（搜尋頁需要有日期）
+            const defaultDates = getDefaultDates();
+            setSelectedRange(defaultDates);
+            updateLocalStorage({
+              checkin: formatDateLocal(defaultDates.from),
+              checkout: formatDateLocal(defaultDates.to),
+              guests: parsed.guests || 2,
+              rooms: parsed.rooms || 1,
+            });
+          }
+        } else {
+          // 沒有日期資料，使用預設值
+          const defaultDates = getDefaultDates();
+          setSelectedRange(defaultDates);
+          updateLocalStorage({
+            checkin: formatDateLocal(defaultDates.from),
+            checkout: formatDateLocal(defaultDates.to),
+            guests: parsed.guests || 2,
+            rooms: parsed.rooms || 1,
+          });
+        }
+
+        // 載入其他數值
+        if (parsed.guests && parsed.guests > 0) setGuests(parsed.guests);
+        if (parsed.rooms && parsed.rooms > 0) setRooms(parsed.rooms);
+      } catch (error) {
+        console.error('Failed to parse localStorage:', error);
+        // 發生錯誤時使用預設值
+        const defaultDates = getDefaultDates();
+        setSelectedRange(defaultDates);
+        setGuests(2);
+        setRooms(1);
+        updateLocalStorage({
+          checkin: formatDateLocal(defaultDates.from),
+          checkout: formatDateLocal(defaultDates.to),
+          guests: 2,
+          rooms: 1,
+        });
+      }
+    } else {
+      // 沒有 localStorage 資料，使用預設值（搜尋頁必須有日期）
+      const defaultDates = getDefaultDates();
+      setSelectedRange(defaultDates);
+      setGuests(2);
+      setRooms(1);
+      updateLocalStorage({
+        checkin: formatDateLocal(defaultDates.from),
+        checkout: formatDateLocal(defaultDates.to),
+        guests: 2,
+        rooms: 1,
+      });
+    }
+
+    setIsLoaded(true);
+  }, []);
 
   // 初始化高亮
   useEffect(() => {
@@ -136,39 +193,48 @@ export default function HotelPage() {
     updateLocalStorage({ rooms: newRooms });
   };
 
-  // 高亮效果 (純 Tailwind)
+  // 高亮效果
   useEffect(() => {
     if (highlightedHotelId !== null) {
       const el = hotelRefs.current[highlightedHotelId];
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // 移除之前高亮
         Object.values(hotelRefs.current).forEach((e) => {
           if (e) {
             e.classList.remove('border-4', 'border-[#DCBB87]', 'rounded-lg');
           }
         });
 
-        // 設置高亮
         el.classList.add('border-4', 'border-[#DCBB87]', 'rounded-lg');
       }
     }
   }, [highlightedHotelId, filteredHotels]);
 
-  // 點擊「預訂」或「卡片」→ 高亮 + loading + 延遲 800ms → 原本路由
   const goToDetail = async (hotelId: number) => {
-    setHighlightedHotelId(hotelId); // 觸發高亮
-    setBookingHotelId(hotelId); // 觸發 loading
+    setHighlightedHotelId(hotelId);
+    setBookingHotelId(hotelId);
     localStorage.setItem('booking_selectedHotelId', hotelId.toString());
 
-    // 延遲 800ms
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // 保留你原本的路由：/hotel-booking/${hotelId}
     router.push(`/hotel-booking/${hotelId}?${searchParams.toString()}`);
-    setBookingHotelId(null); // 清除 loading
+    setBookingHotelId(null);
   };
+
+  // ✅ 等待載入完成
+  if (!isLoaded) {
+    return (
+      <div
+        className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative"
+        style={{ backgroundImage: "url('/images/hotel/bg1.jpeg')" }}
+      >
+        <div className="flex flex-col w-full h-full bg-black/70 min-h-screen p-4 md:p-8 items-center justify-center">
+          <div className="text-white animate-pulse">載入中...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -222,10 +288,7 @@ export default function HotelPage() {
                   }}
                   className="w-full"
                 >
-                  <div
-                    onClick={() => goToDetail(hotel.id)}
-                    className="cursor-pointer"
-                  >
+                  <div>
                     <HotelResultCard
                       hotel={hotel}
                       onBookClick={() => goToDetail(hotel.id)}

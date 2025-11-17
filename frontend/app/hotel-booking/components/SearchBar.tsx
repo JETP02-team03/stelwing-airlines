@@ -5,12 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Calendar, { DateRange } from './Calendar';
 
-// 修正 1: 更新 SearchBarProps 介面，以接受 Page.tsx 傳入的屬性
 interface SearchBarProps {
   selectedRange?: DateRange;
   onDateChange?: (range: DateRange | undefined) => void;
-  // 新增 Guests 和 Rooms 相關屬性
-  guests: number; // 注意：Page.tsx 使用 guests，所以這裡使用 guests 而非 adults
+  guests: number;
   onGuestsChange: (newGuests: number) => void;
   rooms: number;
   onRoomsChange: (newRooms: number) => void;
@@ -19,7 +17,6 @@ interface SearchBarProps {
 export default function SearchBar({
   selectedRange,
   onDateChange,
-  // 修正 2: 在解構中接收 guests, onGuestsChange, rooms, onRoomsChange
   guests,
   onGuestsChange,
   rooms,
@@ -29,14 +26,12 @@ export default function SearchBar({
   const [showCalendar, setShowCalendar] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
 
-  // 修正 3: 移除內部關於 adults/rooms 的 useState，因為它們現在由 props 控制
-  // 已經通過 props 接收：const [adults, setAdults] = useState(2);
-  // 已經通過 props 接收：const [rooms, setRooms] = useState(1);
-
   const formatDate = (date: Date | undefined, placeholder: string) => {
-    if (!date) return placeholder;
-    // 雖然這裡使用了 toLocaleString，但在 Next.js 頁面中，這通常不會造成 hydration error，
-    // 因為這是在 'use client' 組件中，且只在客戶端渲染時才真正運行。
+    // ✅ 確保當日期為 undefined 或無效時，顯示 placeholder
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return placeholder;
+    }
+
     const month = date.toLocaleString('en-US', { month: 'short' });
     const day = date.getDate();
     return `${month} ${day}`;
@@ -46,7 +41,6 @@ export default function SearchBar({
     if (onDateChange) onDateChange(range);
   };
 
-  // 🌟 搜尋按鈕事件：帶參數跳轉
   const handleSearch = () => {
     if (!selectedRange?.from || !selectedRange?.to) {
       alert('請選擇入住與退房日期');
@@ -56,11 +50,13 @@ export default function SearchBar({
     const checkin = selectedRange.from.toISOString().split('T')[0];
     const checkout = selectedRange.to.toISOString().split('T')[0];
 
-    // 修正 4: 使用傳入的 guests 屬性 (來自 Page.tsx)
     router.push(
       `/hotel-booking/search?checkin=${checkin}&checkout=${checkout}&adults=${guests}&rooms=${rooms}`
     );
   };
+
+  // ✅ 新增：檢查是否有選擇日期
+  const hasSelectedDates = selectedRange?.from && selectedRange?.to;
 
   return (
     <>
@@ -72,11 +68,13 @@ export default function SearchBar({
 
           {/* 搜尋欄 */}
           <div className="flex flex-wrap justify-center gap-3 py-4 relative">
-            {/* 日期區 (保持不變) */}
+            {/* 日期區 */}
             <div className="flex items-center bg-white rounded-lg gap-0 overflow-hidden">
               {/* Check in */}
               <button
-                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors"
+                className={`bg-white px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors ${
+                  hasSelectedDates ? 'text-gray-800' : 'text-gray-400'
+                }`}
                 onClick={() => setShowCalendar(true)}
               >
                 <CalendarIcon size={20} className="text-gray-600" />
@@ -89,7 +87,9 @@ export default function SearchBar({
 
               {/* Check out */}
               <button
-                className="bg-white text-gray-800 px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors"
+                className={`bg-white px-6 w-[180px] py-[10px] flex items-center justify-start gap-3 hover:bg-gray-50 transition-colors ${
+                  hasSelectedDates ? 'text-gray-800' : 'text-gray-400'
+                }`}
                 onClick={() => setShowCalendar(true)}
               >
                 <CalendarIcon size={20} className="text-gray-600" />
@@ -105,7 +105,6 @@ export default function SearchBar({
               onClick={() => setShowGuestPicker(!showGuestPicker)}
             >
               <Users size={20} className="text-gray-600" />
-              {/* 修正 5: 顯示傳入的 guests 屬性 */}
               <span className="font-medium">
                 {guests} Adults / {rooms} room
               </span>
@@ -119,17 +118,15 @@ export default function SearchBar({
                   <span>成人</span>
                   <div className="flex items-center gap-2">
                     <button
-                      // 修正 6: 使用 onGuestsChange 更新外部狀態
                       onClick={() => onGuestsChange(Math.max(1, guests - 1))}
-                      className="px-2 py-1 bg-gray-200 rounded"
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
                     >
                       -
                     </button>
-                    <span>{guests}</span>
+                    <span className="w-8 text-center">{guests}</span>
                     <button
-                      // 修正 7: 使用 onGuestsChange 更新外部狀態
                       onClick={() => onGuestsChange(guests + 1)}
-                      className="px-2 py-1 bg-gray-200 rounded"
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
                     >
                       +
                     </button>
@@ -141,17 +138,15 @@ export default function SearchBar({
                   <span>房間</span>
                   <div className="flex items-center gap-2">
                     <button
-                      // 修正 8: 使用 onRoomsChange 更新外部狀態
                       onClick={() => onRoomsChange(Math.max(1, rooms - 1))}
-                      className="px-2 py-1 bg-gray-200 rounded"
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
                     >
                       -
                     </button>
-                    <span>{rooms}</span>
+                    <span className="w-8 text-center">{rooms}</span>
                     <button
-                      // 修正 9: 使用 onRoomsChange 更新外部狀態
                       onClick={() => onRoomsChange(rooms + 1)}
-                      className="px-2 py-1 bg-gray-200 rounded"
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
                     >
                       +
                     </button>
@@ -182,7 +177,7 @@ export default function SearchBar({
         </div>
       </div>
 
-      {/* 日曆彈窗 (保持不變) */}
+      {/* 日曆彈窗 */}
       {showCalendar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2">
           <div

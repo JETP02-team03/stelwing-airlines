@@ -23,10 +23,10 @@ export function HotelBookingStepper({ currentStep }: HotelBookingStepperProps) {
                 />
               )}
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
                   currentStep >= step.id
                     ? 'bg-[var(--df-accent-gold)] text-white'
-                    : 'bg-white border-2 border-gray-300 text-gray-400'
+                    : 'bg-white border-2 border-gray-300 text-white-400'
                 }`}
               >
                 {currentStep > step.id ? (
@@ -54,7 +54,7 @@ export function HotelBookingStepper({ currentStep }: HotelBookingStepperProps) {
               )}
             </div>
             <span
-              className={`mt-3 text-sm whitespace-nowrap ${currentStep >= step.id ? 'text-[var(--df-text-dark)]' : 'text-gray-400'}`}
+              className={`mt-3 text-sm whitespace-nowrap ${currentStep >= step.id ? 'text-[var(--df-text-dark)]' : 'text-white'}`}
             >
               {step.label}
             </span>
