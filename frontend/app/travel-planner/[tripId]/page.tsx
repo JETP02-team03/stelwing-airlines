@@ -227,7 +227,7 @@ export default function TripDetailPage() {
                   <ChevronUp />
                 </div>
                 {/* 內容 */}
-                <div className=" text-white rounded-lg py-4 mt-2">
+                <div className=" text-white rounded-lg py-4 mt-2 whitespace-pre-wrap">
                   {currentTrip.note}
                 </div>
               </div>
@@ -309,6 +309,7 @@ export default function TripDetailPage() {
                 if (item) {
                   setSelectedItem(item);
                   setIsOpenItemCard(true);
+                  // console.log(item);
                 }
               }}
             />

@@ -76,6 +76,8 @@ export default function CreatePlanItemForm({
         endTime: endDateTime.toUTC().toISO(),
       };
 
+      // console.log(JSON.stringify(adjustedData));
+
       const data = await apiFetch<Trip>(
         `http://localhost:3007/api/plans/${tripId}/items`,
         {

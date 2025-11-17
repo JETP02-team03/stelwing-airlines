@@ -78,7 +78,7 @@ export default function ViewDialog({
                   {/* 備註 */}
                   <div className="py-4 border-b border-black">
                     {item.note ? (
-                      <div>{item.note}</div>
+                      <div className="whitespace-pre-wrap">{item.note}</div>
                     ) : (
                       <span className="text-(--sw-grey)">
                         尚未輸入備註或筆記
