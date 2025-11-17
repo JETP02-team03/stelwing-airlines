@@ -8,10 +8,10 @@ const tabs = [
   { key: "flights", label: "機票訂單", path: "/member-center/flight" },
   { key: "hotels", label: "住宿訂單", path: "/member-center/hotel" },
   { key: "dutyfree", label: "免稅商品訂單", path: "/member-center/dutyfree" },
-]
+];
 
 export default function MemberTabs() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const getActiveTab = () => {
     if (pathname === "/member-center") return "info"
@@ -19,9 +19,9 @@ export default function MemberTabs() {
     if (pathname.includes("/hotel")) return "hotels"
     if (pathname.includes("/dutyfree")) return "dutyfree"
     return "info"
-  }
+  };
 
-  const activeTab = getActiveTab()
+  const activeTab = getActiveTab();
 
   return (
     <div className="flex h-12 border-b-2 border-[#D4D4D4] bg-white rounded-t-lg shadow-sm overflow-hidden leading-none">

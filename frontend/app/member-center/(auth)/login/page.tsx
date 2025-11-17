@@ -116,9 +116,10 @@
 // }
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/app/context/auth-context";
 
 // 💡 Stelwing UI 元件
 const Button = ({ children, className = "", ...props }) => (
@@ -155,6 +156,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const {isLoggedIn} = useAuth()
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -190,6 +192,11 @@ export default function LoginPage() {
     }
   };
 
+  useEffect(() => {
+    if(isLoggedIn){
+      router.push(`/member-center`)
+    }
+  }, [isLoggedIn])
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F5F6F7] py-10">
       <Card className="w-[420px]">

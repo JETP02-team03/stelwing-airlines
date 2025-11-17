@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import clsx from 'clsx';
+import clsx from "clsx";
 import {
   ChevronDown,
   Globe,
@@ -9,13 +9,19 @@ import {
   ShoppingCart,
   Trash2,
   X,
-} from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Button } from '../dutyfree-shop/components/ui/button'; //  dutyfree 套件按鈕
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "../dutyfree-shop/components/ui/button";
 
+// 🔼 新增：Auth Context
+import { useAuth } from "@/app/context/auth-context";
+
+// ======================
+// 型別
+// ======================
 interface CartItem {
   id: string;
   name: string;
@@ -27,9 +33,7 @@ interface CartItem {
 interface HeaderProps {
   cartItemCount?: number;
   cartItems?: CartItem[];
-  onCartClick?: () => void;
   onCheckoutClick?: () => void;
-  onMemberClick?: () => void;
   onRemoveItem?: (id: string) => void;
 }
 
@@ -37,30 +41,31 @@ export default function Header({
   cartItemCount = 0,
   cartItems = [],
   onCheckoutClick,
-  onMemberClick,
   onRemoveItem,
 }: HeaderProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // 手機版選單
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
+
+  // 🔼 新增：使用登入狀態
+  const { isLoggedIn, avatar, logout } = useAuth();
+
   const pathname = usePathname();
   const router = useRouter();
 
-  const isDutyfree = pathname.startsWith('/dutyfree-shop');
+  const isDutyfree = pathname.startsWith("/dutyfree-shop");
 
   const navItems = [
-    { name: '訂購機票', href: '/flight-booking' },
-    { name: '住宿預定', href: '/hotel-booking' },
-    { name: '免稅商品', href: '/dutyfree-shop' },
-    { name: '旅程規劃', href: '/travel-planner' },
-    { name: '旅遊分享', href: '/travel-community' },
+    { name: "訂購機票", href: "/flight-booking" },
+    { name: "住宿預定", href: "/hotel-booking" },
+    { name: "免稅商品", href: "/dutyfree-shop" },
+    { name: "旅程規劃", href: "/travel-planner" },
+    { name: "旅遊分享", href: "/travel-community" },
   ];
 
   return (
-    <header
-      className={clsx('bg-[var(--sw-primary)] text-white sticky top-0 z-50')}
-    >
+    <header className="bg-[var(--sw-primary)] text-white sticky top-0 z-50">
       <div className="mx-auto w-full h-16 px-16 flex items-center justify-between gap-[48px]">
-        {/* =================== 左區：Logo + 導覽 =================== */}
+        {/* =============== 左側區 Logo + Nav =============== */}
         <div className="flex items-center gap-12">
           <Link href="/">
             <Image
@@ -72,16 +77,16 @@ export default function Header({
             />
           </Link>
 
-          {/* 桌面版導覽列 */}
+          {/* 桌機導覽列 */}
           <nav className="hidden md:flex items-center gap-9">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'inline-flex items-center h-10 leading-none text-white hover:text-(--sw-accent)transition',
+                  "inline-flex items-center h-10 leading-none text-white hover:text-(--sw-accent) transition",
                   pathname.startsWith(item.href) &&
-                    'text-(--sw-accent) font-semibold'
+                    "text-(--sw-accent) font-semibold"
                 )}
               >
                 {item.name}
@@ -90,9 +95,9 @@ export default function Header({
           </nav>
         </div>
 
-        {/* =================== 右區 =================== */}
+        {/* =============== 右側功能區 =============== */}
         <div className="flex items-center gap-6">
-          {/* 🛒 Dutyfree 才顯示購物車 */}
+          {/* ⭐ Duty-free 購物車 */}
           {isDutyfree && (
             <div className="relative">
               <button
@@ -107,7 +112,7 @@ export default function Header({
                 )}
               </button>
 
-              {/* Dropdown內容 */}
+              {/* 購物車下拉選單 */}
               {cartDropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl border border-gray-200 z-50">
                   <div className="p-4 border-b">
@@ -133,6 +138,7 @@ export default function Header({
                                 className="w-full h-full object-cover"
                               />
                             </div>
+
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">
                                 {item.name}
@@ -140,11 +146,14 @@ export default function Header({
                               <p className="text-sm text-gray-500">
                                 x{item.quantity}
                               </p>
-                              <p className="text-sm font-medium text-[var(--sw-accent)]">
-                                TWD{' '}
-                                {(item.price * item.quantity).toLocaleString()}
+                              <p className="text-sm font-medium text-(--sw-accent)">
+                                TWD{" "}
+                                {(
+                                  item.price * item.quantity
+                                ).toLocaleString()}
                               </p>
                             </div>
+
                             <button
                               onClick={() => onRemoveItem?.(item.id)}
                               className="text-gray-400 hover:text-red-500 transition-colors"
@@ -155,13 +164,13 @@ export default function Header({
                         ))}
                       </div>
 
-                      <div className="p-4 space-y-2">
+                      <div className="p-4">
                         <Button
                           onClick={() => {
                             setCartDropdownOpen(false);
                             onCheckoutClick
                               ? onCheckoutClick()
-                              : router.push('/dutyfree-shop/cart');
+                              : router.push("/dutyfree-shop/cart");
                           }}
                           className="w-full bg-(--sw-accent) hover:bg-(--sw-accent)/90 text-white"
                         >
@@ -175,26 +184,58 @@ export default function Header({
             </div>
           )}
 
-          {/* 🌐 語系切換 */}
-          <button
-            type="button"
-            className="inline-flex items-center h-10 gap-2 text-white hover:text-[var(--sw-accent)] transition"
-          >
+          {/* 🌐 語言切換 */}
+          <button className="inline-flex items-center h-10 gap-2 text-white hover:text-(--sw-accent) transition">
             <Globe className="w-4 h-4" />
             <span>繁體中文</span>
             <ChevronDown className="w-4 h-4" />
           </button>
 
-          {/* ✈️ 會員登入 */}
-          <Link
-            href="/member-center"
-            className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/90 text-[var(--sw-primary)] font-medium transition"
-          >
-            <Plane className="w-4 h-4" />
-            會員登入
-          </Link>
+          {/* ⭐⭐ 會員登入 / 頭像選單 */}
+          {isLoggedIn ? (
+            <div className="relative group">
+              <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#DCBB87] hover:opacity-90 transition">
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
 
-          {/* 📱 手機漢堡選單 */}
+              {/* 下拉 */}
+              <div className="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white text-[#1F2E3C] rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                <Link
+                  href="/member-center"
+                  className="block px-4 py-3 hover:bg-[#DCBB87]/20"
+                >
+                  會員中心
+                </Link>
+
+                <Link
+                  href="/member-center/flight"
+                  className="block px-4 py-3 hover:bg-[#DCBB87]/20"
+                >
+                  訂單總覽
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-4 py-3 hover:bg-[#DCBB87]/20 text-red-600"
+                >
+                  登出
+                </button>
+              </div>
+            </div>
+          ) : (
+            <Link
+              href="/member-center/login"
+              className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[#DCBB87] hover:bg-[#BAA06D] text-[#1F2E3C] font-medium transition"
+            >
+              <Plane className="w-4 h-4" /> 登入
+            </Link>
+          )}
+
+          {/* 📱 手機版漢堡 */}
           <button
             className="md:hidden p-2"
             onClick={() => setIsOpen(!isOpen)}
@@ -205,7 +246,7 @@ export default function Header({
         </div>
       </div>
 
-      {/* =================== 手機版選單 =================== */}
+      {/* ================= 手機版選單 ================= */}
       {isOpen && (
         <div className="md:hidden py-4 absolute top-full left-0 w-full bg-[#1F2E3C] flex flex-col items-center z-40">
           {navItems.map((item) => (
@@ -219,12 +260,21 @@ export default function Header({
             </Link>
           ))}
 
-          <Button
-            onClick={onMemberClick}
-            className="w-[80%] mt-4 bg-(--sw-accent)] hover:bg-(--sw-accent)/90 text-(--sw-primary)"
-          >
-            <Plane className="w-4 h-4 mr-2" /> 會員中心
-          </Button>
+          {!isLoggedIn ? (
+            <Button
+              onClick={() => router.push("/member-center/login")}
+              className="w-[80%] mt-4 bg-[#DCBB87] hover:bg-[#C5A872] text-[#1F2E3C]"
+            >
+              <Plane className="w-4 h-4 mr-2" /> 登入
+            </Button>
+          ) : (
+            <Button
+              onClick={logout}
+              className="w-[80%] mt-4 bg-red-500 hover:bg-red-600 text-white"
+            >
+              登出
+            </Button>
+          )}
         </div>
       )}
     </header>
