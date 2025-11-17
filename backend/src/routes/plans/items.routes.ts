@@ -25,6 +25,7 @@ function getMemberIdFromToken(req: Request) {
   try {
     const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (typeof decoded === "string") return null;
     return decoded.memberId;
   } catch {
     return null;

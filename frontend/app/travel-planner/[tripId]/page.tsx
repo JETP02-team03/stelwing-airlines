@@ -152,6 +152,17 @@ export default function TripDetailPage() {
     return isTodayInside ? today : earliestDate;
   }
 
+  // 功能：設定行事曆第一時間顯示日期，並且在資料一進來時啟動
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      const date = computeInitialDate(items);
+      api.gotoDate(date);
+    }
+  }, [items]);
+
   // Data：FullCalendar 顯示用資料
   const calendarEvents = items.map((item) => ({
     id: String(item.id),
