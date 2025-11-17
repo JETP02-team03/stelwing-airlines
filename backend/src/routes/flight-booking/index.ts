@@ -207,46 +207,70 @@ const CreateBookingSchema = z.object({
 
   cabinClass: z.string().min(1),
 
+  // 總金額
   totalAmount: z.number().nonnegative(),
 
+  // ⭐ 新增：付款方式（目前先支援這幾種）
+  paymentMethod: z
+    .enum(["ecpay", "credit", "atm", "cash"])
+    .optional(),
+
+  // 去程
   outbound: z.object({
-    flightId: z.union([z.string(), z.number(), z.bigint()])
+    flightId: z
+      .union([z.string(), z.number(), z.bigint()])
       .transform((v) => BigInt(v)),
-    seats: z.array(
-      z.object({
-        seatId: z.union([z.string(), z.number(), z.bigint()])
-          .transform((v) => BigInt(v)),
-      })
-    ).nonempty(),
-    baggageId: z.union([z.string(), z.number(), z.bigint()])
+    seats: z
+      .array(
+        z.object({
+          seatId: z
+            .union([z.string(), z.number(), z.bigint()])
+            .transform((v) => BigInt(v)),
+        })
+      )
+      .nonempty(),
+    baggageId: z
+      .union([z.string(), z.number(), z.bigint()])
       .optional()
       .nullable()
       .transform((v) => (v ? BigInt(v) : null)),
-    mealId: z.union([z.string(), z.number(), z.bigint()])
+    mealId: z
+      .union([z.string(), z.number(), z.bigint()])
       .optional()
       .nullable()
       .transform((v) => (v ? BigInt(v) : null)),
   }),
 
-  inbound: z.object({
-    flightId: z.union([z.string(), z.number(), z.bigint()])
-      .transform((v) => BigInt(v)),
-    seats: z.array(
-      z.object({
-        seatId: z.union([z.string(), z.number(), z.bigint()])
-          .transform((v) => BigInt(v)),
-      })
-    ).nonempty(),
-    baggageId: z.union([z.string(), z.number(), z.bigint()])
-      .optional()
-      .nullable()
-      .transform((v) => (v ? BigInt(v) : null)),
-    mealId: z.union([z.string(), z.number(), z.bigint()])
-      .optional()
-      .nullable()
-      .transform((v) => (v ? BigInt(v) : null)),
-  }).optional().nullable(),
+  // 回程（可選）
+  inbound: z
+    .object({
+      flightId: z
+        .union([z.string(), z.number(), z.bigint()])
+        .transform((v) => BigInt(v)),
+      seats: z
+        .array(
+          z.object({
+            seatId: z
+              .union([z.string(), z.number(), z.bigint()])
+              .transform((v) => BigInt(v)),
+          })
+        )
+        .nonempty(),
+      baggageId: z
+        .union([z.string(), z.number(), z.bigint()])
+        .optional()
+        .nullable()
+        .transform((v) => (v ? BigInt(v) : null)),
+      mealId: z
+        .union([z.string(), z.number(), z.bigint()])
+        .optional()
+        .nullable()
+        .transform((v) => (v ? BigInt(v) : null)),
+    })
+    .optional()
+    .nullable(),
 });
+
 
 /* ============================================
  * 🔥 建立訂單
@@ -266,18 +290,16 @@ router.post("/bookings", async (req, res) => {
       const booking = await tx.booking.create({
         data: {
           pnr,
-
           firstName: data.firstName,
           lastName: data.lastName,
           gender: data.gender ?? null,
           nationality: data.nationality ?? null,
           passportNo: data.passportNo ?? null,
-
           cabinClass: data.cabinClass,
           currency: data.currency,
           totalAmount: data.totalAmount,
-
-          paymentStatus: "pending", // 你之後付款成功再改成 paid
+          paymentStatus: "pending",
+          paymentMethod: "ecpay",
         },
       });
 
@@ -375,6 +397,66 @@ router.get("/bookings/:pnr", async (req, res) => {
     });
   }
 });
+
+/* ===================== 查詢訂單列表 GET /bookings ===================== */
+router.get("/bookings", async (req, res) => {
+  try {
+    const rows = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT
+        b.booking_id       AS bookingId,
+        b.pnr              AS pnr,
+        b.payment_method   AS paymentMethod,
+        b.payment_status   AS paymentStatus,
+        CAST(b.created_at AS CHAR) AS createdAt,
+
+        -- 去程航段
+        MIN(
+          CASE 
+            WHEN bd.trip_type IN ('OB', 'outbound') THEN f.origin_iata 
+          END
+        ) AS originIata,
+        MIN(
+          CASE 
+            WHEN bd.trip_type IN ('OB', 'outbound') THEN f.destination_iata 
+          END
+        ) AS destinationIata,
+
+        -- 去程日期
+        MIN(
+          CASE 
+            WHEN bd.trip_type IN ('OB', 'outbound') THEN f.flight_date 
+          END
+        ) AS outboundDate,
+
+        -- 回程日期（若為單程則會是 NULL）
+        MIN(
+          CASE 
+            WHEN bd.trip_type IN ('IB', 'inbound') THEN f.flight_date 
+          END
+        ) AS inboundDate
+
+      FROM bookings b
+      LEFT JOIN booking_details bd ON bd.booking_id = b.booking_id
+      LEFT JOIN flights f ON f.flight_id = bd.flight_id
+      GROUP BY b.booking_id
+      ORDER BY b.booking_id DESC;
+    `);
+
+    return res.json({
+      success: true,
+      data: rows,
+    });
+  } catch (e) {
+    console.error("查詢訂單列表失敗（raw）：", e);
+    return res.status(500).json({
+      success: false,
+      message: "查詢訂單列表失敗",
+      error: String(e),
+    });
+  }
+});
+
+
 
 /* ===================== 動態路由（放最後） ===================== */
 /** 明細：GET /:id?originZone=...&destZone=... */
