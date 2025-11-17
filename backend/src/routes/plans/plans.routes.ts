@@ -6,8 +6,10 @@ import { prisma } from "../../utils/prisma-only.js"
 import { authMiddleware } from "../../middleware/authMiddleware.js";
 import { success } from "zod";
 import { serializeBigInt } from "../../utils/serializeBigInt.js"
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 // #region 「旅程資料」需要有的路由
 
@@ -18,6 +20,18 @@ const router = express.Router();
 // | DELETE | /api/plans/:planId | 刪除旅程 |
 
 // #endregion
+
+function getMemberIdFromToken(req: Request) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) return null;
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.memberId;
+  } catch {
+    return null;
+  }
+}
 
 async function authorizeTrip(userId: number, paramsPlanId: string) {
     // const userId = 2;
@@ -45,7 +59,7 @@ async function authorizeTrip(userId: number, paramsPlanId: string) {
 
 // | GET | /api/plans | 讀取所有旅程 |
 router.get("/", async (req: Request, res: Response) => {
-    const userId = 2;
+    const userId = getMemberIdFromToken(req);
 
     if (!userId) return res.status(404).json({ message: "沒有提供User ID" }) //之後有 JWT 驗證時拉掉
 
@@ -76,11 +90,11 @@ router.get("/", async (req: Request, res: Response) => {
 
       res.status(500).json(errorResponse);
     }
-})
+});
 
 // | POST | /api/plans | 新增旅程 |
 router.post("/", async (req: Request, res: Response) => {
-  const userId = 2; //之後改為從 JWT 取 userID
+  const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
 
   if (!userId) return res.status(404).json({ message: "沒有提供User ID" }) //之後有 JWT 驗證時拉掉
 
@@ -126,12 +140,12 @@ router.post("/", async (req: Request, res: Response) => {
 
     res.status(500).json(errorResponse);
   }
-})
+});
 
 // | GET | /api/plans/:planId | 讀取單一旅程 |
 router.get('/:planId', async (req, res) => {
   const { planId } = req.params;
-  const userId = 2; // TODO: 改成從 JWT 或 session 取得
+  const userId = getMemberIdFromToken(req); // TODO: 改成從 JWT 或 session 取得
 
   try {
     const plan = await authorizeTrip(userId, planId);
@@ -165,7 +179,7 @@ router.get('/:planId', async (req, res) => {
 
 // | DELETE | /api/plans/:planId | 刪除旅程 |
 router.delete('/:id', async (req: Request, res: Response) => {
-  const userId = 2; //之後改為從 JWT 取 userID
+  const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
   const planId = Number(req.params.id);
   
   // 驗證：(有沒有提供 userId)、有沒有提供 tripId、tripId 是不是數字

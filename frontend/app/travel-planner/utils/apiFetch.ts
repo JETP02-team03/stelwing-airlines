@@ -17,6 +17,7 @@ export async function apiFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   try {
+    const token = localStorage.getItem('token');
     // 預設 headers（可以擴充、可以被之後的設定覆蓋），預設希望收到的回傳是 JSON 格式，而我送出去的 body 是 application/json 格式
     const defaultHeaders: Record<string, string> = {
       Accept: 'application/json',
@@ -30,8 +31,9 @@ export async function apiFetch<T>(
     const isFormData = options.body instanceof FormData;
 
     // 合併目前的 headers，先放入預設，再拿使用者的覆蓋
-    const headers = {
+    const headers: Record<string, string> = {
       ...defaultHeaders,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...userHeaders,
     };
 

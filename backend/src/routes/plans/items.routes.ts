@@ -1,10 +1,13 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
-import type { ApiResponse, ApiErrorResponse } from "../../interfaces/api.js"
-import { prisma } from "../../utils/prisma-only.js"
+import type { ApiResponse, ApiErrorResponse } from "../../interfaces/api.js";
+import { prisma } from "../../utils/prisma-only.js";
 import { authMiddleware } from "../../middleware/authMiddleware.js";
+import { serializeBigInt } from "../../utils/serializeBigInt.js";
+import jwt from "jsonwebtoken";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 // #region 「每日行程」需要有的路由
 
@@ -16,11 +19,114 @@ const router = express.Router();
 
 // #endregion
 
+function getMemberIdFromToken(req: Request) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) return null;
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.memberId;
+  } catch {
+    return null;
+  }
+}
 
+// | GET | /api/plans/:planId/items | 讀取所有行程項目 |
+router.get("/", async (req: Request, res: Response) => {
+    const { planId } = req.params as { planId: string };
+    if (!planId) throw new Error('沒有提供旅程 ID');
+    if (!/^\d+$/.test(planId)) throw new Error('沒有提供有效的旅程 ID');
 
+    const planIdNum = BigInt(planId);
+    const userId = getMemberIdFromToken(req);
 
+    try {
+        const planItems = await prisma.planItem.findMany({
+            where: {
+                planId: planIdNum,
+                isDeleted: 0,
+            },
+            orderBy: [
+                { startTime: "desc" }, // 先依開始日期降冪
+                { endTime: "desc" }, // 開始日期相同時再依結束日期降冪
+            ],
+        });
 
+        const response: ApiResponse = {
+            success: true,
+            message: "行程查詢成功",
+            data: serializeBigInt(planItems),
+        };
+        res.status(200).json(response);
+    } catch (err) {
+        const errorResponse: ApiErrorResponse = {
+            success: false,
+            error: (err as Error).message,
+            message: "行程查詢失敗，請稍後再試",
+        };
 
+        res.status(500).json(errorResponse);
+    }
+});
 
+// | POST | /api/plans/:planId/items | 新增行程項目 |
+router.post("/", async (req: Request, res: Response) => {
+    const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
+
+    const { planId } = req.params as { planId: string };
+    if (!planId) throw new Error('沒有提供旅程 ID');
+    if (!/^\d+$/.test(planId)) throw new Error('沒有提供有效的旅程 ID');
+
+    const planIdNum = BigInt(planId);
+
+    try {
+        const {
+            title,
+            allDay,
+            startTime,
+            startTimezone,
+            endTime,
+            endTimezone,
+            note,
+            locationTextchar,
+            locationUrl,
+            typeId,
+        } = req.body;
+
+        const newPlanItem = await prisma.planItem.create({
+            data: {
+                title,
+                allDay,
+                startTime,
+                startTimezone,
+                endTime,
+                endTimezone,
+                note,
+                locationTextchar,
+                locationUrl,
+                typeId,
+                plan: {
+                    connect: { id: planIdNum }, // <-- 這行是你缺少的
+                },
+            },
+        });
+
+        const response: ApiResponse = {
+            success: true,
+            message: "行程新增成功",
+            data: newPlanItem
+        };
+
+        res.status(201).json(response);
+    } catch (err) {
+        const errorResponse: ApiErrorResponse = {
+            success: false,
+            error: (err as Error).message,
+            message: "行程新增失敗，請稍後再試",
+        }
+
+        res.status(500).json(errorResponse);
+    }
+});
 
 export default router;

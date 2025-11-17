@@ -20,3 +20,21 @@ export interface TripForUI extends Trip {
   displayStartDate: string;
   displayEndDate: string;
 }
+
+export type TripItem = {
+  id: string;
+  planId: string;
+  title: string;
+  allDay: boolean;
+  startTime: string;
+  startTimezone: string;
+  endTime: string | null;
+  endTimezone: string | null;
+  note: string | null;
+  locationTextchar: string | null;
+  locationUrl: string | null;
+  typeId: number | null;
+  isDeleted: number;
+  createdAt: string;
+  updatedAt: string;
+};
