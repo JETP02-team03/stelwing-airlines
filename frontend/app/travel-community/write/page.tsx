@@ -48,7 +48,6 @@ export default function TravelWritePage() {
 
   return (
    <div className="min-h-screen bg-[#F5F5F5] text-[#1F2E3C]">
-
       {/* ⭐ 麵包屑容器改成會員中心的寬度 & 高度 */}
     <div className="max-w-[1312px] w-full mx-auto px-4 sm:px-6 lg:px-[64px] pt-10">
         <Breadcrumb
@@ -62,7 +61,6 @@ export default function TravelWritePage() {
 
       {/* ⭐⭐⭐ 原本整個左欄＋右欄保持不變，只是往下排 */}
       <div className="flex mt-6">
-
         {/* Sidebar（不變） */}
         <aside className="w-[240px] bg-white border-r border-[#BA9A60] flex flex-col p-6 gap-8">
           <div className="text-[#1F2E3C] font-bold text-lg flex items-center gap-2">
@@ -79,7 +77,6 @@ export default function TravelWritePage() {
         {/* Main Content（不變） */}
         <main className="flex-1 flex justify-center py-10">
           <div className="w-[1024px] bg-white border border-[#DCBB87] rounded-lg p-10 shadow-sm relative">
-
             {/* 返回按鈕（不變） */}
             <button
               onClick={() => router.push("/travel-community")}
