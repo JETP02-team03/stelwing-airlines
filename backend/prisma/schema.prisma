@@ -164,6 +164,7 @@ model Booking {
   totalAmount   Int      @map("total_amount")
   paymentStatus String   @map("payment_status")
   createdAt     DateTime @default(now()) @map("created_at")
+  paymentMethod String?  @map("payment_method")
 
   details BookingDetail[]
 
