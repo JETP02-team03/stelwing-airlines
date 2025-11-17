@@ -126,6 +126,7 @@ interface DFHomePageProps {
   selectedSubcategory: string;
   searchOpen: boolean;
   searchQuery: string;
+  activeSearchQuery: string;
   onCategoryClick: (category: string, subcategory: string) => void;
   onProductClick: (product: Product) => void;
   onAddToCart: (product: Product) => void;
@@ -140,6 +141,7 @@ export function DFHomePage({
   selectedSubcategory,
   searchOpen,
   searchQuery,
+  activeSearchQuery,
   onCategoryClick,
   onProductClick,
   onAddToCart,
@@ -198,11 +200,11 @@ export function DFHomePage({
           )}
 
           {/* 篩選條件顯示 */}
-          {(selectedCategory || searchQuery) && (
+          {(selectedCategory || activeSearchQuery) && (
             <div className="mt-4 text-center text-sm md:text-base">
               <span className="text-gray-600">
-                {searchQuery
-                  ? `搜尋: "${searchQuery}"`
+                {activeSearchQuery
+                  ? `搜尋: "${activeSearchQuery}"`
                   : `${selectedCategory} > ${selectedSubcategory}`}
               </span>
               <button

@@ -4,6 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DFCheckoutStepper } from '../components/DFCheckoutStepper';
 import { DFOrderSummary } from '../components/DFOrderSummary';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -73,6 +82,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'linepay'>(
     'card'
   );
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // ✅ 自動防呆：若購物車多於 1 件商品，代表不是立即購買 → 清空 checkoutItem
   useEffect(() => {
@@ -150,8 +160,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    alert('✅ 結帳成功！感謝您的購買！');
-    router.push('/dutyfree-shop/complete');
+    setShowSuccess(true);
   };
 
   const onNavigateCart = () => {
@@ -394,6 +403,27 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <AlertDialogContent className="max-w-md bg-white text-center">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl text-[var(--df-primary-dark)]">
+              結帳成功
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-600">
+              感謝您的購買！訂單已建立，請至會員中心查看詳情。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 flex justify-center">
+            <AlertDialogAction
+              className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 px-6"
+              onClick={() => router.push('/dutyfree-shop/complete')}
+            >
+              查看訂單資訊
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

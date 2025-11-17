@@ -36,7 +36,6 @@ export default function AppPage() {
                   width={1600}
                   height={900}
                   priority
-                  quality={90}
                   sizes="(min-width:1280px) 560px, (min-width:1024px) 520px, (min-width:768px) 460px, 320px"
                   className="
                   w-[320px]           /* 手機 */

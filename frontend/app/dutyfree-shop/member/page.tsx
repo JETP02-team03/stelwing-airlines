@@ -1,18 +1,7 @@
 'use client';
-import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DFStatusTag } from '../components/DFStatusTag';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../components/ui/alert-dialog';
 import {
   Tabs,
   TabsContent,
@@ -24,7 +13,6 @@ import { Order, ordersStorage } from '../utils/storage';
 export default function MemberPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
 
   // ✅ 初始化：載入儲存的訂單資料
   useEffect(() => {
@@ -40,14 +28,6 @@ export default function MemberPage() {
   // ✅ 點擊訂單
   const handleOrderClick = (order: Order) => {
     router.push(`/dutyfree-shop/order/${order.id}`);
-  };
-
-  // ✅ 刪除訂單
-  const handleRemoveOrder = (id: string) => {
-    const updated = orders.filter((o) => o.id !== id);
-    setOrders(updated);
-    ordersStorage.save(updated);
-    setDeleteOrderId(null);
   };
 
   // ✅ 狀態標籤轉換
@@ -123,17 +103,13 @@ export default function MemberPage() {
                       <th className="px-6 py-4 text-left">狀態</th>
                       <th className="px-6 py-4 text-left">日期</th>
                       <th className="px-6 py-4 text-left">金額</th>
-                      <th className="px-6 py-4 text-left">刪除</th>
+                      <th className="px-6 py-4 text-left">訂單詳情</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {orders.length > 0 ? (
                       orders.map((order, idx) => (
-                        <tr
-                          key={order.id}
-                          className="hover:bg-gray-50 cursor-pointer"
-                          onClick={() => handleOrderClick(order)}
-                        >
+                        <tr key={order.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">{idx + 1}</td>
                           <td className="px-6 py-4 font-medium">{order.id}</td>
                           <td className="px-6 py-4">{order.paymentMethod}</td>
@@ -149,13 +125,10 @@ export default function MemberPage() {
                           </td>
                           <td className="px-6 py-4">
                             <button
-                              className="text-gray-400 hover:text-red-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteOrderId(order.id);
-                              }}
+                              className="text-[var(--df-accent-gold)] hover:underline"
+                              onClick={() => handleOrderClick(order)}
                             >
-                              <X className="w-5 h-5" />
+                              前往查看
                             </button>
                           </td>
                         </tr>
@@ -181,23 +154,13 @@ export default function MemberPage() {
                 orders.map((order) => (
                   <div
                     key={order.id}
-                    className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleOrderClick(order)}
+                    className="bg-white rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <p className="text-sm text-gray-500">訂單編號</p>
                         <p className="font-medium">{order.id}</p>
                       </div>
-                      <button
-                        className="text-gray-400 hover:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteOrderId(order.id);
-                        }}
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -219,6 +182,14 @@ export default function MemberPage() {
                         <span className="text-gray-500">日期</span>
                         <span>{order.date}</span>
                       </div>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        className="text-[var(--df-accent-gold)] hover:underline"
+                        onClick={() => handleOrderClick(order)}
+                      >
+                        前往查看
+                      </button>
                     </div>
                   </div>
                 ))
@@ -246,32 +217,6 @@ export default function MemberPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* ✅ 刪除確認對話框 */}
-      <AlertDialog
-        open={deleteOrderId !== null}
-        onOpenChange={(open) => !open && setDeleteOrderId(null)}
-      >
-        <AlertDialogContent className="max-w-md bg-white text-gray-800">
-          <AlertDialogHeader>
-            <AlertDialogTitle>確認刪除訂單</AlertDialogTitle>
-            <AlertDialogDescription>
-              確定要刪除此訂單嗎？此操作無法復原。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteOrderId(null)}>
-              取消
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteOrderId && handleRemoveOrder(deleteOrderId)}
-              className="bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90"
-            >
-              確認刪除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
