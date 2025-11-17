@@ -38,6 +38,9 @@ importers:
       moment-timezone:
         specifier: ^0.6.0
         version: 0.6.0
+      ms:
+        specifier: ^2.1.3
+        version: 2.1.3
       multer:
         specifier: ^2.0.2
         version: 2.0.2
@@ -75,6 +78,9 @@ importers:
       '@types/moment-timezone':
         specifier: ^0.5.30
         version: 0.5.30
+      '@types/ms':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
