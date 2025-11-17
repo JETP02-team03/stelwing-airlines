@@ -103,14 +103,10 @@ export default function ListPage() {
   // API：fetch 取得列表資料
   const fetchTrips = async () => {
     try {
-      const token = localStorage.getItem('token');
       // 呼叫共用 apiFetch
       const data = await apiFetch<Trip[]>('http://localhost:3007/api/plans', {
         // const data = await apiFetch<Trip[]>(`${API_BASE}/plans`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       // apiFetch 成功回傳的就是後端 data 部分

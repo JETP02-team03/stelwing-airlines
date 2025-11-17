@@ -94,7 +94,7 @@ router.get("/", async (req: Request, res: Response) => {
 
 // | POST | /api/plans | 新增旅程 |
 router.post("/", async (req: Request, res: Response) => {
-  const userId = 2; //之後改為從 JWT 取 userID
+  const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
 
   if (!userId) return res.status(404).json({ message: "沒有提供User ID" }) //之後有 JWT 驗證時拉掉
 
@@ -145,7 +145,7 @@ router.post("/", async (req: Request, res: Response) => {
 // | GET | /api/plans/:planId | 讀取單一旅程 |
 router.get('/:planId', async (req, res) => {
   const { planId } = req.params;
-  const userId = 2; // TODO: 改成從 JWT 或 session 取得
+  const userId = getMemberIdFromToken(req); // TODO: 改成從 JWT 或 session 取得
 
   try {
     const plan = await authorizeTrip(userId, planId);
@@ -179,7 +179,7 @@ router.get('/:planId', async (req, res) => {
 
 // | DELETE | /api/plans/:planId | 刪除旅程 |
 router.delete('/:id', async (req: Request, res: Response) => {
-  const userId = 2; //之後改為從 JWT 取 userID
+  const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
   const planId = Number(req.params.id);
   
   // 驗證：(有沒有提供 userId)、有沒有提供 tripId、tripId 是不是數字

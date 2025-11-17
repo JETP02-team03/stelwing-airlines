@@ -71,7 +71,7 @@ router.get("/", async (req: Request, res: Response) => {
 
 // | POST | /api/plans/:planId/items | 新增行程項目 |
 router.post("/", async (req: Request, res: Response) => {
-    const userId = 2; //之後改為從 JWT 取 userID
+    const userId = getMemberIdFromToken(req); //之後改為從 JWT 取 userID
 
     const { planId } = req.params as { planId: string };
     if (!planId) throw new Error('沒有提供旅程 ID');
