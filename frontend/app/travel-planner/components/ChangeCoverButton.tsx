@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Cropper from 'react-easy-crop';
 import AlertDialogBox from '../components/alertDialog/alertDialogBox';
 import { useAlertDialog } from '../components/alertDialog/useAlertDialog';
-import type { Trip } from '../types'; // 你專案已有
 import { apiFetch } from '../utils/apiFetch';
 import { getCroppedImg } from '../utils/image';
 
@@ -24,6 +23,12 @@ export default function ChangeCoverButton({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   const { alert, showAlert } = useAlertDialog();
+
+  type UpdateCoverResponse = {
+    success: boolean;
+    message: string;
+    coverImage: string;
+  };
 
   // 1. 使用者選圖片
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +62,7 @@ export default function ChangeCoverButton({
       const formData = new FormData();
       formData.append('cover', blob, 'cover.jpg');
 
-      const data = await apiFetch<Trip>(
+      const data = await apiFetch<UpdateCoverResponse>(
         `http://localhost:3007/api/plans/${tripId}/cover`,
         {
           method: 'PUT',
