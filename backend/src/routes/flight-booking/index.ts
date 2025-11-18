@@ -482,6 +482,108 @@ router.get("/bookings", async (req, res) => {
   }
 });
 
+/* ===================== 改票 PATCH /bookings/:pnr/change ===================== */
+router.patch("/bookings/:pnr/change", async (req, res) => {
+  try {
+    const { pnr } = req.params;
+
+    // 前端傳的資料
+    const { outboundFlightId, inboundFlightId } = req.body;
+
+    // 查詢是否存在
+    const booking = await prisma.booking.findUnique({
+      where: { pnr },
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "查無此訂單（PNR）",
+      });
+    }
+
+    // 更新去程/回程
+    const updates: any[] = [];
+
+    if (outboundFlightId) {
+      updates.push(
+        prisma.bookingDetail.updateMany({
+          where: {
+            bookingId: booking.bookingId,
+            tripType: { in: ["OB", "outbound"] },
+          },
+          data: { flightId: outboundFlightId },
+        })
+      );
+    }
+
+    if (inboundFlightId) {
+      updates.push(
+        prisma.bookingDetail.updateMany({
+          where: {
+            bookingId: booking.bookingId,
+            tripType: { in: ["IB", "inbound"] },
+          },
+          data: { flightId: inboundFlightId },
+        })
+      );
+    }
+
+    await prisma.$transaction(updates);
+
+    return res.json({
+      success: true,
+      message: "改票成功",
+    });
+  } catch (err) {
+    console.error("改票錯誤：", err);
+    res.status(500).json({
+      success: false,
+      message: "改票失敗",
+      error: String(err),
+    });
+  }
+});
+
+/* ===================== 退票 POST /bookings/:pnr/refund ===================== */
+router.post("/bookings/:pnr/refund", async (req, res) => {
+  try {
+    const { pnr } = req.params;
+
+    // 查詢是否存在
+    const booking = await prisma.booking.findUnique({
+      where: { pnr },
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "查無此訂單（PNR）",
+      });
+    }
+
+    // 更新 payment_status = REFUND
+    await prisma.booking.update({
+      where: { pnr },
+      data: {
+        paymentStatus: "REFUND", // 依你的 enum or string
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: "退票成功，已申請退款",
+    });
+  } catch (err) {
+    console.error("退票錯誤：", err);
+    res.status(500).json({
+      success: false,
+      message: "退票失敗",
+      error: String(err),
+    });
+  }
+});
+
 
 /* ===================== 動態路由（放最後） ===================== */
 /** 明細：GET /:id?originZone=...&destZone=... */
