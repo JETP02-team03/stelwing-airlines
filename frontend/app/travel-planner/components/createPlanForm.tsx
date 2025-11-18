@@ -4,11 +4,9 @@ import { useState } from 'react';
 import { timezones } from '../src/data/timezone';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
-import Cropper from 'react-easy-crop';
 import { useAlertDialog } from '../components/alertDialog/useAlertDialog';
 import { Trip } from '../types';
 import { apiFetch } from '../utils/apiFetch';
-import { getCroppedImg } from '../utils/image';
 import AlertDialogBox from './alertDialog/alertDialogBox';
 
 // export interface CreatePlanFormProps {}
@@ -227,13 +225,13 @@ export default function CreatePlanForm({
           ></textarea>
         </div>
         {/* 封面照片 */}
-        <div className="flex gap-4 items-start">
-          <div className="flex-1 sw-l-input">
+        {/* <div className="flex gap-4 items-start"> */}
+        {/* <div className="flex-1 sw-l-input">
             <label htmlFor="coverImage" className="block mb-1">
               封面照片 (選填：支援 jpg / png，大小上限 5MB)
-            </label>
-            {/* 真正的檔案輸入 */}
-            <input
+            </label> */}
+        {/* 真正的檔案輸入 */}
+        {/* <input
               id="coverImage"
               // name="coverImage"
               type="file"
@@ -244,10 +242,10 @@ export default function CreatePlanForm({
                  file:text-sm file:font-semibold
                  file:bg-gray-100 file:text-gray-700
                  hover:file:bg-gray-200"
-            />
+            /> */}
 
-            {/* 預覽圖片 */}
-            {preview && !croppedPreview && (
+        {/* 預覽圖片 */}
+        {/* {preview && !croppedPreview && (
               <div>
                 <div className="relative w-80 h-80 bg-gray-100">
                   <Cropper
@@ -283,10 +281,10 @@ export default function CreatePlanForm({
                 >
                   完成裁切
                 </button>
-              </div>
-            )}
-            {/* 顯示裁切後的圖片 */}
-            {croppedPreview && (
+              </div> */}
+        {/* )} */}
+        {/* 顯示裁切後的圖片 */}
+        {/* {croppedPreview && (
               <div className="mt-2">
                 <img
                   src={croppedPreview}
@@ -294,9 +292,9 @@ export default function CreatePlanForm({
                   className="w-40 h-60 object-cover rounded-full border border-gray-300"
                 />
               </div>
-            )}
-          </div>
-        </div>
+            )} */}
+        {/* </div>
+        </div> */}
         {/* 儲存按鈕 */}
         <div className="flex justify-end">
           <button type="submit" className="sw-btn sw-btn--gold-square">

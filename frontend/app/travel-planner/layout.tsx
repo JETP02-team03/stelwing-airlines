@@ -8,5 +8,11 @@ export default function TravelPlannerLayout({
 }: {
   children: ReactNode;
 }) {
-  return <TripProvider>{children}</TripProvider>;
+  return (
+    <TripProvider>
+      <div className="max-w-[1440px] mx-auto w-full px-4 flex flex-1">
+        {children}
+      </div>
+    </TripProvider>
+  );
 }

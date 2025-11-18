@@ -113,7 +113,8 @@ export default function ListPage() {
       setTrips(data);
     } catch (err: any) {
       // apiFetch 拋出的錯誤會進 catch
-      setError(err.message || '無法取得旅程資料');
+      router.replace('/travel-planner/not-logged');
+      // setError(err.message || '無法取得旅程資料');
     }
   };
 

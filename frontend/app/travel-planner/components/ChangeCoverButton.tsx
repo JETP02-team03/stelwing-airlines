@@ -123,7 +123,7 @@ export default function ChangeCoverButton({
 
       {/* 預覽 + 裁切器 */}
       {preview && !croppedPreview && (
-        <div>
+        <div className="flex flex-col items-center">
           <div className="relative w-80 h-80 bg-gray-100">
             <Cropper
               image={preview}
@@ -139,7 +139,7 @@ export default function ChangeCoverButton({
           </div>
 
           <button
-            className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
+            className="sw-btn sw-btn--gold-square mt-6"
             onClick={handleCropDone}
           >
             完成裁切
@@ -149,14 +149,14 @@ export default function ChangeCoverButton({
 
       {/* 完成裁切後顯示結果 */}
       {croppedPreview && (
-        <div>
+        <div className="flex flex-col items-center">
           <img
             src={croppedPreview}
-            className="w-40 h-60 object-cover rounded border"
+            className="w-40 h-60 object-cover rounded-full"
           />
 
           <button
-            className="mt-3 px-4 py-2 bg-green-600 text-white rounded"
+            className="sw-btn sw-btn--gold-square  mt-6"
             onClick={submitCroppedImage}
           >
             上傳封面

@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTripContext } from '../../../src/context/TripContext';
@@ -253,14 +253,6 @@ export default function TripDetailPage() {
                 {/* 內容 */}
                 <div className=" text-white rounded-lg py-4 mt-2 whitespace-pre-wrap">
                   {currentTrip.note}
-                </div>
-              </div>
-              {/* 收合卡片 2 */}
-              <div>
-                {/* 標題 */}
-                <div className="text-white flex justify-between border-b border-white py-2">
-                  <div>參考連結</div>
-                  <ChevronDown />
                 </div>
               </div>
             </div>

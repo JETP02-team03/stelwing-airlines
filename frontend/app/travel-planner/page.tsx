@@ -11,6 +11,7 @@ export default function TravelPlannerPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log(token);
 
     if (token) {
       router.replace('/travel-planner/list');
