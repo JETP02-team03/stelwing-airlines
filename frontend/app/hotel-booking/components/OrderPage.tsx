@@ -104,6 +104,33 @@ export default function OrderPage({
 
   return (
     <div className="min-h-screen py-12 px-6 flex flex-col lg:flex-row justify-center gap-10">
+      <style jsx>{`
+        .custom-radio {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #d1d5db;
+          border-radius: 50%;
+          display: inline-block;
+          position: relative;
+          cursor: pointer;
+        }
+        .custom-radio:checked {
+          border-color: #dcbb87;
+        }
+        .custom-radio:checked::after {
+          content: '';
+          width: 10px;
+          height: 10px;
+          background-color: #dcbb87;
+          border-radius: 50%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+      `}</style>
+
       {/* 左邊 - 表單 */}
       <div className="bg-white rounded-lg shadow-md p-8 lg:w-2/3 w-full border border-gray-200">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -129,7 +156,7 @@ export default function OrderPage({
                     value="creditCard"
                     checked={paymentMethod === 'creditCard'}
                     onChange={() => setPaymentMethod('creditCard')}
-                    className="form-radio h-5 w-5 text-[#1F2E3C] border-gray-300 focus:ring-[#1F2E3C]"
+                    className="custom-radio"
                   />
                   <span className="text-lg font-medium text-gray-800">
                     信用卡付款
@@ -156,7 +183,7 @@ export default function OrderPage({
               </label>
 
               {/* 2. LinePay */}
-              <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-green-600">
+              <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-gray-600">
                 <div className="flex items-center gap-3">
                   <input
                     type="radio"
@@ -164,14 +191,14 @@ export default function OrderPage({
                     value="linePay"
                     checked={paymentMethod === 'linePay'}
                     onChange={() => setPaymentMethod('linePay')}
-                    className="form-radio h-5 w-5 text-green-600 border-gray-300 focus:ring-green-600"
+                    className="custom-radio"
                   />
                   <span className="text-lg font-medium text-gray-800">
                     LinePay
                   </span>
                 </div>
                 {/* LinePay 圖示 (使用簡單文字代替 Logo) */}
-                <div className="text-green-600 font-bold text-lg">
+                <div className="text-gray-600 font-bold text-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -195,7 +222,7 @@ export default function OrderPage({
         {/* 付款方式選擇區塊結束 */}
         {/* ================================================= */}
 
-        {/* 聯絡人資訊 (保留但可以優化，使其與付款頁分離) */}
+        {/* 聯絡人資訊 (保留但可以優化,使其與付款頁分離) */}
         {pageTitle !== '付款資訊' && (
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
             聯絡人資訊
@@ -296,7 +323,7 @@ export default function OrderPage({
         {/* 信用卡詳細資料區塊結束 */}
         {/* ================================================= */}
         <button
-          // 修正提交事件，使用新的處理函式
+          // 修正提交事件,使用新的處理函式
           onClick={handleFormSubmit}
           className="w-full mt-8 py-3 bg-[#1F2E3C] text-white font-bold text-lg rounded-lg hover:bg-[#2d3d4c] transition"
         >
@@ -317,7 +344,7 @@ export default function OrderPage({
         <div className="space-y-3 text-gray-700 text-sm">
           <div className="flex justify-between">
             <span>飯店名稱</span>
-            <span className="font-medium">{detail.name}</span>
+            <span className="font-medium">{detail.hotelName}</span>
           </div>
           <div className="flex justify-between">
             <span>房型</span>

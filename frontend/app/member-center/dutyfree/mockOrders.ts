@@ -7,7 +7,7 @@ export const mockDutyFreeOrders: Order[] = [
     status: 'success',
     total: 14200,
     discount: 1000,
-    promoCode: 'GOLD10',
+    promoCode: 'BLACK5',
     items: 2,
     paymentMethod: '信用卡付款',
     products: [

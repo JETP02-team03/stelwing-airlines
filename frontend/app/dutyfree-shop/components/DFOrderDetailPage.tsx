@@ -224,10 +224,7 @@ export function DFOrderDetailPage({
                   TWD{' '}
                   {cart
                     .slice(0, order.items)
-                    .reduce(
-                      (sum, item) => sum + item.price * item.quantity,
-                      0
-                    )
+                    .reduce((sum, item) => sum + item.price * item.quantity, 0)
                     .toLocaleString()}
                 </span>
               </div>

@@ -66,5 +66,6 @@
     "activityBar.background": "#1F3129",
     "titleBar.activeBackground": "#2C4539",
     "titleBar.activeForeground": "#F8FBFA"
-  }
+  },
+  "cSpell.words": ["checkin", "dutyfree", "linepay", "qrcode"]
 }

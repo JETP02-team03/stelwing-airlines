@@ -90,7 +90,7 @@ export function DFCartPage({
             <p className="text-gray-500 mb-4">您的購物車是空的</p>
             <Button
               onClick={onNavigateHome}
-              className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white"
+              className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white !text-white"
             >
               繼續購物
             </Button>
@@ -264,11 +264,13 @@ export function DFCartPage({
             <AlertDialogCancel onClick={() => onSetDeleteItemId(null)}>
               取消
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteItemId && onRemoveItem(deleteItemId)}
-              className="bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90"
-            >
-              確認刪除
+            <AlertDialogAction asChild>
+              <button
+                onClick={() => deleteItemId && onRemoveItem(deleteItemId)}
+                className="w-full bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90 text-white rounded-md px-4 py-2 transition-colors"
+              >
+                刪除
+              </button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
