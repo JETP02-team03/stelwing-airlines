@@ -1,10 +1,9 @@
 'use client';
 
+import debounce from 'lodash.debounce';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import debounce from 'lodash.debounce';
 import { DFHomePage } from './components/DFHomePage';
-import { useDFStore } from './context/DFStoreContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './components/ui/alert-dialog';
+import { useDFStore } from './context/DFStoreContext';
 
 export default function DutyFreeShopPage() {
   const router = useRouter(); // ✅ 要放在 component 內！
@@ -28,7 +28,12 @@ export default function DutyFreeShopPage() {
   const [addedProductName, setAddedProductName] = useState('');
 
   const debouncedSearch = useMemo(
-    () => debounce((value: string) => setDebouncedQuery(value), 300),
+    () =>
+      debounce(
+        (value: string) => setDebouncedQuery(value),
+        300,
+        { leading: false, trailing: true }
+      ),
     []
   );
 

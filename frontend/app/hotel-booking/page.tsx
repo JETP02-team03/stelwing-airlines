@@ -201,7 +201,7 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="bg-white/90 py-[30px] rounded-lg shadow-md mx-6">
+      <div className="bg-white/90 py-[24] rounded-lg shadow-md mx-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 mb-3 text-center">
             TOP 5 附近優質飯店

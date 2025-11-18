@@ -1,8 +1,14 @@
-"use client"
+'use client';
 
-import { useState } from "react"
+import { useState } from 'react';
 
-type StatusBadgeVariant = "success" | "danger" | "disabled" | "refund"
+type StatusBadgeVariant =
+  | 'success'
+  | 'danger'
+  | 'disabled'
+  | 'refund'
+  | 'refunding'
+  | 'refunded';
 
 interface StatusBadgeProps {
   variant: StatusBadgeVariant;
@@ -10,21 +16,28 @@ interface StatusBadgeProps {
   tooltip?: string;
 }
 
-export default function StatusBadge({ variant, label, tooltip }: StatusBadgeProps) {
+export default function StatusBadge({
+  variant,
+  label,
+  tooltip,
+}: StatusBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const getVariantStyles = () => {
     switch (variant) {
-      case "success":
-        return "status-badge--success border border-[#28A745] text-[#28A745] bg-white"
-      case "danger":
-        return "status-badge--danger border border-[#F60621] text-[#F60621] bg-white"
-      case "refund":
-        return "status-badge--refund border border-[#F60621] text-[#F60621] bg-white"
-      case "disabled":
-        return "status-badge--disabled border border-[#C5C8C8] text-[#C5C8C8] bg-white"
+      case 'success':
+        return 'status-badge--success bg-green-50 border border-[#28A745] text-[#1F7A2E]';
+      case 'danger':
+        return 'status-badge--danger bg-[#FFF2F2] border border-[#F60621] text-[#D92D20]';
+      case 'refund':
+      case 'refunding':
+        return 'status-badge--refund bg-red-50 border border-[#D92D20] text-[#D92D20]';
+      case 'refunded':
+        return 'status-badge--refunded bg-blue-50 border border-[#2563EB] text-[#1D4ED8]';
+      case 'disabled':
+        return 'status-badge--disabled bg-gray-100 border border-[#C5C8C8] text-[#9CA3AF]';
       default:
-        return ""
+        return '';
     }
   };
 

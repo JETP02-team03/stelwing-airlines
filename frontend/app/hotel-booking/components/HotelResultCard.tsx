@@ -1,3 +1,4 @@
+// HotelResultCard.tsx
 'use client';
 
 import {
@@ -43,7 +44,6 @@ export default function HotelResultCard({
 }: HotelResultCardProps) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
-  // 控制全屏圖片預覽模態框的狀態
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   useEffect(() => {
@@ -76,16 +76,12 @@ export default function HotelResultCard({
   };
 
   return (
-    <div className="flex w-full max-w-4xl items-center px-4 bg-white rounded shadow-md hover:shadow-xl transition overflow-hidden">
-      {/* 左側飯店圖 - 點擊時開啟圖片放大模態框 (已加入阻止冒泡) */}
+    <div className="flex w-full max-w-4xl items-center px-4 bg-white transition">
       <div
         className="relative w-50 h-40 flex-shrink-0 cursor-pointer"
         onClick={(e) => {
-          // 接收事件參數 e
-          e.stopPropagation(); // 阻止事件冒泡，確保圖片點擊不會觸發路由跳轉
-          if (hotel.image) {
-            setIsImageModalOpen(true);
-          }
+          e.stopPropagation();
+          if (hotel.image) setIsImageModalOpen(true);
         }}
       >
         {hotel.image ? (
@@ -104,15 +100,14 @@ export default function HotelResultCard({
             無圖片
           </div>
         )}
+
         <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded-full flex items-center gap-1 text-xs text-white">
-          <Star size={12} color="#D4AF37" fill="#D4AF37" />{' '}
+          <Star size={12} color="#D4AF37" fill="#D4AF37" />
           {hotel.rating.toFixed(1)}
         </div>
       </div>
 
-      {/* 右側文字區 */}
       <div className="flex flex-col flex-1 p-3 gap-2 relative">
-        {/* 收藏按鈕 */}
         <button
           onClick={toggleFavorite}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white border border-gray-200 flex justify-center items-center text-gray-400 hover:text-red-500 transition"
@@ -167,57 +162,27 @@ export default function HotelResultCard({
           </div>
           <div className="text-xs text-gray-500 mb-0.5">/night</div>
 
-          {/* 預訂按鈕：已修正，增加金色邊框、手型鼠標和陰影 */}
           <button
             onClick={(e) => {
-              e.stopPropagation(); // 阻止冒泡，確保只觸發預訂邏輯
-              onBookClick(); // 執行預訂，通常這裡會包含 router.push(...)
+              e.stopPropagation();
+              onBookClick();
             }}
             disabled={isBooking}
-            className={`
-              px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer // ✨ 增加 shadow-lg 和 cursor-pointer
-              ${
-                isBooking
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-[#1E2A33] text-[#DCBB87] hover:bg-[#303D49] border-2 border-[#DCBB87]' // ✨ 增加金色邊框
-              }
-            `}
+            className={`px-4 py-1 font-semibold rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer ${
+              isBooking
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-[#1E2A33] text-[#DCBB87] hover:bg-[#303D49] border-2 border-[#DCBB87]'
+            }`}
           >
-            {isBooking ? (
-              <>
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                處理中
-              </>
-            ) : (
-              '預訂'
-            )}
+            {isBooking ? '處理中...' : '預訂'}
           </button>
         </div>
       </div>
 
-      {/* 🖼️ 圖片預覽模態框 (Modal) */}
       {isImageModalOpen && hotel.image && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex justify-center items-center backdrop-blur-sm"
-          onClick={(e) => {
-            e.stopPropagation(); // 確保點擊背景不會觸發父級路由
-            setIsImageModalOpen(false);
-          }}
+          onClick={() => setIsImageModalOpen(false)}
         >
           <div className="relative max-w-7xl max-h-[90vh] p-4">
             <Image
@@ -226,17 +191,12 @@ export default function HotelResultCard({
               width={1200}
               height={800}
               className="object-contain w-full h-full rounded-lg"
-              onClick={(e) => e.stopPropagation()} // 防止點擊圖片本身關閉模態框
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src =
-                  '/images/hotel/fallback.jpeg';
-              }}
+              onClick={(e) => e.stopPropagation()}
             />
-            {/* 關閉按鈕 - 確保點擊 X 不會跳轉 */}
             <button
-              className="absolute top-4 right-4 text-white text-3xl p-2 rounded-full bg-black/50 hover:bg-black/80 transition"
+              className="absolute top-5 right-6 text-white text-xl p-2 rounded-full bg-black/50 hover:bg-black/80 transition"
               onClick={(e) => {
-                e.stopPropagation(); // 💥 阻止點擊 X 後事件冒泡到父級 Link/onClick
+                e.stopPropagation();
                 setIsImageModalOpen(false);
               }}
             >

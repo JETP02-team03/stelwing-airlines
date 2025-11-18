@@ -18,7 +18,6 @@ export interface FormDataType {
   guests: number;
   firstName?: string;
   lastName?: string;
-  // ✅ 新增付款方式欄位
   paymentMethod: 'creditCard' | 'linePay';
   cardNumber?: string;
   expiry?: string;
@@ -49,7 +48,6 @@ export default function OrderPage({
 }: OrderPageProps) {
   const hotel = mockHotelDetailData;
 
-  // ✅ 追蹤選定的付款方式
   const [paymentMethod, setPaymentMethod] = useState<'creditCard' | 'linePay'>(
     'creditCard'
   );
@@ -61,7 +59,6 @@ export default function OrderPage({
     guests: 2,
     firstName: '',
     lastName: '',
-    // ✅ 預設付款方式
     paymentMethod: 'creditCard',
     cardNumber: '',
     expiry: '',
@@ -78,7 +75,7 @@ export default function OrderPage({
     phone: '0980123123',
     email: 'yun@gmail.com',
     roomType: 'King Size Bed',
-    smokingPreference: '禁菸房',
+    smokingPreference: '禁煙房',
     hotelId: 1,
     hotelName: '東京成田機場旅館',
     price: 3500,
@@ -98,21 +95,44 @@ export default function OrderPage({
   }, []);
 
   const handleFormSubmit = () => {
-    // 確保提交的 formData 包含當前的 paymentMethod
     onSubmit({ ...formData, paymentMethod });
   };
 
   return (
     <div className="min-h-screen py-12 px-6 flex flex-col lg:flex-row justify-center gap-10">
+      <style jsx>{`
+        .custom-radio {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #d1d5db;
+          border-radius: 50%;
+          display: inline-block;
+          position: relative;
+          cursor: pointer;
+        }
+        .custom-radio:checked {
+          border-color: #dcbb87;
+        }
+        .custom-radio:checked::after {
+          content: '';
+          width: 10px;
+          height: 10px;
+          background-color: #dcbb87;
+          border-radius: 50%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+      `}</style>
+
       {/* 左邊 - 表單 */}
       <div className="bg-white rounded-lg shadow-md p-8 lg:w-2/3 w-full border border-gray-200">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           {pageTitle}
         </h2>
 
-        {/* ================================================= */}
-        {/* ✅ 付款方式選擇區塊 (模仿截圖) */}
-        {/* ================================================= */}
         {pageTitle === '付款資訊' && (
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">
@@ -129,13 +149,12 @@ export default function OrderPage({
                     value="creditCard"
                     checked={paymentMethod === 'creditCard'}
                     onChange={() => setPaymentMethod('creditCard')}
-                    className="form-radio h-5 w-5 text-[#1F2E3C] border-gray-300 focus:ring-[#1F2E3C]"
+                    className="custom-radio"
                   />
                   <span className="text-lg font-medium text-gray-800">
                     信用卡付款
                   </span>
                 </div>
-                {/* 信用卡圖示 */}
                 <div className="text-gray-500">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -156,53 +175,75 @@ export default function OrderPage({
               </label>
 
               {/* 2. LinePay */}
-              <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-green-600">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="linePay"
-                    checked={paymentMethod === 'linePay'}
-                    onChange={() => setPaymentMethod('linePay')}
-                    className="form-radio h-5 w-5 text-green-600 border-gray-300 focus:ring-green-600"
-                  />
-                  <span className="text-lg font-medium text-gray-800">
-                    LinePay
-                  </span>
-                </div>
-                {/* LinePay 圖示 (使用簡單文字代替 Logo) */}
-                <div className="text-green-600 font-bold text-lg">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-message-circle"
-                  >
-                    <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
-                  </svg>
-                </div>
-              </label>
+              <div>
+                <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-gray-600">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="linePay"
+                      checked={paymentMethod === 'linePay'}
+                      onChange={() => setPaymentMethod('linePay')}
+                      className="custom-radio"
+                    />
+                    <span className="text-lg font-medium text-gray-800">
+                      LinePay
+                    </span>
+                  </div>
+                  <div className="text-gray-600 font-bold text-lg">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-message-circle"
+                    >
+                      <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
+                    </svg>
+                  </div>
+                </label>
+
+                {paymentMethod === 'linePay' && (
+                  <div className="mt-4 p-6 border border-gray-200 rounded-lg bg-gray-50 text-center">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      掃描 QR Code 完成付款
+                    </h4>
+                    <div className="flex justify-center mb-4">
+                      <Image
+                        src="/images/dutyfree/qrcode.png"
+                        alt="LinePay QR Code"
+                        width={192}
+                        height={192}
+                        className="border-2 border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      請使用 LINE App 掃描此 QR Code
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      總金額:{' '}
+                      <span className="font-bold text-gray-800">
+                        ${totalPrice.toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
-        {/* ================================================= */}
-        {/* 付款方式選擇區塊結束 */}
-        {/* ================================================= */}
 
-        {/* 聯絡人資訊 (保留但可以優化，使其與付款頁分離) */}
         {pageTitle !== '付款資訊' && (
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
             聯絡人資訊
           </h3>
         )}
 
-        {/* 姓/名 (如果 formData 中有這些欄位) */}
         {formData.lastName !== undefined && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -234,13 +275,9 @@ export default function OrderPage({
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* ✅ 信用卡詳細資料輸入區塊 (只有在付款頁面且選擇信用卡時顯示) */}
-        {/* ================================================= */}
         {pageTitle === '付款資訊' && paymentMethod === 'creditCard' && (
           <div className="space-y-4 mb-6 pt-6">
             <h3 className="text-xl font-semibold text-gray-700">信用卡資訊</h3>
-            {/* 信用卡號碼 */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
                 信用卡號碼
@@ -257,7 +294,6 @@ export default function OrderPage({
               />
             </div>
 
-            {/* 到期日 & CVC */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -292,11 +328,8 @@ export default function OrderPage({
             </div>
           </div>
         )}
-        {/* ================================================= */}
-        {/* 信用卡詳細資料區塊結束 */}
-        {/* ================================================= */}
+
         <button
-          // 修正提交事件，使用新的處理函式
           onClick={handleFormSubmit}
           className="w-full mt-8 py-3 bg-[#1F2E3C] text-white font-bold text-lg rounded-lg hover:bg-[#2d3d4c] transition"
         >
@@ -304,7 +337,7 @@ export default function OrderPage({
         </button>
       </div>
 
-      {/* 右邊 - 訂單摘要 (保持不變) */}
+      {/* 右邊 - 訂單摘要 */}
       <aside className="bg-white rounded-lg shadow-md p-8 w-full lg:w-1/3 border border-gray-200 h-fit">
         <Image
           src={detail.image || '/images/hotel/default.jpeg'}
@@ -317,11 +350,19 @@ export default function OrderPage({
         <div className="space-y-3 text-gray-700 text-sm">
           <div className="flex justify-between">
             <span>飯店名稱</span>
-            <span className="font-medium">{detail.name}</span>
+            <span className="font-medium">{detail.hotelName}</span>
           </div>
           <div className="flex justify-between">
-            <span>房型</span>
+            <span>床型</span>
             <span>{detail.roomType}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>房間數</span>
+            <span>{detail.rooms} 間</span>
+          </div>
+          <div className="flex justify-between">
+            <span>吸煙偏好</span>
+            <span>{detail.smokingPreference}</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center gap-1">

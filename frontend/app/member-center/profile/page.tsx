@@ -6,6 +6,16 @@ import { ArrowLeft, Lock } from "lucide-react";
 import SectionCard from "../components/SectionCard";
 import { TAIWAN_CITIES } from "./twCities"; // ✅ 使用你剛建立的縣市資料
 
+const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+const formatPhoneDisplay = (value: string) => {
+  const digits = sanitizePhone(value);
+  if (!digits) return "";
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7, 10)}`;
+};
+
 // ✅ 簡單 Toast：右上角提示訊息
 function Toast({ message }: { message: string }) {
   const [show, setShow] = useState(false);
@@ -47,6 +57,9 @@ export default function ProfilePage() {
     gender: "",
     city: "",
     address: "",
+    username: "",
+    country: "",
+    postalCode: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -101,11 +114,14 @@ export default function ProfilePage() {
           firstName: m.firstName || "",
           lastName: m.lastName || "",
           email: m.email || "",
-          phoneNumber: m.phoneNumber || "",
+          phoneNumber: sanitizePhone(m.phoneNumber || ""),
           birthDate: m.birthDate ? m.birthDate.split("T")[0] : "",
           gender: m.gender || "",
-          city,
+          city: m.city || city,
           address: detailAddress,
+          username: m.username || "",
+          country: m.country || "",
+          postalCode: m.postalCode || "",
         });
       })
       .finally(() => setLoading(false));
@@ -115,24 +131,27 @@ export default function ProfilePage() {
   // ✅ 個資完整度計算
   // =========================================
   const completeness = (() => {
-    let score = 0;
-    if (formData.gender) score += 20;
-    if (formData.birthDate) score += 20;
-    if (formData.phoneNumber) score += 20;
-    if (formData.city) score += 20;
-    if (formData.address) score += 20;
-    return score;
+    const fields = [
+      formData.gender,
+      formData.birthDate,
+      formData.phoneNumber,
+      formData.city,
+      formData.address,
+      formData.country,
+      formData.postalCode,
+      formData.firstName,
+      formData.lastName,
+    ];
+    const filled = fields.filter((v) => !!v).length;
+    return Math.round((filled / fields.length) * 100);
   })();
 
   // =========================================
   // ✅ 儲存個人資料（update-profile）
   // =========================================
   const handleSaveProfile = async () => {
-    // 📌 手機格式驗證：若有填，必須是 09 開頭 + 8 碼
-    if (
-      formData.phoneNumber &&
-      !/^09\d{8}$/.test(formData.phoneNumber)
-    ) {
+    const digits = sanitizePhone(formData.phoneNumber);
+    if (digits && !/^09\d{8}$/.test(digits)) {
       setToastMessage("電話格式需為 09XXXXXXXX");
       setTimeout(() => setToastMessage(""), 2000);
       return;
@@ -140,9 +159,7 @@ export default function ProfilePage() {
 
     setSavingProfile(true);
 
-    const fullAddress = formData.city
-      ? `${formData.city} ${formData.address}`.trim()
-      : formData.address;
+    const fullAddress = formData.address?.trim() || "";
 
     try {
       const res = await fetch(
@@ -152,10 +169,16 @@ export default function ProfilePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             memberId: formData.memberId,
+            username: formData.username || null,
+            firstName: formData.firstName || null,
+            lastName: formData.lastName || null,
             gender: formData.gender,
-            birthDate: formData.birthDate,
-            phoneNumber: formData.phoneNumber,
-            address: fullAddress,
+            birthDate: formData.birthDate || null,
+            phoneNumber: digits || null,
+            address: fullAddress || null,
+            city: formData.city || null,
+            country: formData.country || null,
+            postalCode: formData.postalCode || null,
           }),
         }
       );
@@ -332,27 +355,39 @@ export default function ProfilePage() {
               />
             </div>
 
+            {/* 暱稱 */}
+            <div>
+              <label className="text-sm text-[#666] mb-2 block">
+                暱稱（顯示名稱，可修改）
+              </label>
+              <input
+                type="text"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, username: e.target.value }))
+                }
+                className="w-full px-4 py-2 border border-[#C5C8C8] rounded focus:border-[#DCBB87]"
+                placeholder="輸入想顯示的暱稱"
+              />
+            </div>
+
             {/* 性別 Radio */}
             <div>
-              <label className="text-sm text-[#666] mb-2 block">性別</label>
+              <label className="text-sm text-[#666] mb-2 block">
+                性別（註冊後不可修改）
+              </label>
               <div className="flex gap-6">
                 {[
                   { key: "M", label: "男" },
                   { key: "F", label: "女" },
-                  { key: "X", label: "不公開" },
                 ].map((g) => (
-                  <label key={g.key} className="flex items-center gap-2">
+                  <label key={g.key} className="flex items-center gap-2 text-[#999]">
                     <input
                       type="radio"
                       name="gender"
                       value={g.key}
                       checked={formData.gender === g.key}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          gender: e.target.value,
-                        }))
-                      }
+                      disabled
                     />
                     {g.label}
                   </label>
@@ -384,11 +419,57 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 placeholder="09XXXXXXXX"
-                value={formData.phoneNumber}
+                inputMode="numeric"
+                maxLength={13}
+                value={formatPhoneDisplay(formData.phoneNumber)}
+                onChange={(e) => {
+                  const digits = sanitizePhone(e.target.value);
+                  if (
+                    digits === "" ||
+                    digits === "0" ||
+                    digits === "09" ||
+                    (digits.startsWith("09") && digits.length <= 10)
+                  ) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      phoneNumber: digits,
+                    }));
+                  }
+                }}
+                className="w-full px-4 py-2 border border-[#C5C8C8] rounded focus:border-[#DCBB87]"
+              />
+              <p className="text-xs text-[#999] mt-1">
+                必須為 09 開頭的 10 碼手機號碼
+              </p>
+            </div>
+
+            {/* 國家 */}
+            <div>
+              <label className="text-sm text-[#666] mb-2 block">國家</label>
+              <input
+                type="text"
+                value={formData.country}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, country: e.target.value }))
+                }
+                className="w-full px-4 py-2 border border-[#C5C8C8] rounded focus:border-[#DCBB87]"
+              />
+            </div>
+
+            {/* 郵遞區號 */}
+            <div>
+              <label className="text-sm text-[#666] mb-2 block">
+                郵遞區號
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                value={formData.postalCode}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    phoneNumber: e.target.value,
+                    postalCode: e.target.value.replace(/\D/g, ""),
                   }))
                 }
                 className="w-full px-4 py-2 border border-[#C5C8C8] rounded focus:border-[#DCBB87]"

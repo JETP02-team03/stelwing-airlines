@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-// 🔼【新增】引入 usePathname，讓每次路由變化都重新檢查 token
+// 🔼【保留】每次路由變化重新檢查 token
 import { usePathname } from "next/navigation";
 
 // ========================================
@@ -21,9 +21,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [avatar, setAvatar] = useState("/avatars/default.png");
-  const [member, setMember] = useState(null);
+  const [member, setMember] = useState<any>(null);
 
-  // 🔼【新增】目前所在路徑
+  // ✅【保留】這行沒有刪掉：用來監聽路由變化
   const pathname = usePathname();
 
   // ========================================
@@ -53,7 +53,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setIsLoggedIn(true);
         setMember(data.member);
-        setAvatar(data.member?.avatar?.imagePath || "/avatars/default.png");
+
+        // =====================================================
+        // ❌ 舊版寫法（保留備份，不再使用）
+        //    後端沒有 data.member.avatar 這個欄位
+        // setAvatar(data.member?.avatar?.imagePath || "/avatars/default.png");
+        //
+        // ✅ 新版寫法：
+        //    後端 /verify 回傳的是 avatarOption：
+        //    member.avatarOption.imagePath
+        // =====================================================
+        setAvatar(
+          data.member?.avatarOption?.imagePath || "/avatars/default.png"
+        );
       }
     } catch (err) {
       console.error("Auth verify error:", err);
@@ -68,7 +80,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // ========================================
   const login = (token: string) => {
     localStorage.setItem("token", token); // ← 儲存 token
-    loadMember();                         // ← 立即同步狀態（登入當下就更新 Header）
+
+    // ✅ 登入後立刻同步會員資料（更新 Header 頭像 & 狀態）
+    loadMember();
   };
 
   const logout = () => {
@@ -80,15 +94,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refresh = () => loadMember();
 
-  // ❌【原本】只在第一次 mount 時跑一次
+  // ❌【舊版備註】原本只有 mount 時跑一次：
   // useEffect(() => {
   //   loadMember();
   // }, []);
 
-  // 🔧【修改】→ 每次路由變化時都重新檢查 token
+  // ✅【現在】每次路由變化都重新檢查 token
   useEffect(() => {
     loadMember();
-  }, [pathname]); // 🔼 依賴 pathname：登入後跳轉頁面，Header 就會重新檢查
+  }, [pathname]); // ← 這裡完全保留你的作法，只是上面改了 avatar 欄位
 
   return (
     <AuthContext.Provider
@@ -99,4 +113,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// ✅ 專門給元件用的 Hook
 export const useAuth = () => useContext(AuthContext)!;

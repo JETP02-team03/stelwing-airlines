@@ -7,7 +7,7 @@ import { DFPickupModal } from '../components/DFPickupModal';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { Button } from '../components/ui/button';
 import { useDFStore } from '../context/DFStoreContext';
-import { OrderProduct, ordersStorage } from '../utils/storage';
+import { OrderProduct, ordersStorage, promoStorage } from '../utils/storage';
 
 /**
  *  最終修正版：
@@ -72,6 +72,9 @@ export default function CompletePage() {
       date: new Date().toLocaleDateString('zh-TW'),
       status: 'success',
       total,
+      discount: discountPercent ? discount : 0,
+      discountPercent: discountPercent || 0,
+      promoCode: discountPercent ? promoStorage.load().promoCode || '' : '',
       items: cartSnapshot.length,
       paymentMethod: '信用卡付款',
       products: cartSnapshot,

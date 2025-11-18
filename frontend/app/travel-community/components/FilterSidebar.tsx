@@ -1,74 +1,168 @@
 // app/travel-community/components/FilterSidebar.tsx
 "use client";
 
-export default function FilterSidebar() {
+import {
+  FilterState,
+  mileageOptions,
+  timeRangeOptions,
+  tagOptions,
+  categoryOptions,
+} from "../data/posts";
+
+interface FilterSidebarProps {
+  filters: FilterState;
+  onChange: (state: Partial<FilterState>) => void;
+  onApply: () => void;
+  appliedMessage?: string | null;
+}
+
+export default function FilterSidebar({
+  filters,
+  onChange,
+  onApply,
+  appliedMessage,
+}: FilterSidebarProps) {
+  const toggleValue = (list: string[], value: string) =>
+    list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+
   return (
-    <div className="rounded-[12px] border border-[rgba(45,64,87,0.1)] bg-white p-5 shadow-sm">
-      <h3 className="font-semibold mb-4 flex items-center gap-2">排序方式</h3>
-      <div className="space-y-2 mb-6">
-        <RadioItem name="sort" label="最新" defaultChecked />
-        <RadioItem name="sort" label="最熱門" />
-        <RadioItem name="sort" label="最多哩程" />
+    <div className="rounded-[12px] border border-[rgba(45,64,87,0.1)] bg-white p-5 shadow-sm flex flex-col gap-5">
+      <div>
+        <h3 className="font-semibold mb-4 flex items-center gap-2">排序方式</h3>
+        <div className="space-y-2 text-sm text-[#1F2E3C]/80">
+          {[
+            { label: "最新", value: "newest" },
+            { label: "最熱門", value: "popular" },
+            { label: "最多哩程", value: "miles" },
+            { label: "分享最多", value: "shares" },
+          ].map((option) => (
+            <label key={option.value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="sort"
+                checked={filters.sort === option.value}
+                onChange={() => onChange({ sort: option.value as FilterState["sort"] })}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <Field label="發佈時間">
-        <Select options={["所有時間", "近 7 天", "近 30 天", "今年"]} />
+        <Select
+          options={timeRangeOptions}
+          value={filters.timeRange}
+          onChange={(value) => onChange({ timeRange: value as FilterState["timeRange"] })}
+        />
       </Field>
 
       <Field label="獎勵哩程">
-        <Select options={["不限", "1,000+", "5,000+", "10,000+"]} />
+        <Select
+          options={mileageOptions}
+          value={filters.mileageTier}
+          onChange={(value) => onChange({ mileageTier: value as FilterState["mileageTier"] })}
+        />
       </Field>
 
       <Field label="熱門標籤">
-        <TagGroup tags={["潛水", "美食", "夜市", "賞櫻", "秘境", "滑雪"]} />
+        <TagGroup
+          tags={tagOptions}
+          selected={filters.selectedTags}
+          onToggle={(tag) =>
+            onChange({ selectedTags: toggleValue(filters.selectedTags, tag) })
+          }
+        />
       </Field>
 
       <Field label="景點分類">
-        <TagGroup tags={["遊樂園", "歷史古蹟", "動物園", "夜市", "博物館"]} />
+        <TagGroup
+          tags={categoryOptions}
+          selected={filters.selectedCategories}
+          onToggle={(cat) =>
+            onChange({
+              selectedCategories: toggleValue(filters.selectedCategories, cat),
+            })
+          }
+        />
       </Field>
+
+      {appliedMessage && (
+        <p className="text-xs text-[var(--sw-primary)]">{appliedMessage}</p>
+      )}
+
+      <button
+        type="button"
+        onClick={onApply}
+        className="mt-1 h-11 rounded-full bg-[var(--sw-accent)] text-black text-sm font-normal tracking-[0.08em] shadow-[0_10px_25px_rgba(220,187,135,0.28)] hover:bg-[var(--sw-accent)]/90 transition"
+      >
+        套用篩選
+      </button>
     </div>
   );
 }
 
-function Field({ label, children }: any) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="mb-6">
-      <div className="text-sm font-semibold mb-2">{label}</div>
+    <div className="space-y-2 w-full">
+      <div className="text-sm font-semibold text-[#1F2E3C]/80">{label}</div>
       {children}
     </div>
   );
 }
 
-function RadioItem({ name, label, defaultChecked = false }: any) {
+function Select({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <input type="radio" name={name} defaultChecked={defaultChecked} />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-function Select({ options }: { options: string[] }) {
-  return (
-    <select className="h-10 w-full rounded-[8px] border px-3 text-sm">
+    <select
+      className="h-10 w-full rounded-[8px] border px-3 text-sm"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
       {options.map((o) => (
-        <option key={o}>{o}</option>
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
       ))}
     </select>
   );
 }
 
-function TagGroup({ tags }: { tags: string[] }) {
+function TagGroup({
+  tags,
+  selected,
+  onToggle,
+}: {
+  tags: string[];
+  selected: string[];
+  onToggle: (tag: string) => void;
+}) {
   return (
     <div className="flex flex-wrap gap-2">
-      {tags.map((t) => (
-        <button
-          key={t}
-          className="rounded-full border px-3 h-8 text-sm hover:border-[var(--sw-accent)]"
-        >
-          {t}
-        </button>
-      ))}
+      {tags.map((t) => {
+        const isActive = selected.includes(t);
+        return (
+          <button
+            key={t}
+            type="button"
+            onClick={() => onToggle(t)}
+            className={`rounded-full border px-3 h-8 text-sm transition ${
+              isActive
+                ? "bg-[var(--sw-accent)] text-black border-[var(--sw-accent)]"
+                : "hover:border-[var(--sw-accent)]"
+            }`}
+          >
+            {t}
+          </button>
+        );
+      })}
     </div>
   );
 }

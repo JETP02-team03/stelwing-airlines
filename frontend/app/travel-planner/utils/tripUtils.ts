@@ -23,20 +23,27 @@ function convertToTimezone(isoString: string, timezone: string): string {
 
 // function：取得旅程狀態：待啟程、進行中、已結束
 function calculateStatus(trip: any): string {
-  const nowUTC = DateTime.utc();
-  const startDateUTC = DateTime.fromISO(trip.startDate);
-  const endDateUTC = DateTime.fromISO(trip.endDate);
+  const { startDate, startTimezone, endDate, endTimezone } = trip;
 
-  let status;
-  if (nowUTC < startDateUTC) {
-    status = '待啟程';
-  } else if (nowUTC < endDateUTC) {
-    status = '進行中';
+  const nowLocal = DateTime.local(); // 你的現在時間（台灣）
+
+  // 將 now 換成旅程開始時區
+  const nowAtStartTZ = nowLocal.setZone(startTimezone).startOf('day');
+  const startAtTZ = DateTime.fromISO(startDate)
+    .setZone(startTimezone)
+    .startOf('day');
+
+  // 將 now 換成旅程結束時區
+  const nowAtEndTZ = nowLocal.setZone(endTimezone).startOf('day');
+  const endAtTZ = DateTime.fromISO(endDate).setZone(endTimezone).startOf('day');
+
+  if (nowAtStartTZ < startAtTZ) {
+    return '待啟程';
+  } else if (nowAtEndTZ <= endAtTZ) {
+    return '進行中';
   } else {
-    status = '已結束';
+    return '已結束';
   }
-
-  return status;
 }
 
 // 將原始 API 旅程資料轉成 UI 用資料

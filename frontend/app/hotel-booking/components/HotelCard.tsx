@@ -72,7 +72,7 @@ export default function HotelCard({
       <div className="relative h-full flex flex-col justify-between p-4 z-10">
         <div className="flex justify-end">
           <div className="bg-black/70 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 text-sm backdrop-blur-sm shadow-lg">
-            <Star size={14} color="#D4AF37" fill="#D4AF37" />
+            <Star size={14} color="#DCBB87" fill="#DCBB87" />
             <span className="font-semibold">{hotel.rating}</span>
           </div>
         </div>

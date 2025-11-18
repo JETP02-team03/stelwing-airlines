@@ -16,19 +16,21 @@ import session from "express-session";
 import sessionFileStore from "session-file-store";
 import cors from "cors";
 import { log } from "console";
+import path from "path";
 
 const FileStore = sessionFileStore(session);
 
 // 建⽴伺服器主物件
 const app = express();
 // 設定靜態內容資料夾
-app.use(express.static("public"));
+app.use(express.static(path.join(process.cwd(), "public")));
 // 解析 JSON body 的中間件
 app.use(express.json());
 // 解析 URL-encoded body 的中間件
 app.use(express.urlencoded({ extended: true }));
 // 11/11若晴新增 會員頭像圖庫
-app.use("/avatars", express.static("public/avatars"));
+app.use("/avatars", express.static(path.join(process.cwd(), "public/avatars")));
+app.use('/planner/cover', express.static(path.join(process.cwd(), 'public/planner/cover')));
 // 允許所有來源訪問
 app.use(
   cors({
@@ -47,6 +49,8 @@ app.use(
     credentials: true,
   })
 );
+
+console.log("cwd =", process.cwd());
 
 app.set("json replacer", (_key: any, value: { toString: () => any }) =>
   typeof value === "bigint" ? value.toString() : value

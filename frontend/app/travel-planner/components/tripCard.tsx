@@ -1,6 +1,7 @@
 'use client';
 
 import { MoveRight } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { useTripContext } from '../../../src/context/TripContext';
@@ -70,7 +71,7 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
       );
 
       const tripForUI = transformTripForUI(data);
-      console.log(tripForUI);
+      // console.log(tripForUI);
       setCurrentTrip(tripForUI);
 
       // 通過驗證 → 跳轉到動態路由
@@ -88,10 +89,13 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
   // 功能：處理刪除旅程
   const handleDelete = useCallback(async () => {
     try {
-      const data = await fetch(`http://localhost:3007/api/plans/${trip.id}`, {
-        // const data = await apiFetch(`${API_BASE}/plans/${trip.id}`, {
-        method: 'DELETE',
-      });
+      const data = await apiFetch(
+        `http://localhost:3007/api/plans/${trip.id}`,
+        {
+          // const data = await apiFetch(`${API_BASE}/plans/${trip.id}`, {
+          method: 'DELETE',
+        }
+      );
 
       onDeleteSuccess(trip.id);
 
@@ -117,7 +121,19 @@ export default function TripCard({ trip, onDeleteSuccess }: TripCardProps) {
       <div className="rounded-lg bg-ticket py-4 flex">
         {/* 第 1 塊：飛機窗圖片 */}
         <div className="px-4">
-          <div className="bg-(--sw-primary) w-20 h-30 rounded-full"></div>
+          <div className="relative bg-(--sw-primary) w-20 h-30 rounded-full overflow-hidden">
+            {trip.coverImage ? (
+              <Image
+                src={`http://localhost:3007${trip.coverImage}`}
+                alt="Stelwing private jet"
+                fill
+                priority
+                className="object-cover object-center"
+              />
+            ) : (
+              <div></div>
+            )}
+          </div>
         </div>
         {/* 第 2 塊：行程文字內容 */}
         <div className="flex-1 px-4 flex flex-col">

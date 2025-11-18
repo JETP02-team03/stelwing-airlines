@@ -117,22 +117,68 @@ export default function CreatePlanItemForm({
             required
           />
         </div>
-
+        {/* allDay 勾選 */}
+        <div className="mb-3">
+          <input
+            id="allDay"
+            name="allDay"
+            type="checkbox"
+            checked={formData.allDay} // 綁定狀態
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setFormData((prev) => ({
+                ...prev,
+                allDay: checked, // 更新 allDay 狀態
+                // 如果勾選，時間部分可自動設為 00:00
+                startTime: checked
+                  ? prev.startTime
+                    ? prev.startTime.split('T')[0] + 'T00:00'
+                    : DateTime.now().toISODate() + 'T00:00'
+                  : prev.startTime,
+                endTime: checked
+                  ? prev.endTime
+                    ? prev.endTime.split('T')[0] + 'T00:00'
+                    : prev.startTime
+                      ? prev.startTime.split('T')[0] + 'T00:00'
+                      : DateTime.now().toISODate() + 'T00:00'
+                  : prev.endTime,
+              }));
+            }}
+          />
+          <label htmlFor="allDay" className="ml-2">
+            建立整天的行程
+          </label>
+        </div>
         {/* 開始日期及時區 */}
         <div className="flex gap-4">
           <div className="flex-1 sw-l-input">
-            <label htmlFor="startTime">開始日期</label>
-            <input
-              id="startTime"
-              name="startTime"
-              type="datetime-local"
-              value={formData.startTime}
-              onChange={(e) => handleStartTimeChange(e.target.value)}
-              required
-            />
+            <label htmlFor="startTime">開始時間</label>
+            {formData.allDay ? (
+              // 如果 allDay 為 true，顯示 date input
+              <input
+                id="startTime"
+                name="startTime"
+                type="date"
+                value={formData.startTime.split('T')[0] || ''}
+                onChange={(e) =>
+                  handleStartTimeChange(e.target.value + 'T00:00')
+                }
+                required
+              />
+            ) : (
+              // 如果 allDay 為 false，顯示 datetime input
+              <input
+                id="startTime"
+                name="startTime"
+                type="datetime-local"
+                value={formData.startTime}
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                required
+              />
+            )}
           </div>
-          <div className="flex-2 sw-l-input">
-            <label htmlFor="startTimezone">開始日期時區</label>
+          <div className="flex-1 sw-l-input">
+            <label htmlFor="startTimezone">開始時間時區</label>
             <select
               id="startTimezone"
               name="startTimezone"
@@ -151,18 +197,36 @@ export default function CreatePlanItemForm({
         {/* 結束日期及時區 */}
         <div className="flex gap-4">
           <div className="flex-1 sw-l-input">
-            <label htmlFor="endTime">結束日期 (選填)</label>
-            <input
-              id="endTime"
-              name="endTime"
-              type="datetime-local"
-              value={formData.endTime}
-              min={formData.startTime || undefined}
-              onChange={handleChange}
-            />
+            <label htmlFor="endTime">結束時間 (選填)</label>
+            {formData.allDay ? (
+              // allDay 勾選 → 顯示 date input
+              <input
+                id="endTime"
+                name="endTime"
+                type="date"
+                value={formData.endTime.split('T')[0] || ''}
+                min={formData.startTime.split('T')[0] || undefined}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    endTime: e.target.value + 'T00:00',
+                  }))
+                }
+              />
+            ) : (
+              // allDay 未勾 → 顯示 datetime-local input
+              <input
+                id="endTime"
+                name="endTime"
+                type="datetime-local"
+                value={formData.endTime}
+                min={formData.startTime || undefined}
+                onChange={handleChange}
+              />
+            )}
           </div>
-          <div className="flex-2 sw-l-input">
-            <label htmlFor="endTimezone">結束日期時區</label>
+          <div className="flex-1 sw-l-input">
+            <label htmlFor="endTimezone">結束時間時區</label>
             <select id="endTimezone" name="endTimezone" onChange={handleChange}>
               <option value="">選擇時區 ⭣</option>
               {timezones.map((tz) => (

@@ -1,10 +1,19 @@
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { DFQuantitySelector } from '../components/DFQuantitySelector';
+import { ShoppingCart, X } from 'lucide-react';
 import { DFCheckoutStepper } from '../components/DFCheckoutStepper';
+import { DFQuantitySelector } from '../components/DFQuantitySelector';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
-import { ShoppingCart, X } from 'lucide-react';
 
 interface CartItem {
   id: string;
@@ -44,7 +53,10 @@ export function DFCartPage({
   onCheckout,
   onSetDeleteItemId,
 }: DFCartPageProps) {
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
   const total = subtotal - discount;
 
   return (
@@ -52,14 +64,22 @@ export function DFCartPage({
       <div className="mx-auto px-4 lg:px-16 max-w-7xl">
         {/* Breadcrumb */}
         <div className="text-sm text-gray-500 mb-4">
-          <button onClick={onNavigateHome} className="hover:text-[var(--df-accent-gold)]">
+          <button
+            onClick={onNavigateHome}
+            className="hover:text-[var(--df-accent-gold)]"
+          >
             首頁
           </button>
           {' > '}
           <span>購物車</span>
         </div>
 
-        <h1 style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: '600' }} className="mb-4 md:mb-8">購物車</h1>
+        <h1
+          style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: '600' }}
+          className="mb-4 md:mb-8"
+        >
+          購物車
+        </h1>
 
         {/* Checkout Stepper */}
         <DFCheckoutStepper currentStep={1} />
@@ -68,9 +88,9 @@ export function DFCartPage({
           <div className="bg-white rounded-lg p-8 md:p-12 text-center">
             <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500 mb-4">您的購物車是空的</p>
-            <Button 
+            <Button
               onClick={onNavigateHome}
-              className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white"
+              className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white !text-white"
             >
               繼續購物
             </Button>
@@ -90,8 +110,11 @@ export function DFCartPage({
                 </div>
 
                 {/* Cart Items */}
-                {cart.map(item => (
-                  <div key={item.id} className="grid grid-cols-12 gap-4 p-4 border-b items-center">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-12 gap-4 p-4 border-b items-center"
+                  >
                     <div className="col-span-6 flex gap-4">
                       <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                         <ImageWithFallback
@@ -102,7 +125,9 @@ export function DFCartPage({
                       </div>
                       <div>
                         <h3 className="font-medium mb-1">{item.name}</h3>
-                        <p className="text-sm text-gray-500">{item.description}</p>
+                        <p className="text-sm text-gray-500">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
                     <div className="col-span-2 flex justify-center">
@@ -112,7 +137,9 @@ export function DFCartPage({
                       />
                     </div>
                     <div className="col-span-2 text-center">
-                      <span className="font-medium">${(item.price * item.quantity).toLocaleString()}</span>
+                      <span className="font-medium">
+                        ${(item.price * item.quantity).toLocaleString()}
+                      </span>
                     </div>
                     <div className="col-span-2 flex justify-center">
                       <button
@@ -128,7 +155,7 @@ export function DFCartPage({
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
-                {cart.map(item => (
+                {cart.map((item) => (
                   <div key={item.id} className="bg-white rounded-lg p-4">
                     <div className="flex gap-4 mb-4">
                       <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
@@ -140,7 +167,9 @@ export function DFCartPage({
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium mb-1">{item.name}</h3>
-                        <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                        <p className="text-sm text-gray-500 line-clamp-2">
+                          {item.description}
+                        </p>
                       </div>
                       <button
                         onClick={() => onSetDeleteItemId(item.id)}
@@ -154,7 +183,9 @@ export function DFCartPage({
                         value={item.quantity}
                         onChange={(qty) => onUpdateQuantity(item.id, qty)}
                       />
-                      <span className="font-medium">${(item.price * item.quantity).toLocaleString()}</span>
+                      <span className="font-medium">
+                        ${(item.price * item.quantity).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -173,7 +204,7 @@ export function DFCartPage({
                     value={promoCode}
                     onChange={(e) => onPromoCodeChange(e.target.value)}
                   />
-                  <Button 
+                  <Button
                     onClick={onApplyPromoCode}
                     className="bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white whitespace-nowrap"
                   >
@@ -192,16 +223,20 @@ export function DFCartPage({
                   {discount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span>折扣 ({discountPercent}%)</span>
-                      <span className="text-[var(--df-state-success)]">-${discount.toLocaleString()}</span>
+                      <span className="text-[var(--df-state-success)]">
+                        -${discount.toLocaleString()}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>總金額</span>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>${total.toLocaleString()}</span>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
+                      ${total.toLocaleString()}
+                    </span>
                   </div>
                 </div>
-                
-                <Button 
+
+                <Button
                   onClick={onCheckout}
                   className="w-full bg-[var(--df-accent-gold)] hover:bg-[var(--df-accent-gold)]/90 text-white h-12"
                 >
@@ -214,7 +249,10 @@ export function DFCartPage({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteItemId !== null} onOpenChange={(open) => !open && onSetDeleteItemId(null)}>
+      <AlertDialog
+        open={deleteItemId !== null}
+        onOpenChange={(open) => !open && onSetDeleteItemId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>確認刪除</AlertDialogTitle>
@@ -223,12 +261,16 @@ export function DFCartPage({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => onSetDeleteItemId(null)}>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteItemId && onRemoveItem(deleteItemId)}
-              className="bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90"
-            >
-              確認刪除
+            <AlertDialogCancel onClick={() => onSetDeleteItemId(null)}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <button
+                onClick={() => deleteItemId && onRemoveItem(deleteItemId)}
+                className="w-full bg-[var(--df-state-error)] hover:bg-[var(--df-state-error)]/90 text-white rounded-md px-4 py-2 transition-colors"
+              >
+                刪除
+              </button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
