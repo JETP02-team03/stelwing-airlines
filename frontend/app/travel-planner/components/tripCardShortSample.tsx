@@ -1,6 +1,7 @@
 'use client';
 
 import { MoveRight } from 'lucide-react';
+import Image from 'next/image';
 
 export interface Trip {
   id: string; // 必填：用於 key
@@ -46,7 +47,19 @@ export default function TripCard({ trip }: TripCardShortProps) {
         {/* 第 1 塊：飛機窗圖片 + 狀態 */}
         <div className="px-4 flex flex-col items-center justify-between gap-4">
           {/* 飛機窗圖片 */}
-          <div className="bg-(--sw-primary) w-20 h-30 rounded-full"></div>
+          <div className="relative bg-(--sw-primary) w-20 h-30 rounded-full overflow-hidden">
+            {trip.coverImage ? (
+              <Image
+                src={`http://localhost:3007${trip.coverImage}`}
+                alt="Stelwing private jet"
+                fill
+                priority
+                className="object-cover object-center"
+              />
+            ) : (
+              <div></div>
+            )}
+          </div>
           {/* 狀態 */}
           <div className="flex items-center">
             <div

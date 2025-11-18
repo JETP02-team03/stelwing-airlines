@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { timezones } from '../src/data/timezone';
 // @ts-expect-error 我不寫就跳錯我只好加啊氣死
 import { DateTime } from 'luxon';
+import Cropper from 'react-easy-crop';
 import { useAlertDialog } from '../components/alertDialog/useAlertDialog';
 import { Trip } from '../types';
 import { apiFetch } from '../utils/apiFetch';
+import { getCroppedImg } from '../utils/image';
 import AlertDialogBox from './alertDialog/alertDialogBox';
 
 // export interface CreatePlanFormProps {}
@@ -19,6 +21,12 @@ export default function CreatePlanForm({
 }) {
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
   const { alert, showAlert } = useAlertDialog();
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     destination: '',
@@ -27,7 +35,7 @@ export default function CreatePlanForm({
     endDate: '',
     endTimezone: '',
     note: '',
-    coverImage: '',
+    // coverImage: '',
   });
 
   // 功能：監看欄位變化
@@ -52,13 +60,27 @@ export default function CreatePlanForm({
     });
   };
 
+  // 功能：處理檔案上傳
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(selectedFile);
+
+    // 不要在這裡更新 formData.coverImage
+    // 等裁切完成後再存
+  };
+
   // 功能：表單送出
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // e 是事件物件，這裡指表單的 submit 事件，參數 e 冒號後面都是型別定義，TS 就可以知道 e 有哪些屬性和方法可以使用，而這個 e 是 FormEvrnt 表單事件，事件綁掉的元素一定是 HTMLFormElement <form></form> 標籤元素
     e.preventDefault();
 
     try {
-      // 資料整理：日期轉為帶有時區資料的時間物件格式
+      // 先處理日期
       const startDateTime = DateTime.fromISO(formData.startDate, {
         zone: formData.startTimezone,
       }).startOf('day');
@@ -66,17 +88,30 @@ export default function CreatePlanForm({
         zone: formData.endTimezone,
       }).startOf('day');
 
-      const adjustedData = {
-        ...formData,
-        startDate: startDateTime.toUTC().toISO(),
-        endDate: endDateTime.toUTC().toISO(),
-      };
+      // 用 FormData 取代 JSON
+      const form = new FormData();
+      form.append('title', formData.title);
+      form.append('destination', formData.destination);
+      form.append('startDate', startDateTime.toUTC().toISO());
+      form.append('startTimezone', formData.startTimezone);
+      form.append('endDate', endDateTime.toUTC().toISO());
+      form.append('endTimezone', formData.endTimezone);
+      form.append('note', formData.note);
 
+      // 加上檔案
+      if (croppedPreview) {
+        const res = await fetch(croppedPreview);
+        const blob = await res.blob();
+        form.append('coverImage', blob, file?.name || 'cover.jpg');
+      } else if (file) {
+        form.append('coverImage', file);
+      }
+
+      // POST
       const data = await apiFetch<Trip>(`http://localhost:3007/api/plans`, {
         // const data = await apiFetch(`${API_BASE}/plans`, {
         method: 'POST',
-        body: JSON.stringify(adjustedData),
-        headers: { 'Content-Type': 'application/json' },
+        body: form,
       });
 
       showAlert({
@@ -100,7 +135,13 @@ export default function CreatePlanForm({
         {/* 旅程標題 */}
         <div className="sw-l-input">
           <label htmlFor="title">旅程標題</label>
-          <input id="title" name="title" type="text" onChange={handleChange} />
+          <input
+            id="title"
+            name="title"
+            type="text"
+            onChange={handleChange}
+            required
+          />
         </div>
         {/* 目的地 */}
         <div className="sw-l-input">
@@ -122,6 +163,7 @@ export default function CreatePlanForm({
               type="date"
               value={formData.startDate}
               onChange={(e) => handleStartDateChange(e.target.value)}
+              required
             />
           </div>
           <div className="flex-2 sw-l-input">
@@ -129,7 +171,9 @@ export default function CreatePlanForm({
             <select
               id="startTimezone"
               name="startTimezone"
+              value={formData.startTimezone}
               onChange={handleChange}
+              required
             >
               <option value="">選擇時區 ⭣</option>
               {timezones.map((tz) => (
@@ -151,11 +195,18 @@ export default function CreatePlanForm({
               value={formData.endDate}
               min={formData.startDate || undefined}
               onChange={handleChange}
+              required
             />
           </div>
           <div className="flex-2 sw-l-input">
             <label htmlFor="endTimezone">結束日期時區</label>
-            <select id="endTimezone" name="endTimezone" onChange={handleChange}>
+            <select
+              id="endTimezone"
+              name="endTimezone"
+              value={formData.endTimezone}
+              onChange={handleChange}
+              required
+            >
               <option value="">選擇時區 ⭣</option>
               {timezones.map((tz) => (
                 <option key={tz.value} value={tz.value}>
@@ -167,7 +218,7 @@ export default function CreatePlanForm({
         </div>
         {/* 備註 */}
         <div className="flex-1 sw-l-input">
-          <label htmlFor="startDate">備註 (選填)</label>
+          <label htmlFor="note">備註 (選填)</label>
           <textarea
             id="note"
             name="note"
@@ -176,28 +227,74 @@ export default function CreatePlanForm({
           ></textarea>
         </div>
         {/* 封面照片 */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-start">
           <div className="flex-1 sw-l-input">
-            <label htmlFor="coverImage">
+            <label htmlFor="coverImage" className="block mb-1">
               封面照片 (選填：支援 jpg / png，大小上限 5MB)
             </label>
+            {/* 真正的檔案輸入 */}
             <input
               id="coverImage"
-              name="coverImage"
-              type="text"
-              readOnly
-              placeholder="使用預設圖片"
-              value=""
-              onChange={handleChange}
+              // name="coverImage"
+              type="file"
+              accept="image/png, image/jpeg"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                 file:rounded-md file:border file:border-gray-300
+                 file:text-sm file:font-semibold
+                 file:bg-gray-100 file:text-gray-700
+                 hover:file:bg-gray-200"
             />
-          </div>
-          <div className="mb-[28px] flex items-end">
-            <button
-              className="px-2 py-1 border border-solid border-(--sw-grey) rounded-md"
-              disabled
-            >
-              選擇檔案
-            </button>
+
+            {/* 預覽圖片 */}
+            {preview && !croppedPreview && (
+              <div>
+                <div className="relative w-80 h-80 bg-gray-100">
+                  <Cropper
+                    image={preview}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={2 / 3} // 1:1 正方形裁切
+                    cropShape="rect" // 視覺圓形遮罩
+                    showGrid={false}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={(_, croppedAreaPixels) =>
+                      setCroppedAreaPixels(croppedAreaPixels)
+                    }
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
+                  onClick={async () => {
+                    if (!preview || !croppedAreaPixels) return;
+                    const croppedImage = await getCroppedImg(
+                      preview,
+                      croppedAreaPixels
+                    );
+                    setCroppedPreview(croppedImage);
+
+                    // setFormData((prev) => ({
+                    //   ...prev,
+                    //   coverImage: croppedImage,
+                    // }));
+                  }}
+                >
+                  完成裁切
+                </button>
+              </div>
+            )}
+            {/* 顯示裁切後的圖片 */}
+            {croppedPreview && (
+              <div className="mt-2">
+                <img
+                  src={croppedPreview}
+                  alt="裁切後封面"
+                  className="w-40 h-60 object-cover rounded-full border border-gray-300"
+                />
+              </div>
+            )}
           </div>
         </div>
         {/* 儲存按鈕 */}

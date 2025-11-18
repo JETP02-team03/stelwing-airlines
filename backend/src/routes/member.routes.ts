@@ -1,5 +1,6 @@
 // src/routes/member.routes.ts
 import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma-only.js";
 import bcrypt from "bcrypt"; // ⚙️ 確保有引入 bcrypt
@@ -8,12 +9,13 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 // ✅ 解析 JWT token，取得 memberId
-function getMemberIdFromToken(req) {
+function getMemberIdFromToken(req: Request) {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) return null;
   try {
     const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (typeof decoded === "string") return null;
     return decoded.memberId;
   } catch {
     return null;

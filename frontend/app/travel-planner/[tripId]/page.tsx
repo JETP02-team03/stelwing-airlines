@@ -14,6 +14,7 @@ import { Trip, TripItem } from '../types';
 import { apiFetch } from '../utils/apiFetch';
 // import { toOffsetISO } from '../utils/timezone';
 import momentTimezonePlugin from '@fullcalendar/moment-timezone';
+import ChangeCoverButton from '../components/ChangeCoverButton';
 import CreatePlanItemForm from '../components/createPlanItemForm';
 import EditDialog from '../components/editDialog';
 import TripItemCardDialog from '../components/tripItemCard';
@@ -35,6 +36,7 @@ export default function TripDetailPage() {
   const [itemsError, setItemsError] = useState<string | null>(null);
   const [selectedTimezone, setSelectedTimezone] = useState('local');
   const [isOpenCreateItem, setIsOpenCreateItem] = useState(false);
+  const [isOpenChangeCover, setIsOpenChangeCover] = useState(false);
   const initialDate = useMemo(() => computeInitialDate(items), [items]);
   const calendarRef = useRef<FullCalendar | null>(null);
   const [selectedItem, setSelectedItem] = useState<TripItem | null>(null);
@@ -152,6 +154,17 @@ export default function TripDetailPage() {
     return isTodayInside ? today : earliestDate;
   }
 
+  // 功能：設定行事曆第一時間顯示日期，並且在資料一進來時啟動
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      const date = computeInitialDate(items);
+      api.gotoDate(date);
+    }
+  }, [items]);
+
   // Data：FullCalendar 顯示用資料
   const calendarEvents = items.map((item) => ({
     id: String(item.id),
@@ -219,7 +232,12 @@ export default function TripDetailPage() {
                 </button>
               </div>
               <div className="flex-1 flex flex-col gap-2">
-                <button className="sw-btn text-white">刪除整趟旅程</button>
+                <button
+                  className="sw-btn text-white"
+                  onClick={() => setIsOpenChangeCover(true)}
+                >
+                  更換封面圖片
+                </button>
                 <button className="sw-btn text-white">修改旅程資訊</button>
               </div>
             </div>
@@ -330,6 +348,18 @@ export default function TripDetailPage() {
         <CreatePlanItemForm
           tripId={currentTrip.id}
           onSuccess={handleFormSuccess}
+        />
+      </EditDialog>
+      <EditDialog
+        open={isOpenChangeCover}
+        onOpenChange={setIsOpenChangeCover}
+        title={'更換圖片'}
+      >
+        <ChangeCoverButton
+          tripId={currentTrip!.id}
+          onUpdated={(newCoverUrl) => {
+            setCurrentTrip((prev) => ({ ...prev!, coverImage: newCoverUrl }));
+          }}
         />
       </EditDialog>
       {selectedItem && (
