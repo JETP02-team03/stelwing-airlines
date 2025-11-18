@@ -220,8 +220,29 @@ export function DFOrderDetailPage({
             <div className="w-full md:max-w-sm space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">小計：</span>
-                <span>TWD {order.total.toLocaleString()}</span>
+                <span>
+                  TWD{' '}
+                  {cart
+                    .slice(0, order.items)
+                    .reduce(
+                      (sum, item) => sum + item.price * item.quantity,
+                      0
+                    )
+                    .toLocaleString()}
+                </span>
               </div>
+              {(order.discount ?? 0) > 0 && (
+                <div className="flex justify-between text-sm text-green-700">
+                  <span className="text-gray-600">
+                    折扣
+                    {order.promoCode
+                      ? `（${order.promoCode.toUpperCase()}）`
+                      : ''}
+                    ：
+                  </span>
+                  <span>-TWD {Number(order.discount).toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t pt-2">
                 <span className="font-semibold">總計：</span>
                 <span
