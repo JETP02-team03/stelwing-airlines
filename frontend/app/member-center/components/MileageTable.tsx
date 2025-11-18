@@ -1,5 +1,7 @@
 "use client";
 
+import OrderFrame from "./OrderFrame";
+
 export default function MileageTable() {
   // 之後會改成後端撈資料
   const mockData = [
@@ -9,7 +11,8 @@ export default function MileageTable() {
   ];
 
   return (
-    <div className="border border-[#BA9A60] rounded-xl overflow-hidden">
+    <OrderFrame>
+      <div className="border border-[#BA9A60] rounded-xl overflow-hidden">
       {/* 表頭 */}
       <div className="bg-[#1F2E3C] text-white text-sm grid grid-cols-4 py-3 px-6 font-medium">
         <div>ID</div>
@@ -36,6 +39,7 @@ export default function MileageTable() {
           <div>{row.date}</div>
         </div>
       ))}
-    </div>
+      </div>
+    </OrderFrame>
   );
 }

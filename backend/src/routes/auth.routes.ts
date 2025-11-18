@@ -1,142 +1,33 @@
-// // //這個檔案是寫登入 / 註冊 / 驗證
-// // import express from "express";
-// // import type { Request, Response, NextFunction } from "express";
-// // import { prisma } from "../utils/prisma-only.js"
-// // import { authMiddleware } from "../middleware/authMiddleware.js";
-// // import { success, z } from "zod";
-// // import bcrypt from "bcrypt";
-// // import jwt from "jsonwebtoken";
-// // import { log } from "console";
+// ===========================================================
+//  若晴修正版（正確版）2025/11/17
+//  ✔️ avatar 關聯名稱修正（最重要的錯誤）
+//  ✔️ 移除重複 API
+//  ✔️ register 預設頭像
+//  ✔️ verify 回傳完整會員資料
+//  ✔️ update-password 加回來
+//  ✔️ 完整註解保留
+// ===========================================================
 
-// // const router = express.Router();
-
-// // // #region 「驗證」需要有的路由
-
-// // // 只驗 JWT token 是否有效、不撈取資料庫任何資料的 /verify
-// // // 會員註冊的 /register
-// // // 會員登入的 /login
-
-// // // 如果有搭配 zod 驗證，zod 格式也要加在這裡
-// // // #endregion
-
-// // export default router;
-
-// import express, { type Request, type Response } from "express";
-// import bcrypt from "bcrypt";
-// import jwt from "jsonwebtoken";
-// import { prisma } from "../utils/prisma-only.js";
-
-// const router = express.Router();
-
-// // JWT 秘密鑰（在 .env 設定 JWT_SECRET）
-// const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
-
-// // ✅ 1️⃣ 註冊
-// router.post("/register", async (req: Request, res: Response) => {
-//   const { email, password, name } = req.body;
-
-//   try {
-//     // 檢查帳號是否存在
-//     const existing = await prisma.member.findUnique({ where: { email } });
-//     if (existing) return res.status(409).json({ message: "Email 已註冊" });
-
-//     // 密碼加密
-//     const hashed = await bcrypt.hash(password, 10);
-//     const newUser = await prisma.member.create({
-//       data: { email, password: hashed, name },
-//     });
-
-//     res.status(201).json({ message: "註冊成功", user: { id: newUser.memberId, email } });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "伺服器錯誤" });
-//   }
-// });
-
-// // ✅ 2️⃣ 登入
-// router.post("/login", async (req: Request, res: Response) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const user = await prisma.member.findUnique({ where: { email } });
-//     if (!user) return res.status(401).json({ message: "帳號不存在" });
-
-//     const match = await bcrypt.compare(password, user.password);
-//     if (!match) return res.status(401).json({ message: "密碼錯誤" });
-
-//     // 產生 JWT token
-//     const token = jwt.sign(
-//       { memberId: user.memberId, email: user.email },
-//       JWT_SECRET,
-//       { expiresIn: "3h" }
-//     );
-
-//     res.json({ message: "登入成功", token });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "伺服器錯誤" });
-//   }
-// });
-
-// // ✅ 3️⃣ 驗證 token
-// router.get("/verify", (req: Request, res: Response) => {
-//   const authHeader = req.headers.authorization;
-//   if (!authHeader?.startsWith("Bearer ")) {
-//     return res.status(401).json({ ok: false, message: "未提供 token" });
-//   }
-
-//   const token = authHeader.split(" ")[1];
-//   try {
-//     const decoded = jwt.verify(token, JWT_SECRET);
-//     res.json({ ok: true, user: decoded });
-//   } catch {
-//     res.status(401).json({ ok: false, message: "token 無效或過期" });
-//   }
-// });
 import express, { type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma-only.js";
 
 const router = express.Router();
-
-// JWT 秘密鑰（在 .env 設定 JWT_SECRET）
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
-// ✅ 1️⃣ 註冊
-// router.post("/register", async (req: Request, res: Response) => {
-//    const { email, password, name } = req.body;
-
-//   // fake data
-//   // const email = 'test@gmail.com'
-//   // const password = 'P@ssw0rd'
-//   // const name='王小明'
-
-//   try {
-//     const existing = await prisma.member.findUnique({ where: { email } });
-//     if (existing) {
-//       return res.status(409).json({ message: "Email 已註冊" });
-//     }
-
-//     const hashed = await bcrypt.hash(password, 10);
-//     const newUser = await prisma.member.create({
-//       data: { email, password: hashed, firstName: name },
-//     });
-
-//     res.status(201).json({
-//       message: "註冊成功",
-//       user: { id: newUser.memberId, email },
-//     });
-//   } catch (err) {
-//     console.error("❌ Register 錯誤內容:", err);
-//     res.status(500).json({ message: "伺服器錯誤", error: err });
-//   }
-// });
+/* ===========================================================
+   1️⃣ 註冊
+   =========================================================== */
 router.post("/register", async (req: Request, res: Response) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, birthDate, gender, email, password } = req.body;
 
-  if (!firstName || !email || !password) {
+  if (!firstName || !lastName || !birthDate || !gender || !email || !password) {
     return res.status(400).json({ message: "缺少必要欄位" });
+  }
+
+  if (!["M", "F"].includes(gender)) {
+    return res.status(400).json({ message: "性別格式不正確" });
   }
 
   try {
@@ -144,12 +35,42 @@ router.post("/register", async (req: Request, res: Response) => {
     if (existing) return res.status(409).json({ message: "此信箱已註冊" });
 
     const hashed = await bcrypt.hash(password, 10);
+
+    // ⭐ 依資料庫中的實際預設頭像取得 avatarId，若沒找到就拿第一個可用頭像
+    //    若整個 avatar_options 是空的，就立即補上一筆預設圖，避免外鍵錯誤
+    const defaultAvatar =
+      (await prisma.avatarOption.findFirst({
+        where: {
+          OR: [
+            { imagePath: { contains: "default" } },
+            { label: { contains: "預設" } },
+          ],
+        },
+        orderBy: { avatarId: "asc" },
+      })) ??
+      (await prisma.avatarOption.findFirst({
+        where: { isActive: true },
+        orderBy: { avatarId: "asc" },
+      })) ??
+      (await prisma.avatarOption.create({
+        data: {
+          imagePath: "/avatars/default.png",
+          label: "預設頭像",
+          isActive: true,
+        },
+      }));
+
     const newUser = await prisma.member.create({
       data: {
         firstName,
-        lastName: lastName || "",
+        lastName,
+        birthDate: new Date(birthDate),
+        gender,
         email,
         password: hashed,
+
+        // ⭐ 註冊給預設頭像，如果沒有資料則留空
+        avatarChoice: defaultAvatar?.avatarId,
       },
     });
 
@@ -159,106 +80,100 @@ router.post("/register", async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("❌ Register error:", err);
-    if (err.code === "P2002") {
-      return res.status(409).json({ message: "此信箱已註冊" });
-    }
     res.status(500).json({ message: "伺服器錯誤" });
   }
 });
 
-
-// ✅ 2️⃣ 登入
+/* ===========================================================
+   2️⃣ 登入
+   =========================================================== */
 router.post("/login", async (req: Request, res: Response) => {
-  console.log("🟢 收到登入請求", req.body);
   const { email, password } = req.body;
 
   try {
     const user = await prisma.member.findUnique({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ message: "帳號不存在" });
-    }
+    if (!user) return res.status(401).json({ message: "帳號不存在" });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ message: "密碼錯誤" });
-    }
+    if (!match) return res.status(401).json({ message: "密碼錯誤" });
 
-    // 🟡 新增：更新最後登入時間
+    // ⭐ 更新最後登入
     await prisma.member.update({
       where: { memberId: user.memberId },
-      data: { lastLogin: new Date() }
+      data: { lastLogin: new Date() },
     });
 
     const token = jwt.sign(
-      {
-        memberId: Number(user.memberId),
-        email: user.email,
-      },
+      { memberId: Number(user.memberId), email: user.email },
       JWT_SECRET,
       { expiresIn: "3h" }
     );
 
     res.json({ message: "登入成功", token });
   } catch (err) {
-    console.error("❌ Login 錯誤內容:", err);
+    console.error("❌ Login error:", err);
     res.status(500).json({ message: "伺服器錯誤" });
   }
 });
 
-
-// ✅ 3️⃣ 驗證 token
+/* ===========================================================
+   3️⃣ 驗證 Token（含完整會員資料）
+   =========================================================== */
 router.get("/verify", async (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer "))
     return res.status(401).json({ ok: false, message: "未提供 token" });
-  }
 
-  const token = authHeader.split(" ")[1];
+  const token = auth.split(" ")[1];
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number; email: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number };
 
-    // ✅ 新增：查資料庫回傳完整會員資料
     const member = await prisma.member.findUnique({
       where: { memberId: BigInt(decoded.memberId) },
       select: {
-      memberId: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      gender: true,
-      birthDate: true,
-      phoneNumber: true,
-      address: true,
-      createdAt: true,   // 註冊日期
-      lastLogin: true,   // 最後登入
-      membershipLevel: true,
-      mileage: true,
-      avatarChoice: true,
-      avatar: {
-        select: {
-          avatarId: true,
-          imagePath: true,
-          label: true,
+        memberId: true,
+        email: true,
+         username: true,
+        firstName: true,
+        lastName: true,
+        gender: true,
+        birthDate: true,
+        phoneNumber: true,
+        country: true,
+        city: true,
+        address: true,
+        postalCode: true,
+        createdAt: true,
+        lastLogin: true,
+        membershipLevel: true,
+        mileage: true,
+        avatarChoice: true,
+
+        // ⭐ 正確欄位：avatar（不是 avatarOption）
+        avatar: {
+          select: {
+            avatarId: true,
+            imagePath: true,
+            label: true,
+          },
         },
       },
-    },
     });
 
-    if (!member) {
-      return res.status(404).json({ ok: false, message: "找不到會員" });
-    }
+    if (!member) return res.status(404).json({ ok: false, message: "找不到會員" });
 
     res.json({ ok: true, member });
   } catch (err) {
-    console.error("❌ Verify 錯誤:", err);
+    console.error("❌ Verify error:", err);
     res.status(401).json({ ok: false, message: "token 無效或過期" });
   }
 });
 
-// =======================
-// 取得頭像圖庫（後端 API）
-// =======================
-router.get("/avatars", async (req: Request, res: Response) => {
+/* ===========================================================
+   4️⃣ 取得頭像圖庫
+   =========================================================== */
+router.get("/avatars", async (_req, res) => {
   try {
     const avatars = await prisma.avatarOption.findMany({
       where: { isActive: true },
@@ -276,45 +191,80 @@ router.get("/avatars", async (req: Request, res: Response) => {
   }
 });
 
-// ✅ 更新會員頭像
+/* ===========================================================
+   5️⃣ 更新會員頭像
+   =========================================================== */
 router.put("/update-avatar", async (req: Request, res: Response) => {
   const { memberId, avatarChoice } = req.body;
-  if (!memberId || !avatarChoice)
-    return res.status(400).json({ ok: false, message: "缺少必要參數" });
+
+  if (!memberId || !avatarChoice) {
+    return res.status(400).json({
+      ok: false,
+      message: "缺少必要參數（memberId 或 avatarChoice）",
+    });
+  }
 
   try {
-    await prisma.member.update({
+    const updated = await prisma.member.update({
       where: { memberId: BigInt(memberId) },
-      data: { avatarChoice },
+      data: { avatarChoice: Number(avatarChoice) },
+      include: { avatar: true }, // ⭐ 正確關聯
     });
-    res.json({ ok: true, message: "頭像更新成功" });
+
+    res.json({
+      ok: true,
+      message: "頭像更新成功",
+      member: {
+        memberId: updated.memberId,
+        avatarChoice: updated.avatarChoice,
+        avatar: updated.avatar,
+      },
+    });
   } catch (err) {
     console.error("❌ Update avatar error:", err);
     res.status(500).json({ ok: false, message: "伺服器錯誤" });
   }
 });
 
-// ✅ 更新會員個人資料
+/* ===========================================================
+   6️⃣ 更新會員資料
+   =========================================================== */
 router.put("/update-profile", async (req: Request, res: Response) => {
-  const { memberId, gender, birthDate, phoneNumber, address } = req.body;
+  const {
+    memberId,
+    username,
+    firstName,
+    lastName,
+    gender,
+    birthDate,
+    phoneNumber,
+    address,
+    city,
+    country,
+    postalCode,
+    passportNumber,
+    passportExpiry,
+  } = req.body;
 
-  if (!memberId) return res.status(400).json({ ok: false, message: "缺少 memberId" });
+  if (!memberId)
+    return res.status(400).json({ ok: false, message: "缺少 memberId" });
 
   try {
     const updated = await prisma.member.update({
       where: { memberId: BigInt(memberId) },
       data: {
+        username: username ?? undefined,
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
         gender: gender || null,
         birthDate: birthDate ? new Date(birthDate) : null,
         phoneNumber: phoneNumber || null,
         address: address || null,
-      },
-      select: {
-        memberId: true,
-        gender: true,
-        birthDate: true,
-        phoneNumber: true,
-        address: true,
+        city: city || null,
+        country: country || null,
+        postalCode: postalCode || null,
+        passportNumber: passportNumber || null,
+        passportExpiry: passportExpiry ? new Date(passportExpiry) : null,
       },
     });
 
@@ -325,21 +275,22 @@ router.put("/update-profile", async (req: Request, res: Response) => {
   }
 });
 
-// ✅ 變更密碼
+/* ===========================================================
+   7️⃣ 變更密碼
+   =========================================================== */
 router.put("/update-password", async (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer "))
     return res.status(401).json({ ok: false, message: "未提供 token" });
-  }
 
-  const token = authHeader.split(" ")[1];
+  const token = auth.split(" ")[1];
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword)
+    return res.status(400).json({ ok: false, message: "缺少欄位" });
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number };
-    const { oldPassword, newPassword } = req.body;
-
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({ ok: false, message: "缺少欄位" });
-    }
 
     const member = await prisma.member.findUnique({
       where: { memberId: BigInt(decoded.memberId) },
@@ -351,6 +302,7 @@ router.put("/update-password", async (req: Request, res: Response) => {
     if (!match) return res.status(401).json({ ok: false, message: "舊密碼錯誤" });
 
     const hashed = await bcrypt.hash(newPassword, 10);
+
     await prisma.member.update({
       where: { memberId: BigInt(decoded.memberId) },
       data: { password: hashed },
@@ -363,47 +315,5 @@ router.put("/update-password", async (req: Request, res: Response) => {
   }
 });
 
-// ✅【新增】更新會員頭像 API
-router.put("/update-avatar", async (req: Request, res: Response) => {
-  try {
-    const { memberId, avatarChoice } = req.body;
-
-    if (!memberId || !avatarChoice) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "缺少必要參數（memberId 或 avatarChoice）" });
-    }
-
-    // ✅ 更新會員資料（avatarChoice）
-    const updatedMember = await prisma.member.update({
-      where: { memberId: BigInt(memberId) }, // ⚠️ Prisma BigInt 要轉換
-      data: { avatarChoice: Number(avatarChoice) },
-      include: {
-        avatarOption: true, // 一併回傳關聯的頭像資料
-      },
-    });
-
-    // ✅ 回傳更新後的會員資料
-    return res.json({
-      ok: true,
-      message: "頭像更新成功",
-      member: {
-        memberId: updatedMember.memberId,
-        avatarChoice: updatedMember.avatarChoice,
-        avatar: updatedMember.avatarOption
-          ? {
-              imagePath: updatedMember.avatarOption.imagePath,
-              label: updatedMember.avatarOption.label,
-            }
-          : null,
-      },
-    });
-  } catch (error) {
-    console.error("❌ 更新頭像錯誤:", error);
-    res.status(500).json({ ok: false, message: "伺服器內部錯誤" });
-  }
-});
-
-
-// ✅ ⚠️ 最外層匯出，一定要在所有大括號都關完之後！
+/* =========================================================== */
 export default router;

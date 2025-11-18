@@ -120,6 +120,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/auth-context";
+import { useToast } from "@/app/context/toast-context";
 
 // 💡 Stelwing UI 元件
 const Button = ({ children, className = "", ...props }) => (
@@ -156,7 +157,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const {isLoggedIn} = useAuth()
+  const { isLoggedIn, login: authLogin } = useAuth();
+  const { showToast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -178,8 +180,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem("token", data.token);
-        setMessage("登入成功！即將導向會員中心");
+        authLogin(data.token);
+        showToast({
+          title: "登入成功",
+          message: "歡迎回來，祝旅程愉快！",
+          type: "success",
+        });
         setTimeout(() => router.push("/member-center"), 1000);
       } else {
         setMessage(data.message || "帳號或密碼錯誤");

@@ -102,7 +102,7 @@ export default function MemberCenterLayout({
         />
 
         {/* Page Title */}
-        <h1 className="text-[24px] text-[#1F2E3C] mb-8">會員中心</h1>
+        <h1 className="text-[24px] text-[#1F2E3C] my-8">會員中心</h1>
 
         {/* Tabs */}
         <MemberTabs />
