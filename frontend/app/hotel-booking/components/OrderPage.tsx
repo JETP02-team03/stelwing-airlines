@@ -183,38 +183,67 @@ export default function OrderPage({
               </label>
 
               {/* 2. LinePay */}
-              <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-gray-600">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="linePay"
-                    checked={paymentMethod === 'linePay'}
-                    onChange={() => setPaymentMethod('linePay')}
-                    className="custom-radio"
-                  />
-                  <span className="text-lg font-medium text-gray-800">
-                    LinePay
-                  </span>
-                </div>
-                {/* LinePay 圖示 (使用簡單文字代替 Logo) */}
-                <div className="text-gray-600 font-bold text-lg">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-message-circle"
-                  >
-                    <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
-                  </svg>
-                </div>
-              </label>
+              <div>
+                <label className="flex items-center justify-between p-4 border border-gray-300 rounded-lg cursor-pointer transition-all hover:shadow-md has-[:checked]:border-gray-600">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="linePay"
+                      checked={paymentMethod === 'linePay'}
+                      onChange={() => setPaymentMethod('linePay')}
+                      className="custom-radio"
+                    />
+                    <span className="text-lg font-medium text-gray-800">
+                      LinePay
+                    </span>
+                  </div>
+                  {/* LinePay 圖示 (使用簡單文字代替 Logo) */}
+                  <div className="text-gray-600 font-bold text-lg">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-message-circle"
+                    >
+                      <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
+                    </svg>
+                  </div>
+                </label>
+
+                {/* ✅ LinePay QR Code 區塊 (選擇 LinePay 時顯示) */}
+                {paymentMethod === 'linePay' && (
+                  <div className="mt-4 p-6 border border-gray-200 rounded-lg bg-gray-50 text-center">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      掃描 QR Code 完成付款
+                    </h4>
+                    <div className="flex justify-center mb-4">
+                      <Image
+                        src="/images/dutyfree/qrcode.png"
+                        alt="LinePay QR Code"
+                        width={192}
+                        height={192}
+                        className="border-2 border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      請使用 LINE App 掃描此 QR Code
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      總金額:{' '}
+                      <span className="font-bold text-gray-800">
+                        ${totalPrice.toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -347,8 +376,16 @@ export default function OrderPage({
             <span className="font-medium">{detail.hotelName}</span>
           </div>
           <div className="flex justify-between">
-            <span>房型</span>
+            <span>床型</span>
             <span>{detail.roomType}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>房間數</span>
+            <span>{detail.rooms} 間</span>
+          </div>
+          <div className="flex justify-between">
+            <span>吸煙偏好</span>
+            <span>{detail.smokingPreference}</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center gap-1">

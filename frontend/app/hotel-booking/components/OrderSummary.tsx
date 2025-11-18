@@ -38,7 +38,7 @@ export default function OrderSummary({
           <span className="font-medium">{hotel.name}</span>
         </div>
         <div className="flex justify-between">
-          <span>房型</span>
+          <span>床型</span>
           <span>{hotel.roomType}</span>
         </div>
         <div className="flex justify-between">

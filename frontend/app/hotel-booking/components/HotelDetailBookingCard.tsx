@@ -157,7 +157,7 @@ export default function HotelDetailBookingCard({
           </div>
 
           <div className="flex justify-between">
-            <span>房型</span>
+            <span>床型</span>
             <span>{formData.roomType}</span>
           </div>
 
