@@ -28,7 +28,12 @@ export default function DutyFreeShopPage() {
   const [addedProductName, setAddedProductName] = useState('');
 
   const debouncedSearch = useMemo(
-    () => debounce((value: string) => setDebouncedQuery(value), 300),
+    () =>
+      debounce(
+        (value: string) => setDebouncedQuery(value),
+        300,
+        { leading: false, trailing: true }
+      ),
     []
   );
 
