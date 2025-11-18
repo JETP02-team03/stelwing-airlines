@@ -1,7 +1,9 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { Map, MapPin, Pencil, Trash2, X } from 'lucide-react';
+import { Map, MapPin, MoveRight, Pencil, Trash2, X } from 'lucide-react';
+// @ts-expect-error 我不寫就跳錯我只好加啊氣死
+import { DateTime } from 'luxon';
 import { TripItem } from '../types';
 
 export interface ViewDialogProps {
@@ -19,6 +21,45 @@ export default function ViewDialog({
   // title,
   item,
 }: ViewDialogProps) {
+  // 計算日期及時間顯示
+  const startDT = DateTime.fromISO(item.startTime, {
+    zone: item.startTimezone,
+  });
+  const endDT = item.endTime
+    ? DateTime.fromISO(item.endTime, {
+        zone: item.endTimezone || item.startTimezone,
+      })
+    : null;
+
+  const startStrDate = startDT.toFormat('M月 d日');
+  const startStrTime = startDT.toFormat('a hh：mm');
+  const endStrDate = endDT ? endDT.toFormat('M月 d日') : '';
+  const endStrTime = endDT ? endDT.toFormat('a hh：mm') : '';
+
+  // 計算時間長
+  const start = DateTime.fromISO(item.startTime); // UTC
+  const end = item.endTime ? DateTime.fromISO(item.endTime) : null;
+
+  let durationStr = '';
+
+  if (end) {
+    const duration = end.diff(start, ['days', 'hours', 'minutes']);
+
+    const d = duration.days;
+    const h = duration.hours;
+    const m = duration.minutes;
+
+    if (d === 0 && h === 0 && m === 0) {
+      durationStr = '';
+    } else {
+      const parts = [];
+      if (d > 0) parts.push(`${d} 天`);
+      if (h > 0) parts.push(`${h} 小時`);
+      if (m > 0) parts.push(`${m} 分鐘`);
+      durationStr = parts.join(' ');
+    }
+  }
+
   return (
     <>
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -66,8 +107,43 @@ export default function ViewDialog({
             {/* 行程標題 */}
             <Dialog.Title className="sw-h5 mb-3">{item.title}</Dialog.Title>
             {/* 時間 */}
-            <div className="border-b border-black pb-2 mb-4">
-              12月 25日 星期四 ‧ 上午 09：00 - 上午 10：30
+            <div className="border-b border-black pb-4 mb-4 flex items-center">
+              {/* 開始時間 */}
+              <div className="flex flex-col">
+                <div>{startStrDate}</div>
+                {!item.allDay ? (
+                  <div className="text-[18px] font-bold">{startStrTime}</div>
+                ) : (
+                  <div className="text-[18px] font-bold">整日</div>
+                )}
+                {/* 全日事件不顯示時間 */}
+                <div className="text-[#8b929a] text-xs">
+                  {item.startTimezone}
+                </div>
+              </div>
+
+              {/* 結束時間 */}
+              {item.endTime && (
+                <>
+                  <div className="mx-8 flex flex-col items-center">
+                    <MoveRight />
+                    {/* 時長 */}
+                    <div>{durationStr}</div>
+                  </div>
+                  <div className="flex flex-col text-right">
+                    <div>{endStrDate}</div>
+                    {!item.allDay ? (
+                      <div className="text-[18px] font-bold">{endStrTime}</div>
+                    ) : (
+                      <div className="text-[18px] font-bold">整日</div>
+                    )}
+                    {/* 全日事件不顯示時間 */}
+                    <div className="text-[#8b929a] text-xs">
+                      {item.endTimezone}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <section className="flex-1 overflow-y-auto pr-3">
