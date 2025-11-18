@@ -199,58 +199,58 @@ export default function HotelDetailContent({
           </p>
 
           <div className="grid grid-cols-2 gap-12">
-            {/* 吸菸需求 */}
+            {/* 吸煙需求 */}
             <div>
               <label className="text-base font-semibold block mb-4">
-                吸菸需求（需視現場狀況安排）
+                吸煙偏好（需視現場狀況安排）
               </label>
               <div className="space-y-3">
-                {/* 禁菸 */}
+                {/* 禁煙 */}
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <span
                     className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      formData.smokingPreference === '禁菸房'
+                      formData.smokingPreference === '禁煙房'
                         ? 'border-[#DCBB87]'
                         : 'border-gray-400'
                     }`}
                   >
-                    {formData.smokingPreference === '禁菸房' && (
+                    {formData.smokingPreference === '禁煙房' && (
                       <span className="w-2 h-2 rounded-full bg-[#DCBB87]" />
                     )}
                   </span>
-                  <span className="text-sm text-gray-700">禁菸房</span>
+                  <span className="text-sm text-gray-700">禁煙房</span>
                   <input
                     type="radio"
                     name="smokingPreference"
-                    value="禁菸房"
+                    value="禁煙房"
                     className="hidden"
-                    checked={formData.smokingPreference === '禁菸房'}
+                    checked={formData.smokingPreference === '禁煙房'}
                     onChange={(e) =>
                       onInputChange('smokingPreference', e.target.value)
                     }
                   />
                 </label>
 
-                {/* 吸菸 */}
+                {/* 吸煙 */}
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <span
                     className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      formData.smokingPreference === '吸菸房'
+                      formData.smokingPreference === '吸煙房'
                         ? 'border-[#DCBB87]'
                         : 'border-gray-400'
                     }`}
                   >
-                    {formData.smokingPreference === '吸菸房' && (
+                    {formData.smokingPreference === '吸煙房' && (
                       <span className="w-2 h-2 rounded-full bg-[#DCBB87]" />
                     )}
                   </span>
-                  <span className="text-sm text-gray-700">吸菸房</span>
+                  <span className="text-sm text-gray-700">吸煙房</span>
                   <input
                     type="radio"
                     name="smokingPreference"
-                    value="吸菸房"
+                    value="吸煙房"
                     className="hidden"
-                    checked={formData.smokingPreference === '吸菸房'}
+                    checked={formData.smokingPreference === '吸煙房'}
                     onChange={(e) =>
                       onInputChange('smokingPreference', e.target.value)
                     }
@@ -259,7 +259,7 @@ export default function HotelDetailContent({
               </div>
             </div>
 
-            {/* 床型需求 - 已改成跟吸菸需求完全一樣的樣式 */}
+            {/* 床型需求 */}
             <div>
               <label className="text-base font-semibold block mb-4">
                 床型需求（需視現場狀況安排）

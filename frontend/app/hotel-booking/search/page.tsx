@@ -16,7 +16,7 @@ const formatDateLocal = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-export default function HotelPage() {
+export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -27,15 +27,6 @@ export default function HotelPage() {
   const [selectedAmenities, setSelectedAmenities] = useState<AmenityKey[]>([]);
   const [bookingHotelId, setBookingHotelId] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // ✅ 設定預設日期
-  const getDefaultDates = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const threeDaysLater = new Date(today);
-    threeDaysLater.setDate(today.getDate() + 3);
-    return { from: today, to: threeDaysLater };
-  };
 
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
     undefined
@@ -48,7 +39,15 @@ export default function HotelPage() {
     null
   );
 
-  // ✅ 在客戶端載入資料
+  const getDefaultDates = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeDaysLater = new Date(today);
+    threeDaysLater.setDate(today.getDate() + 3);
+    return { from: today, to: threeDaysLater };
+  };
+
+  // 載入 localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -57,16 +56,12 @@ export default function HotelPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-
-        // 載入日期
         if (parsed.checkin && parsed.checkout) {
           const checkinDate = new Date(parsed.checkin);
           const checkoutDate = new Date(parsed.checkout);
-
           if (!isNaN(checkinDate.getTime()) && !isNaN(checkoutDate.getTime())) {
             setSelectedRange({ from: checkinDate, to: checkoutDate });
           } else {
-            // 日期無效，使用預設值（搜尋頁需要有日期）
             const defaultDates = getDefaultDates();
             setSelectedRange(defaultDates);
             updateLocalStorage({
@@ -77,7 +72,6 @@ export default function HotelPage() {
             });
           }
         } else {
-          // 沒有日期資料，使用預設值
           const defaultDates = getDefaultDates();
           setSelectedRange(defaultDates);
           updateLocalStorage({
@@ -87,13 +81,9 @@ export default function HotelPage() {
             rooms: parsed.rooms || 1,
           });
         }
-
-        // 載入其他數值
         if (parsed.guests && parsed.guests > 0) setGuests(parsed.guests);
         if (parsed.rooms && parsed.rooms > 0) setRooms(parsed.rooms);
-      } catch (error) {
-        console.error('Failed to parse localStorage:', error);
-        // 發生錯誤時使用預設值
+      } catch {
         const defaultDates = getDefaultDates();
         setSelectedRange(defaultDates);
         setGuests(2);
@@ -106,7 +96,6 @@ export default function HotelPage() {
         });
       }
     } else {
-      // 沒有 localStorage 資料，使用預設值（搜尋頁必須有日期）
       const defaultDates = getDefaultDates();
       setSelectedRange(defaultDates);
       setGuests(2);
@@ -193,23 +182,13 @@ export default function HotelPage() {
     updateLocalStorage({ rooms: newRooms });
   };
 
-  // 高亮效果
+  // 高亮 scroll
   useEffect(() => {
     if (highlightedHotelId !== null) {
       const el = hotelRefs.current[highlightedHotelId];
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        Object.values(hotelRefs.current).forEach((e) => {
-          if (e) {
-            e.classList.remove('border-4', 'border-[#DCBB87]', 'rounded-lg');
-          }
-        });
-
-        el.classList.add('border-4', 'border-[#DCBB87]', 'rounded-lg');
-      }
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [highlightedHotelId, filteredHotels]);
+  }, [highlightedHotelId]);
 
   const goToDetail = async (hotelId: number) => {
     setHighlightedHotelId(hotelId);
@@ -222,7 +201,6 @@ export default function HotelPage() {
     setBookingHotelId(null);
   };
 
-  // ✅ 等待載入完成
   if (!isLoaded) {
     return (
       <div
@@ -286,15 +264,18 @@ export default function HotelPage() {
                   ref={(el) => {
                     hotelRefs.current[hotel.id] = el;
                   }}
-                  className="w-full"
+                  className={`w-full transition-all duration-300 cursor-pointer ${
+                    highlightedHotelId === hotel.id
+                      ? 'border-4 border-[#DCBB87] rounded-lg'
+                      : ''
+                  }`}
+                  onClick={() => setHighlightedHotelId(hotel.id)}
                 >
-                  <div>
-                    <HotelResultCard
-                      hotel={hotel}
-                      onBookClick={() => goToDetail(hotel.id)}
-                      isBooking={bookingHotelId === hotel.id}
-                    />
-                  </div>
+                  <HotelResultCard
+                    hotel={hotel}
+                    onBookClick={() => goToDetail(hotel.id)}
+                    isBooking={bookingHotelId === hotel.id}
+                  />
                 </div>
               ))
             )}
