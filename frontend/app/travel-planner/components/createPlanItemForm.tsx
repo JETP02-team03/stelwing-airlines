@@ -90,7 +90,7 @@ export default function CreatePlanItemForm({
 
       showAlert({
         title: '新增成功',
-        description: '點擊確認跳轉行程規劃頁面',
+        description: '點擊確認回到日曆',
         confirmText: '確認',
         onConfirm: () => onSuccess(data.id),
       });

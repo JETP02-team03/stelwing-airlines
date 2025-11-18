@@ -359,6 +359,7 @@ export default function TripDetailPage() {
           tripId={currentTrip!.id}
           onUpdated={(newCoverUrl) => {
             setCurrentTrip((prev) => ({ ...prev!, coverImage: newCoverUrl }));
+            setIsOpenChangeCover(false);
           }}
         />
       </EditDialog>

@@ -50,7 +50,7 @@ app.use(
   })
 );
 
-console.log("cwd =", process.cwd());
+// console.log("cwd =", process.cwd());
 
 app.set("json replacer", (_key: any, value: { toString: () => any }) =>
   typeof value === "bigint" ? value.toString() : value

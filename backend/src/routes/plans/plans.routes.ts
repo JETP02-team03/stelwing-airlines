@@ -320,7 +320,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 // | PUT | /api/plans/:planId/cover | 更新封面圖片 |
 router.put("/:id/cover", upload.single("cover"), async (req: Request, res: Response) => {
   try {
-    console.log('觸發了後端 API')
+    // console.log('新的一個 req 開始，觸發了後端 API')
     const userId = getMemberIdFromToken(req);
     if (!userId) throw new Error('沒有提供 User ID');
 
@@ -329,8 +329,8 @@ router.put("/:id/cover", upload.single("cover"), async (req: Request, res: Respo
 
     if (!req.file) throw new Error('沒有上傳檔案');
 
-    console.log(tripId)
-    console.log(req.file)
+    // console.log(tripId)
+    // console.log(req.file)
     // 最終檔案路徑（給 DB）
     const coverUrl = `/planner/cover/${req.file.filename}`;
 
@@ -340,19 +340,30 @@ router.put("/:id/cover", upload.single("cover"), async (req: Request, res: Respo
       data: { coverImage: coverUrl },
     });
 
-    res.json({
-      success: true,
-      message: "封面更新成功",
-      coverImage: coverUrl,
-    });
+    // console.log('撈完了資料庫')
+    // console.log(coverUrl)
 
-  } catch (err) {
+    const response: ApiResponse = {
+      success: true,
+      message: '旅程刪除成功',
+      data: {
+        coverImage: coverUrl
+      }
+    };
+    res.status(201).json(response);
+    // console.log('回應了成功的 res')
+
+  } catch (err: any) {
+    // console.log('走到了錯誤')
     console.error(err);
-    res.status(500).json({
+
+    const errorResponse: ApiErrorResponse = {
       success: false,
-      message: "Upload failed",
-      error: err instanceof Error ? err.message : String(err),
-    });
+      error: err,
+      message: '上傳圖片失敗',
+    };
+
+    res.status(500).json(errorResponse);
   }
 });
 
