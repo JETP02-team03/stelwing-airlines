@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { DFCheckoutStepper } from '../components/DFCheckoutStepper';
 import { DFQuantitySelector } from '../components/DFQuantitySelector';
-import { Button } from '../components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import { Button } from '../components/ui/button';
 import { useDFStore } from '../context/DFStoreContext';
 
 export default function CartPage() {
@@ -188,7 +188,7 @@ export default function CartPage() {
                 </div>
                 {hasDiscount && (
                   <p className="text-xs text-green-600 mt-1">
-                    已套用優惠碼 <strong>{promoCode.toUpperCase()}</strong>
+                    已套用折扣碼 <strong>{promoCode.toUpperCase()}</strong>
                   </p>
                 )}
               </div>

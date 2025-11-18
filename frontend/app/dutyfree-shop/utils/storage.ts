@@ -21,6 +21,9 @@ export interface Order {
   date: string;
   status: string;
   total: number;
+  discount?: number;
+  discountPercent?: number;
+  promoCode?: string;
   items: number;
   paymentMethod: string;
   products: OrderProduct[];
