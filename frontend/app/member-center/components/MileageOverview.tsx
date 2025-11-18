@@ -2,17 +2,21 @@
 
 import { TrendingUp, Award, Plane } from "lucide-react";
 
+interface Props {
+  mileage: number;
+  level: string;
+  nextLevelPercent: number;
+  className?: string;
+}
+
 export default function MileageOverview({
   mileage,
   level,
   nextLevelPercent,
-}: {
-  mileage: number;
-  level: string;
-  nextLevelPercent: number;
-}) {
+  className = "",
+}: Props) {
   return (
-    <div className="w-full bg-white p-6 border border-[#BA9A60] rounded-xl mb-8">
+    <div className={`w-full bg-white p-6 border border-[#BA9A60] rounded-xl ${className}`}>
       <h2 className="text-lg font-semibold mb-4 text-[#1F2E3C] flex items-center gap-2">
         <Plane size={20} className="text-[#DCBB87]" />
         哩程概況
@@ -54,7 +58,10 @@ export default function MileageOverview({
       {/* 進度條 */}
       <div className="mt-6">
         <div className="text-sm text-[#1F2E3C] mb-1">
-          當前等級：<span className="text-[#BA9A60] font-semibold">{level}會員</span>
+          當前等級：
+          <span className="text-[#BA9A60] font-semibold">
+            {level?.includes("會員") ? level : `${level}會員`}
+          </span>
         </div>
 
         <div className="w-full h-3 bg-[#F1E8D2] rounded-full overflow-hidden">

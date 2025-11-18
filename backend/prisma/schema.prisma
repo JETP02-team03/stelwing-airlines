@@ -47,6 +47,16 @@ model Member {
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   bookings Booking[]
+  travelPosts      TravelPost[]
+  likes            Like[]
+  comments         Comment[]
+  collections      Collection[]
+  postShares       PostShare[]
+  mileagePurchases MileagePurchase[]
+  mileageTipsGiven MileageTip[] @relation("MileageGiver")
+  mileageTipsReceived MileageTip[] @relation("MileageReceiver")
+  searchLogs       SearchLog[]
+  bookmarkFolders  BookmarkFolder[]
 
   @@map("members")
 }
@@ -55,7 +65,6 @@ model Member {
 enum Gender {
   M
   F
-  X
 }
 
 //會員等級 ENUM
@@ -279,4 +288,262 @@ model PlanItem {
   plan Plan @relation(fields: [planId], references: [id])
 
   @@map("plan_items")
+}
+
+// =========================
+// 旅遊分享：文章 / 媒體
+// =========================
+// 旅遊分享 - 文章類型
+enum PostType {
+  travel
+  video
+  snapshot
+}
+
+// 旅遊分享 - 文章狀態
+enum PostStatus {
+  published
+  draft
+}
+
+// 旅遊分享 - 文章表（主內容）
+model TravelPost {
+  postId      BigInt     @id @default(autoincrement()) @map("post_id")
+  authorId    BigInt     @map("user_id")
+  author      Member     @relation(fields: [authorId], references: [memberId], onDelete: Cascade)
+  postType    PostType   @map("post_type")
+  title       String     @map("title") @db.VarChar(255)
+  content     String     @map("content") @db.Text
+  location    String?    @map("location") @db.VarChar(100)
+  status      PostStatus @default(published) @map("status")
+  totalSizeMb Float      @default(0) @map("total_size_mb")
+  shareCount  Int        @default(0) @map("share_count")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  deletedAt   DateTime?  @map("deleted_at")
+
+  media          MediaItem[]
+  comments       Comment[]
+  likes          Like[]
+  collections    Collection[]
+  shares         PostShare[]
+  postTags       PostTag[]
+  bookmarkItems  BookmarkItem[]
+  tipsReceived   MileageTip[] @relation("PostTips")
+
+  @@index([authorId])
+  @@index([postType])
+  @@index([createdAt])
+  @@map("travel_posts")
+}
+
+// 旅遊分享 - 媒體類型
+enum MediaType {
+  image
+  video
+}
+
+// 旅遊分享 - 媒體表
+model MediaItem {
+  mediaId         BigInt    @id @default(autoincrement()) @map("media_id")
+  postId          BigInt    @map("post_id")
+  post            TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  mediaType       MediaType @map("media_type")
+  mediaUrl        String    @map("media_url") @db.VarChar(500)
+  thumbnailUrl    String?   @map("thumbnail_url") @db.VarChar(500)
+  mimeType        String?   @map("mime_type") @db.VarChar(100)
+  fileSizeMb      Float     @default(0) @map("file_size_mb")
+  durationSeconds Int?      @map("duration_seconds")
+  orderIndex      Int       @default(0) @map("order_index")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([postId])
+  @@map("media_items")
+}
+
+// =========================
+// 旅遊分享：互動
+// =========================
+// 旅遊分享 - 按讚表
+model Like {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  postId    BigInt   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Member     @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+  post TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+// 旅遊分享 - 留言表
+model Comment {
+  commentId BigInt    @id @default(autoincrement()) @map("comment_id")
+  userId    BigInt    @map("user_id")
+  postId    BigInt    @map("post_id")
+  parentId  BigInt?   @map("parent_id")
+  content   String    @map("content") @db.Text
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user   Member?     @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+  post   TravelPost  @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  parent Comment?    @relation("CommentReplies", fields: [parentId], references: [commentId])
+  replies Comment[]  @relation("CommentReplies")
+
+  @@index([postId])
+  @@map("comments")
+}
+
+// 旅遊分享 - 收藏表
+model Collection {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  postId    BigInt   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Member     @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+  post TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("collections")
+}
+
+// 旅遊分享 - 分享平台 Enum
+enum SharePlatform {
+  internal
+  facebook
+  instagram
+  twitter
+  line
+  copylink
+}
+
+// 旅遊分享 - 分享紀錄表
+model PostShare {
+  shareId   BigInt        @id @default(autoincrement()) @map("share_id")
+  postId    BigInt        @map("post_id")
+  userId    BigInt        @map("user_id")
+  platform  SharePlatform @map("platform")
+  sharedAt  DateTime      @default(now()) @map("shared_at")
+
+  user Member     @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+  post TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
+
+  @@unique([userId, postId, platform])
+  @@map("post_shares")
+}
+
+// =========================
+// 哩程 / 金流
+// =========================
+// 哩程購買 - 狀態
+enum MileagePurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// 哩程購買訂單表
+model MileagePurchase {
+  id                  BigInt                @id @default(autoincrement())
+  userId              BigInt                @map("user_id")
+  amount              Int                   @map("amount")
+  price               Int                   @map("price")
+  currency            String                @map("currency") @db.VarChar(10)
+  status              MileagePurchaseStatus @map("status")
+  paymentGatewayTxId  String?               @map("payment_gateway_tx_id") @db.VarChar(255)
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+
+  user Member @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+
+  @@map("mileage_purchases")
+}
+
+// 哩程打賞紀錄表
+model MileageTip {
+  id         BigInt     @id @default(autoincrement())
+  giverId    BigInt     @map("giver_id")
+  receiverId BigInt     @map("receiver_id")
+  postId     BigInt     @map("post_id")
+  amount     Int        @map("amount")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  giver    Member     @relation("MileageGiver", fields: [giverId], references: [memberId], onDelete: Cascade)
+  receiver Member     @relation("MileageReceiver", fields: [receiverId], references: [memberId], onDelete: Cascade)
+  post     TravelPost @relation("PostTips", fields: [postId], references: [postId], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("mileage_tips")
+}
+
+// =========================
+// 內容探索 / 標籤
+// =========================
+// 標籤主檔
+model Tag {
+  tagId BigInt @id @default(autoincrement()) @map("tag_id")
+  name  String @unique @map("name") @db.VarChar(50)
+
+  postTags PostTag[]
+
+  @@map("tags")
+}
+
+// 文章標籤關聯
+model PostTag {
+  id     BigInt @id @default(autoincrement())
+  postId BigInt @map("post_id")
+  tagId  BigInt @map("tag_id")
+
+  post TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  tag  Tag        @relation(fields: [tagId], references: [tagId], onDelete: Cascade)
+
+  @@unique([postId, tagId])
+  @@map("post_tags")
+}
+
+// 搜尋紀錄表
+model SearchLog {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt?  @map("user_id")
+  keyword   String   @map("keyword") @db.VarChar(100)
+  source    String?  @map("source") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user Member? @relation(fields: [userId], references: [memberId], onDelete: SetNull)
+
+  @@map("search_logs")
+}
+
+// 收藏資料夾表
+model BookmarkFolder {
+  folderId  BigInt   @id @default(autoincrement()) @map("folder_id")
+  userId    BigInt   @map("user_id")
+  name      String   @map("name") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  Member          @relation(fields: [userId], references: [memberId], onDelete: Cascade)
+  items BookmarkItem[]
+
+  @@map("bookmark_folders")
+}
+
+// 收藏項目表
+model BookmarkItem {
+  id        BigInt   @id @default(autoincrement())
+  folderId  BigInt   @map("folder_id")
+  postId    BigInt   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  folder BookmarkFolder @relation(fields: [folderId], references: [folderId], onDelete: Cascade)
+  post   TravelPost     @relation(fields: [postId], references: [postId], onDelete: Cascade)
+
+  @@unique([folderId, postId])
+  @@map("bookmark_items")
 }

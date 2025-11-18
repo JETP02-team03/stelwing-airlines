@@ -9,8 +9,26 @@ import MileageTabs from "./components/MileageTabs";
 import MileageTable from "./components/MileageTable";
 
 // ✅【保留】性別與等級顯示對照表
-const genderLabels = { male: "男", female: "女", other: "其他", M: "男", F: "女", X: "其他" };
+const genderLabels = { male: "男", female: "女", M: "男", F: "女" };
 const levelLabels = { Green: "普卡會員", Silver: "銀卡會員", Gold: "金卡會員", Platinum: "白金會員" };
+
+const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+const formatPhoneDisplay = (value: string) => {
+  const digits = sanitizePhone(value);
+  if (!digits) return "";
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7, 10)}`;
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("zh-TW");
+  } catch {
+    return value;
+  }
+};
 
 export default function MemberInfoPage() {
   const router = useRouter();
@@ -48,14 +66,22 @@ export default function MemberInfoPage() {
         //    這裡先用安全預設，之後你擴充 /verify 回傳 avatar 資料就會自動帶出
         setMember({
           memberId: data.member.memberId,
-          name: `${data.member.lastName || ""}${data.member.firstName || ""}`,
+          firstName: data.member.firstName || "",
+          lastName: data.member.lastName || "",
+          username: data.member.username || "",
+          avatarChoice: data.member.avatarChoice || null,
           email: data.member.email,
           level: data.member.membershipLevel || "Green",
           mileage: data.member.mileage || 0, // ✅ 從後端撈哩程
-          gender: data.member.gender || "other",
+          gender: data.member.gender || "",
           birthDate: data.member.birthDate || "",
-          phone: data.member.phoneNumber || "",
+          phone: sanitizePhone(data.member.phoneNumber || ""),
+          country: data.member.country || "",
+          city: data.member.city || "",
+          postalCode: data.member.postalCode || "",
           address: data.member.address || "",
+          passportNumber: data.member.passportNumber || "",
+          passportExpiry: data.member.passportExpiry || "",
           registerDate: data.member.createdAt || "",
           lastLogin: data.member.lastLogin || "",
           avatar: {
@@ -144,6 +170,44 @@ export default function MemberInfoPage() {
       </div>
     );
 
+  const levelLabel =
+    levelLabels[member.level as keyof typeof levelLabels] ??
+    member.level ??
+    "一般會員";
+
+  const displayName =
+    `${member.lastName || ""}${member.firstName || ""}`.trim() ||
+    member.username ||
+    "未填寫";
+  const nickname = member.username || "尚未設定";
+  const formattedPhone = formatPhoneDisplay(member.phone || "");
+  const birthDateLabel = formatDate(member.birthDate);
+  const infoItems = [
+    { label: "姓氏", value: member.lastName || "未填寫" },
+    { label: "名字", value: member.firstName || "未填寫" },
+    { label: "暱稱", value: nickname },
+    {
+      label: "性別",
+      value:
+        genderLabels[member.gender as keyof typeof genderLabels] || "未設定",
+    },
+    { label: "生日", value: birthDateLabel || "未填寫" },
+    { label: "電話", value: formattedPhone || "未填寫" },
+    { label: "Email", value: member.email, span: 2 },
+    { label: "國家", value: member.country || "未填寫" },
+    { label: "縣市", value: member.city || "未填寫" },
+    { label: "郵遞區號", value: member.postalCode || "未填寫" },
+    { label: "地址", value: member.address || "未填寫", span: 4 },
+  ];
+
+  const getSpanClass = (span?: number) => {
+    if (span === 4) return "sm:col-span-2 lg:col-span-4";
+    if (span === 3) return "sm:col-span-2 lg:col-span-3";
+    if (span === 2) return "sm:col-span-2 lg:col-span-2";
+    return "";
+  };
+  const nextLevelPercent = 0;
+
   return (
     <>
       <div className="bg-white rounded-b-lg shadow-sm">
@@ -157,7 +221,7 @@ export default function MemberInfoPage() {
               <img
                 src={member.avatar.imagePath}
                 alt={member.avatar.label}
-                className="w-20 h-20 lg:w-24 lg:h-24 rounded-full object-cover border-4 border-[#DCBB87] mb-4 cursor-pointer hover:opacity-80 transition"
+                className="w-20 h-20 lg:w-24 lg:h-24 rounded-full object-cover ring-4 ring-[#DCBB87] mb-4 cursor-pointer hover:opacity-80 transition"
                 onClick={openAvatarModal} // ✅ 點頭像開彈窗
               />
               <button
@@ -170,11 +234,14 @@ export default function MemberInfoPage() {
               </button>
             </div>
 
-            <h3 className="text-[#1F2E3C] -mt-1 mb-2 text-center text-sm lg:text-base">
-              {member.name || "未填寫姓名"}
+            <h3 className="text-[#1F2E3C] -mt-1 mb-1 text-center text-base font-semibold">
+              {displayName}
             </h3>
+            <div className="text-xs text-[#999] mb-2">
+              暱稱：{nickname}
+            </div>
             <div className="px-3 py-1 rounded-full text-xs lg:text-sm bg-[#DCBB87] text-[#1F2E3C]">
-              {levelLabels[member.level] || "一般會員"}
+              {levelLabel}
             </div>
 
             {/* Info group */}
@@ -226,63 +293,48 @@ export default function MemberInfoPage() {
           {/* 右側詳細資料 */}
           <div className="flex-1 p-6 relative">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
-              <div>
-                <div className="text-xs text-[#666] mb-1">姓名</div>
-                <div>{member.name || "未填寫"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-[#666] mb-1">性別</div>
-                <div>{genderLabels[member.gender as keyof typeof genderLabels] || "未設定"}</div>
-              </div>
-              <div>
-                <div className="text-xs text-[#666] mb-1">生日</div>
-                <div>
-                  {member.birthDate
-                    ? new Date(member.birthDate).toLocaleDateString("zh-TW")
-                    : "未填寫"}
+              {infoItems.map((item) => (
+                <div
+                  key={item.label}
+                  className={`min-h-[60px] ${getSpanClass(item.span)} space-y-1`}
+                >
+                  <div className="text-xs text-[#666]">{item.label}</div>
+                  <div className="text-sm text-[#1F2E3C] whitespace-pre-line">
+                    {item.value || "未填寫"}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-xs text-[#666] mb-1">電話</div>
-                <div>{member.phone || "未填寫"}</div>
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-4">
-                <div className="text-xs text-[#666] mb-1">Email</div>
-                <div>{member.email}</div>
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-4">
-                <div className="text-xs text-[#666] mb-1">地址</div>
-                <div>{member.address || "未填寫"}</div>
-              </div>
+              ))}
             </div>
 
             {/* ✅ 保留你的 UI：更改 → 前往 profile */}
-            <Link
-              href="/member-center/profile"
-              className="
-                absolute lg:bottom-6 lg:right-6
-                mt-6 lg:mt-0
-                px-5 py-2 text-sm
-                bg-[#DCBB87] text-[#1F2E3C]
-                hover:bg-[#C5A872]
-                rounded-full
-                transition-colors
-                text-center
-              "
-            >
-              修改
-            </Link>
+            <div className="mt-6 flex lg:justify-end">
+              <Link
+                href="/member-center/profile"
+                className="
+                  inline-flex items-center justify-center
+                  px-5 py-2 text-sm
+                  bg-[#DCBB87] text-[#1F2E3C]
+                  hover:bg-[#C5A872]
+                  rounded-full
+                  transition-colors
+                  text-center
+                "
+              >
+                修改
+              </Link>
+            </div>
           </div>
         </div>
       </div>
+
       {/* --- 哩程系統 --- */}
-      <MileageOverview
-        mileage={member.mileage}
-        level={levelLabels[member.level]}
-        nextLevelPercent={12}
-      />
+      <div className="mt-8">
+        <MileageOverview
+          mileage={member.mileage}
+          level={levelLabel}
+          nextLevelPercent={nextLevelPercent}
+        />
+      </div>
 
       <MileageTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -316,10 +368,10 @@ export default function MemberInfoPage() {
                   key={a.avatarId}
                   type="button"
                   onClick={() => setSelectedAvatarId(a.avatarId)}
-                  className={`w-[88px] h-[88px] flex items-center justify-center rounded-full border-4 transition ${
+                  className={`w-[88px] h-[88px] flex items-center justify-center rounded-full overflow-hidden transition focus-visible:outline-none ${
                     selectedAvatarId === a.avatarId
-                      ? "border-[#DCBB87]"
-                      : "border-transparent hover:border-[#BA9A60]"
+                      ? "ring-[6px] ring-[#DCBB87]"
+                      : "ring-0 hover:ring-[4px] hover:ring-[#BA9A60]"
                   }`}
                   aria-label={a.label}
                   title={a.label}
@@ -327,7 +379,7 @@ export default function MemberInfoPage() {
                   <img
                     src={a.imagePath}
                     alt={a.label}
-                    className="w-20 h-20 rounded-full object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </button>
               ))}

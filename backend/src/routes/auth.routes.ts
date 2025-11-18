@@ -20,10 +20,14 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
    1️⃣ 註冊
    =========================================================== */
 router.post("/register", async (req: Request, res: Response) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, birthDate, gender, email, password } = req.body;
 
-  if (!firstName || !email || !password) {
+  if (!firstName || !lastName || !birthDate || !gender || !email || !password) {
     return res.status(400).json({ message: "缺少必要欄位" });
+  }
+
+  if (!["M", "F"].includes(gender)) {
+    return res.status(400).json({ message: "性別格式不正確" });
   }
 
   try {
@@ -32,15 +36,41 @@ router.post("/register", async (req: Request, res: Response) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
+    // ⭐ 依資料庫中的實際預設頭像取得 avatarId，若沒找到就拿第一個可用頭像
+    //    若整個 avatar_options 是空的，就立即補上一筆預設圖，避免外鍵錯誤
+    const defaultAvatar =
+      (await prisma.avatarOption.findFirst({
+        where: {
+          OR: [
+            { imagePath: { contains: "default" } },
+            { label: { contains: "預設" } },
+          ],
+        },
+        orderBy: { avatarId: "asc" },
+      })) ??
+      (await prisma.avatarOption.findFirst({
+        where: { isActive: true },
+        orderBy: { avatarId: "asc" },
+      })) ??
+      (await prisma.avatarOption.create({
+        data: {
+          imagePath: "/avatars/default.png",
+          label: "預設頭像",
+          isActive: true,
+        },
+      }));
+
     const newUser = await prisma.member.create({
       data: {
         firstName,
-        lastName: lastName || "",
+        lastName,
+        birthDate: new Date(birthDate),
+        gender,
         email,
         password: hashed,
 
-        // ⭐ 註冊給預設頭像（default.png）
-        avatarChoice: 8,
+        // ⭐ 註冊給預設頭像，如果沒有資料則留空
+        avatarChoice: defaultAvatar?.avatarId,
       },
     });
 
@@ -104,12 +134,16 @@ router.get("/verify", async (req: Request, res: Response) => {
       select: {
         memberId: true,
         email: true,
+         username: true,
         firstName: true,
         lastName: true,
         gender: true,
         birthDate: true,
         phoneNumber: true,
+        country: true,
+        city: true,
         address: true,
+        postalCode: true,
         createdAt: true,
         lastLogin: true,
         membershipLevel: true,
@@ -196,7 +230,21 @@ router.put("/update-avatar", async (req: Request, res: Response) => {
    6️⃣ 更新會員資料
    =========================================================== */
 router.put("/update-profile", async (req: Request, res: Response) => {
-  const { memberId, gender, birthDate, phoneNumber, address } = req.body;
+  const {
+    memberId,
+    username,
+    firstName,
+    lastName,
+    gender,
+    birthDate,
+    phoneNumber,
+    address,
+    city,
+    country,
+    postalCode,
+    passportNumber,
+    passportExpiry,
+  } = req.body;
 
   if (!memberId)
     return res.status(400).json({ ok: false, message: "缺少 memberId" });
@@ -205,10 +253,18 @@ router.put("/update-profile", async (req: Request, res: Response) => {
     const updated = await prisma.member.update({
       where: { memberId: BigInt(memberId) },
       data: {
+        username: username ?? undefined,
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
         gender: gender || null,
         birthDate: birthDate ? new Date(birthDate) : null,
         phoneNumber: phoneNumber || null,
         address: address || null,
+        city: city || null,
+        country: country || null,
+        postalCode: postalCode || null,
+        passportNumber: passportNumber || null,
+        passportExpiry: passportExpiry ? new Date(passportExpiry) : null,
       },
     });
 

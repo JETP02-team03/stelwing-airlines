@@ -45,6 +45,7 @@ export default function Header({
 }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false); // 手機版選單
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // 🔼 新增：使用登入狀態
   const { isLoggedIn, avatar, logout } = useAuth();
@@ -197,8 +198,28 @@ export default function Header({
           {isLoggedIn ? (
             <>
               {/* (R) Read：顯示目前登入者頭像 */}
-              <div className="relative group">
-                <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#DCBB87] hover:opacity-90 transition">
+              <div
+                className="relative"
+                onMouseEnter={() => setProfileOpen(true)}
+                onMouseLeave={(e) => {
+                  const nextTarget = e.relatedTarget as Node | null;
+                  if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+                  setProfileOpen(false);
+                }}
+                onFocus={() => setProfileOpen(true)}
+                onBlur={(e) => {
+                  const nextTarget = e.relatedTarget as Node | null;
+                  if (!nextTarget || !e.currentTarget.contains(nextTarget)) {
+                    setProfileOpen(false);
+                  }
+                }}
+              >
+                <button
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#DCBB87] hover:opacity-90 transition"
+                  onClick={() => setProfileOpen((prev) => !prev)}
+                  aria-haspopup="menu"
+                  aria-expanded={profileOpen}
+                >
                   <img
                     src={avatar}
                     alt="avatar"
@@ -206,15 +227,21 @@ export default function Header({
                   />
                 </button>
 
+                {/* 透明橋接區域，避免滑鼠經過時立即關閉 */}
+                <div className="absolute left-0 right-0 top-full h-4" />
+
                 {/* 下拉選單：保持 hover 不中斷 */}
                 <div
                   className="
                     absolute right-0 mt-2 w-48 
                     bg-white text-[#1F2E3C] rounded-lg shadow-lg border border-gray-200
-                    opacity-0 group-hover:opacity-100
-                    pointer-events-none group-hover:pointer-events-auto
-                    transition-opacity duration-150
+                    transition-all duration-150
                   "
+                  style={{
+                    opacity: profileOpen ? 1 : 0,
+                    pointerEvents: profileOpen ? "auto" : "none",
+                    transform: profileOpen ? "translateY(0)" : "translateY(-4px)",
+                  }}
                 >
                   {/* (R) Read：前往會員中心 */}
                   <Link

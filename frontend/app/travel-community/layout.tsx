@@ -7,7 +7,7 @@ export default function TravelLayout({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-[1440px] px-5 py-6">
+    <section className="mx-auto w-full max-w-[1312px] px-4 sm:px-6 lg:px-[64px] py-6">
       {children}
     </section>
   );

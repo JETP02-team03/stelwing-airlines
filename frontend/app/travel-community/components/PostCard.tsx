@@ -2,22 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Post } from "../data/posts";
 
-export interface Post {
-  id: string | number;
-  title: string;
-  author: string;
-  miles: number;
-  type: "遊記" | "影片" | "隨手拍";
-  cover?: string;
-  duration?: string;
-  location?: string;
-}
+const dateFormatter = new Intl.DateTimeFormat("zh-TW", {
+  month: "short",
+  day: "numeric",
+});
 
 export default function PostCard({ post }: { post: Post }) {
   const [error, setError] = useState(false);
   const badge = post.type;
   const isVideo = post.type === "影片";
+  const createdLabel = dateFormatter.format(new Date(post.createdAt));
 
   return (
     <Link href={`/travel-community/${post.id}`}>
@@ -74,15 +70,33 @@ export default function PostCard({ post }: { post: Post }) {
         </div>
 
         {/* 內容 */}
-        <div className="p-3">
-          <div className="sw-h6 mb-1 leading-tight">
+        <div className="p-3 space-y-2">
+          <div className="sw-h6 leading-tight text-[#1F2E3C]">
             {post.location ? `${post.location}｜` : ""}
             {post.title}
           </div>
 
-          <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+          <p className="text-sm text-[#1F2E3C]/70 line-clamp-2">{post.summary}</p>
+
+          <div className="flex flex-wrap gap-2">
+            {post.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-1 text-[11px] rounded-full border border-[rgba(31,46,60,0.08)] text-[#1F2E3C]/70"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-500">
             <div>👤 {post.author}</div>
-            <div>💳 {post.miles.toLocaleString()} 哩程</div>
+            <div className="flex items-center gap-2">
+              <span>{createdLabel}</span>
+              <span className="text-[#DCBB87] font-semibold">
+                💳 {post.miles.toLocaleString()} 哩程
+              </span>
+            </div>
           </div>
         </div>
       </article>
