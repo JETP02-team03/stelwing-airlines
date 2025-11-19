@@ -59,7 +59,6 @@ export default function FlightCard({
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6">
         {/* 出發 */}
         <div>
-          <div className="text-[12px] opacity-80">上{'\u5348'}</div>
           <div className="text-3xl font-extrabold leading-none">
             {leg.depTime}
           </div>
@@ -79,7 +78,6 @@ export default function FlightCard({
 
         {/* 抵達 */}
         <div className="text-right">
-          <div className="text-[12px] opacity-80">下{'\u5348'}</div>
           <div className="text-3xl font-extrabold leading-none">
             {leg.arrTime}
           </div>

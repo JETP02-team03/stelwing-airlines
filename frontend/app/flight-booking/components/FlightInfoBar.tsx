@@ -39,7 +39,6 @@ export default function FlightInfoBar({
 
   const qs = sp.toString();
 
-  // ✅ 從 store 讀取最新金額
   const baseFare = useBookingStore((s) => s.price.baseFare);
   const extrasTotal = useBookingStore((s) => s.price.extrasTotal);
   const openDetails = useBookingStore((s) => s.openDetails);

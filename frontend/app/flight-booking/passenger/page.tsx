@@ -46,6 +46,74 @@ const PHONE_CODES = [
 
 const STORAGE_KEY = 'stelwing.passenger.form';
 
+/* ========= 類似 Zod 的護照驗證邏輯 ========= */
+
+type PassengerErrors = Partial<Record<keyof Passenger, string>>;
+
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+function validatePassenger(pax: Passenger): PassengerErrors {
+  const errors: PassengerErrors = {};
+
+  // 名字
+  const fn = pax.firstName.trim();
+  if (!fn) {
+    errors.firstName = '請填寫名字（First name）';
+  } else if (!/^[A-Z]+$/.test(fn)) {
+    errors.firstName = '請以護照上的英文大寫填寫，不含空格或符號';
+  }
+
+  // 姓氏
+  const ln = pax.lastName.trim();
+  if (!ln) {
+    errors.lastName = '請填寫姓氏（Last name）';
+  } else if (!/^[A-Z]+$/.test(ln)) {
+    errors.lastName =
+      '請以護照上的英文大寫填寫，不含空格或符號（FNU 亦須大寫）';
+  }
+
+  // 生日
+  if (!pax.birthday) {
+    errors.birthday = '請選擇生日';
+  } else if (!dateRegex.test(pax.birthday)) {
+    errors.birthday = '生日格式需為 YYYY-MM-DD';
+  }
+
+  // 國籍
+  if (!pax.nationality || pax.nationality.length !== 2) {
+    errors.nationality = '請選擇國籍';
+  }
+
+  // 護照號碼（依國籍判斷）
+  const passport = pax.passportNo.trim();
+  if (!passport) {
+    errors.passportNo = '請填寫護照號碼';
+  } else {
+    if (pax.nationality === 'TW') {
+      // 台灣護照：1 英文 + 8 數字
+      if (!/^[A-Z][0-9]{8}$/.test(passport)) {
+        errors.passportNo =
+          '台灣護照格式為 1 碼英文大寫 + 8 碼數字，請勿輸入空格或符號';
+      }
+    } else {
+      // 一般通用：6–9 碼英文大寫或數字
+      if (!/^[A-Z0-9]{6,9}$/.test(passport)) {
+        errors.passportNo =
+          '護照號碼僅能填寫 6–9 碼英文大寫與數字，請勿輸入空格或符號';
+      }
+    }
+  }
+
+  // 護照效期
+  if (!pax.passportExpiry) {
+    errors.passportExpiry = '請選擇護照到期日';
+  } else if (!dateRegex.test(pax.passportExpiry)) {
+    errors.passportExpiry = '護照到期日格式需為 YYYY-MM-DD';
+  }
+
+  return errors;
+}
+
 export default function PassengerPage() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -73,7 +141,6 @@ export default function PassengerPage() {
 
   // ====== 票價合計與「查看明細」彈窗 ======
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [openDetails, setOpenDetails] = useState(false);
   const [obSeg, setObSeg] = useState<Segment | null>(null);
   const [ibSeg, setIbSeg] = useState<Segment | null>(null);
 
@@ -151,6 +218,14 @@ export default function PassengerPage() {
     email: '',
   });
 
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  // 依目前 pax 即時計算錯誤（像 Zod parse）
+  const paxErrorsLive = useMemo(() => validatePassenger(pax), [pax]);
+
+  // 真正要顯示在畫面上的錯誤（只有按過下一步才顯示）
+  const paxErrors: PassengerErrors = hasSubmitted ? paxErrorsLive : {};
+
   // 載入暫存
   useEffect(() => {
     try {
@@ -170,7 +245,6 @@ export default function PassengerPage() {
 
   // 右上「帶入目前會員資料」
   const fillFromMember = () => {
-    // 這裡示意，之後可串後端/會員中心
     setContact((c) => ({
       ...c,
       firstName: c.firstName || 'Zichen',
@@ -187,19 +261,28 @@ export default function PassengerPage() {
     }));
   };
 
-  const canNext =
-    pax.firstName.trim() &&
-    pax.lastName.trim() &&
-    pax.gender &&
-    pax.birthday &&
+  const isPassengerValid = Object.keys(paxErrorsLive).length === 0;
+
+  const isContactValid = !!(
     contact.firstName.trim() &&
     contact.lastName.trim() &&
     contact.phone.trim() &&
-    contact.email.trim();
+    contact.email.trim()
+  );
+
+  const canNext = isPassengerValid && isContactValid;
 
   // ====== 導頁：上一頁 / 下一步（到行李與餐點） ======
   const goPrev = () => router.push(`/flight-booking?${qs}`);
-  const goNext = () => router.push(`/flight-booking/extras?${qs}`);
+
+  const goNext = () => {
+    setHasSubmitted(true);
+    if (!canNext) {
+      // 不符合規則就不導頁，錯誤訊息會自動顯示
+      return;
+    }
+    router.push(`/flight-booking/extras?${qs}`);
+  };
 
   return (
     <div>
@@ -208,7 +291,7 @@ export default function PassengerPage() {
           資料填寫
         </h2>
 
-        {/* === 區塊 1：訂位人（聯絡人）— 移到最上方，右上有帶入按鈕 === */}
+        {/* === 區塊 1：訂位人（聯絡人） === */}
         <section className="rounded-2xl border border-[color:var(--sw-grey)]/30 bg-[color:var(--sw-primary)] text-[color:var(--sw-white)] shadow-sm">
           <div className="flex items-center justify-between px-5 md:px-6 py-4 md:py-5 border-b border-[color:var(--sw-grey)]/20">
             <div className="flex items-center gap-3">
@@ -275,7 +358,7 @@ export default function PassengerPage() {
                       onChange={(e) =>
                         setContact({ ...contact, phoneCountry: e.target.value })
                       }
-                      className="w-28 bg-white/10 border border-white/20 rounded-lg px-2 py-2 outline-none"
+                      className="w-28 bg白/10 bg-white/10 border border-white/20 rounded-lg px-2 py-2 outline-none"
                     >
                       {PHONE_CODES.map((c) => (
                         <option key={c.code} value={c.code}>
@@ -325,8 +408,27 @@ export default function PassengerPage() {
                 <div>
                   <h3 className="font-semibold mb-2">旅客資訊</h3>
                   <p className="text-sm leading-6 opacity-90">
-                    護照與機票英文字姓名需一致；若護照僅有名，姓氏請填
-                    <span className="font-semibold"> FNU</span>。
+                    <span className="block">
+                      • 護照與機票上的英文姓名需完全一致（姓氏在前、名字在後）。
+                    </span>
+                    <span className="block">
+                      • 若護照僅有名字，請在「姓氏」欄位輸入{' '}
+                      <span className="font-semibold">FNU</span>。
+                    </span>
+                    <span className="block">
+                      • 請使用英文大寫，勿輸入中文、符號、點號或空格。
+                    </span>
+                    <span className="block">
+                      • 範例：護照顯示{' '}
+                      <span className="font-semibold">LIN ZICHEN</span> ⇒
+                      姓氏：LIN；名字：ZICHEN
+                    </span>
+                    <span className="block">
+                      • 護照號碼請照護照完整填寫，不可加空格或破折號。
+                    </span>
+                    <span className="block">
+                      • 護照有效期限須符合各國要求（多數需至少 6 個月以上）。
+                    </span>
                   </p>
                 </div>
               </div>
@@ -373,12 +475,24 @@ export default function PassengerPage() {
                       <input
                         value={pax.firstName}
                         onChange={(e) =>
-                          setPax({ ...pax, firstName: e.target.value })
+                          setPax({
+                            ...pax,
+                            firstName: e.target.value.toUpperCase(),
+                          })
                         }
-                        className="w-full bg-white/10 border border-white/20 rounded-lg pl-9 pr-3 py-2 outline-none placeholder:opacity-60"
+                        className={`w-full bg-white/10 rounded-lg pl-9 pr-3 py-2 outline-none placeholder:opacity-60 ${
+                          paxErrors.firstName
+                            ? 'border border-red-400'
+                            : 'border border-white/20'
+                        }`}
                         placeholder="First name"
                       />
                     </div>
+                    {paxErrors.firstName && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.firstName}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-4">
                     <label className="text-xs opacity-90 block mb-1">
@@ -387,11 +501,23 @@ export default function PassengerPage() {
                     <input
                       value={pax.lastName}
                       onChange={(e) =>
-                        setPax({ ...pax, lastName: e.target.value })
+                        setPax({
+                          ...pax,
+                          lastName: e.target.value.toUpperCase(),
+                        })
                       }
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 outline-none placeholder:opacity-60"
+                      className={`w-full bg-white/10 rounded-lg px-3 py-2 outline-none placeholder:opacity-60 ${
+                        paxErrors.lastName
+                          ? 'border border-red-400'
+                          : 'border border-white/20'
+                      }`}
                       placeholder="Last name"
                     />
+                    {paxErrors.lastName && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.lastName}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-4">
                     <label className="text-xs opacity-90 block mb-1">
@@ -405,9 +531,18 @@ export default function PassengerPage() {
                         onChange={(e) =>
                           setPax({ ...pax, birthday: e.target.value })
                         }
-                        className="w-full bg-white/10 border border-white/20 rounded-lg pl-9 pr-3 py-2 outline-none"
+                        className={`w-full bg-white/10 rounded-lg pl-9 pr-3 py-2 outline-none ${
+                          paxErrors.birthday
+                            ? 'border border-red-400'
+                            : 'border border-white/20'
+                        }`}
                       />
                     </div>
+                    {paxErrors.birthday && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.birthday}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -422,7 +557,11 @@ export default function PassengerPage() {
                       onChange={(e) =>
                         setPax({ ...pax, nationality: e.target.value })
                       }
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 outline-none"
+                      className={`w-full bg-white/10 rounded-lg px-3 py-2 outline-none ${
+                        paxErrors.nationality
+                          ? 'border border-red-400'
+                          : 'border border-white/20'
+                      }`}
                     >
                       {NATIONALITIES.map((n) => (
                         <option key={n.code} value={n.code}>
@@ -430,6 +569,11 @@ export default function PassengerPage() {
                         </option>
                       ))}
                     </select>
+                    {paxErrors.nationality && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.nationality}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-4">
                     <label className="text-xs opacity-90 block mb-1">
@@ -438,11 +582,23 @@ export default function PassengerPage() {
                     <input
                       value={pax.passportNo}
                       onChange={(e) =>
-                        setPax({ ...pax, passportNo: e.target.value })
+                        setPax({
+                          ...pax,
+                          passportNo: e.target.value.toUpperCase(),
+                        })
                       }
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 outline-none placeholder:opacity-60"
+                      className={`w-full bg-white/10 rounded-lg px-3 py-2 outline-none placeholder:opacity-60 ${
+                        paxErrors.passportNo
+                          ? 'border border-red-400'
+                          : 'border border-white/20'
+                      }`}
                       placeholder="Passport No."
                     />
+                    {paxErrors.passportNo && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.passportNo}
+                      </p>
+                    )}
                   </div>
                   <div className="md:col-span-4">
                     <label className="text-xs opacity-90 block mb-1">
@@ -454,8 +610,17 @@ export default function PassengerPage() {
                       onChange={(e) =>
                         setPax({ ...pax, passportExpiry: e.target.value })
                       }
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 outline-none"
+                      className={`w-full bg-white/10 rounded-lg px-3 py-2 outline-none ${
+                        paxErrors.passportExpiry
+                          ? 'border border-red-400'
+                          : 'border border-white/20'
+                      }`}
                     />
+                    {paxErrors.passportExpiry && (
+                      <p className="mt-1 text-xs text-red-300">
+                        {paxErrors.passportExpiry}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

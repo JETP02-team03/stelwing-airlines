@@ -65,6 +65,13 @@ export default function FlightBookingPage() {
   const departISO = (sp.get('departDate') ?? ymd(new Date())).slice(0, 10);
   const returnISO = (sp.get('returnDate') ?? departISO).slice(0, 10);
 
+  const originLabel = sp.get('originLabel') ?? ORIGIN;
+  const destLabel = sp.get('destLabel') ?? DEST;
+
+  // 給日期條用的標題
+  const outboundTitle = `去程　${originLabel} → ${destLabel}`;
+  const inboundTitle = `回程　${destLabel} → ${originLabel}`;
+
   /* ===== 日期條（7 天，置中第 4 格） ===== */
   const [obStart, setObStart] = useState(() =>
     addDays(new Date(departISO), -3)
@@ -135,13 +142,13 @@ export default function FlightBookingPage() {
         flightNo: f.flightNumber,
         leg: {
           originCode: f.originIata,
-          originName: '台北(桃園)',
+          originName: originLabel, // 🆕 去程出發地
           depTime: new Date(f.depTimeUtc).toLocaleTimeString('zh-TW', {
             hour: '2-digit',
             minute: '2-digit',
           }),
           destinationCode: f.destinationIata,
-          destinationName: '東京成田',
+          destinationName: destLabel, // 🆕 去程目的地
           arrTime: new Date(f.arrTimeUtc).toLocaleTimeString('zh-TW', {
             hour: '2-digit',
             minute: '2-digit',
@@ -152,7 +159,7 @@ export default function FlightBookingPage() {
         currency: 'TWD',
         cabin: '經濟艙',
       }));
-  }, [allOb, selectedObDate, obDayFare]);
+  }, [allOb, selectedObDate, obDayFare, originLabel, destLabel]);
 
   const ibFlights: FlightItem[] = useMemo(() => {
     if (!selectedIbDate) return [];
@@ -162,13 +169,13 @@ export default function FlightBookingPage() {
         flightNo: f.flightNumber,
         leg: {
           originCode: f.originIata,
-          originName: '東京成田',
+          originName: destLabel, // 🆕 回程出發地（＝去程目的地）
           depTime: new Date(f.depTimeUtc).toLocaleTimeString('zh-TW', {
             hour: '2-digit',
             minute: '2-digit',
           }),
           destinationCode: f.destinationIata,
-          destinationName: '台北(桃園)',
+          destinationName: originLabel, // 🆕 回程目的地（＝去程出發地）
           arrTime: new Date(f.arrTimeUtc).toLocaleTimeString('zh-TW', {
             hour: '2-digit',
             minute: '2-digit',
@@ -179,7 +186,7 @@ export default function FlightBookingPage() {
         currency: 'TWD',
         cabin: '經濟艙',
       }));
-  }, [allIb, selectedIbDate, ibDayFare]);
+  }, [allIb, selectedIbDate, ibDayFare, originLabel, destLabel]);
 
   /* ===== 已選航班（從 sessionStorage 讀）與合計 ===== */
   type Stored = {
@@ -334,7 +341,7 @@ export default function FlightBookingPage() {
       <main className="sw-container pb-12 pt-8 space-y-10">
         {/* 去程 日期列 */}
         <FareDateStrip
-          title="去程　台北(桃園) → 東京成田"
+          title={outboundTitle}
           items={outboundDates}
           selectedIndex={obIndex}
           onSelect={(i) => {
@@ -388,7 +395,7 @@ export default function FlightBookingPage() {
         {/* 回程 日期列 */}
         <FareDateStrip
           className="mt-10"
-          title="回程　東京成田 → 台北(桃園)"
+          title={inboundTitle}
           items={inboundDates}
           selectedIndex={ibIndex}
           onSelect={(i) => {

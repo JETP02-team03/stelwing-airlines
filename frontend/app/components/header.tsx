@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import clsx from "clsx";
+import clsx from 'clsx';
 import {
   ChevronDown,
   Globe,
@@ -9,16 +9,16 @@ import {
   ShoppingCart,
   Trash2,
   X,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { Button } from "../dutyfree-shop/components/ui/button";
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Button } from '../dutyfree-shop/components/ui/button';
 
 // 🔼 新增：Auth Context
-import { useAuth } from "@/app/context/auth-context";
-import { useToast } from "@/app/context/toast-context";
+import { useAuth } from '@/app/context/auth-context';
+import { useToast } from '@/app/context/toast-context';
 
 // ======================
 // 型別
@@ -55,31 +55,31 @@ export default function Header({
   const pathname = usePathname();
   const router = useRouter();
 
-  const isDutyfree = pathname.startsWith("/dutyfree-shop");
+  const isDutyfree = pathname.startsWith('/dutyfree-shop');
 
   const navItems = [
-    { name: "訂購機票", href: "/flight-booking" },
-    { name: "住宿預定", href: "/hotel-booking" },
-    { name: "免稅商品", href: "/dutyfree-shop" },
-    { name: "旅程規劃", href: "/travel-planner" },
-    { name: "旅遊分享", href: "/travel-community" },
+    { name: '訂購機票', href: '/flight-booking' },
+    { name: '住宿預定', href: '/hotel-booking' },
+    { name: '免稅商品', href: '/dutyfree-shop' },
+    { name: '旅程規劃', href: '/travel-planner' },
+    { name: '旅遊分享', href: '/travel-community' },
+    { name: '常見問題', href: '/FAQ' },
   ];
 
   const handleLogout = () => {
     setProfileOpen(false);
     logout();
     showToast({
-      title: "已成功登出",
-      message: "期待再次與你同行。",
-      type: "success",
+      title: '已成功登出',
+      message: '期待再次與你同行。',
+      type: 'success',
     });
-    router.push("/member-center/login");
+    router.push('/member-center/login');
   };
 
   return (
     <header className="bg-[var(--sw-primary)] text-white sticky top-0 z-50">
       <div className="mx-auto w-full h-16 px-16 flex items-center justify-between gap-[48px]">
-        
         {/* =============== 左側區 Logo + Nav =============== */}
         <div className="flex items-center gap-12">
           <Link href="/">
@@ -99,9 +99,9 @@ export default function Header({
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  "inline-flex items-center h-10 leading-none text-white hover:text-(--sw-accent) transition",
+                  'inline-flex items-center h-10 leading-none text-white hover:text-(--sw-accent) transition',
                   pathname.startsWith(item.href) &&
-                    "text-(--sw-accent) font-semibold"
+                    'text-(--sw-accent) font-semibold'
                 )}
               >
                 {item.name}
@@ -112,7 +112,6 @@ export default function Header({
 
         {/* =============== 右側功能區 =============== */}
         <div className="flex items-center gap-6">
-
           {/* ⭐ Duty-free 購物車 */}
           {isDutyfree && (
             <div className="relative">
@@ -163,7 +162,8 @@ export default function Header({
                                 x{item.quantity}
                               </p>
                               <p className="text-sm font-medium text-(--sw-accent)">
-                                TWD { (item.price * item.quantity).toLocaleString() }
+                                TWD{' '}
+                                {(item.price * item.quantity).toLocaleString()}
                               </p>
                             </div>
 
@@ -183,7 +183,7 @@ export default function Header({
                             setCartDropdownOpen(false);
                             onCheckoutClick
                               ? onCheckoutClick()
-                              : router.push("/dutyfree-shop/cart");
+                              : router.push('/dutyfree-shop/cart');
                           }}
                           className="w-full bg-(--sw-accent) hover:bg-(--sw-accent)/90 text-white"
                         >
@@ -216,7 +216,8 @@ export default function Header({
                 onMouseEnter={() => setProfileOpen(true)}
                 onMouseLeave={(e) => {
                   const nextTarget = e.relatedTarget as Node | null;
-                  if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+                  if (nextTarget && e.currentTarget.contains(nextTarget))
+                    return;
                   setProfileOpen(false);
                 }}
                 onFocus={() => setProfileOpen(true)}
@@ -252,17 +253,19 @@ export default function Header({
                   "
                   style={{
                     opacity: profileOpen ? 1 : 0,
-                    pointerEvents: profileOpen ? "auto" : "none",
-                    transform: profileOpen ? "translateY(0)" : "translateY(-4px)",
+                    pointerEvents: profileOpen ? 'auto' : 'none',
+                    transform: profileOpen
+                      ? 'translateY(0)'
+                      : 'translateY(-4px)',
                   }}
                 >
                   <div className="px-4 py-3 border-b border-[#D1D5DB]">
                     <div className="text-base font-semibold text-[#1F2E3C] truncate">
                       {member?.lastName || member?.firstName
-                        ? `${member?.lastName ?? ""}${member?.firstName ?? ""}`.trim() ||
+                        ? `${member?.lastName ?? ''}${member?.firstName ?? ''}`.trim() ||
                           member?.username ||
-                          "會員"
-                        : "會員"}
+                          '會員'
+                        : '會員'}
                     </div>
                   </div>
                   {/* (R) Read：前往會員中心 */}
@@ -311,7 +314,6 @@ export default function Header({
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-
         </div>
       </div>
 
@@ -331,7 +333,7 @@ export default function Header({
 
           {!isLoggedIn ? (
             <Button
-              onClick={() => router.push("/member-center/login")}
+              onClick={() => router.push('/member-center/login')}
               className="w-[80%] mt-4 bg-[#DCBB87] hover:bg-[#C5A872] text-[#1F2E3C]"
             >
               <Plane className="w-4 h-4 mr-2" /> 登入
@@ -346,7 +348,6 @@ export default function Header({
           )}
         </div>
       )}
-
     </header>
   );
 }
