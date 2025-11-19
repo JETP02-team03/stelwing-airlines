@@ -1,19 +1,19 @@
 // app/travel-community/page.tsx
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageTabs from "./components/PageTabs";
 import FilterSidebar from "./components/FilterSidebar";
 import Masonry from "./components/Masonry";
+import FloatingWriteButton from "./components/FloatingWriteButton";
 import Breadcrumb from "@/app/components/Breadcrumb";
-import { PenSquare } from "lucide-react";
 import {
   defaultFilterState,
   FilterState,
-  mockPosts,
   PostType,
 } from "./data/posts";
+import type { Post } from "./data/posts";
+import { apiFetch } from "@/app/travel-planner/utils/apiFetch";
 
 const filterByTimeRange = (createdAt: string, range: FilterState["timeRange"]) => {
   if (range === "all") return true;
@@ -46,6 +46,27 @@ export default function TravelCommunityPage() {
   const [appliedFilters, setAppliedFilters] =
     useState<FilterState>(defaultFilterState);
   const [applyMessage, setApplyMessage] = useState<string | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3007/api";
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const data = await apiFetch<Post[]>(`${API_BASE}/travel-community`);
+        setPosts(data);
+      } catch (err: any) {
+        setError(err.message ?? "無法取得旅遊分享");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [API_BASE]);
 
   const handleFilterChange = (update: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...update }));
@@ -60,7 +81,7 @@ export default function TravelCommunityPage() {
   const visiblePosts = useMemo(() => {
     const keywordLower = keyword.trim().toLowerCase();
 
-    const result = mockPosts
+    const result = posts
       .filter((post) => {
         if (activeTab !== "全部" && post.type !== activeTab) {
           return false;
@@ -119,7 +140,7 @@ export default function TravelCommunityPage() {
       });
 
     return result;
-  }, [activeTab, country, keyword, appliedFilters]);
+  }, [activeTab, country, keyword, appliedFilters, posts]);
 
   return (
     <main className="space-y-6 relative">
@@ -144,6 +165,12 @@ export default function TravelCommunityPage() {
       {applyMessage && (
         <div className="rounded-full bg-[var(--sw-primary)]/5 text-[var(--sw-primary)] text-sm px-4 py-2 inline-flex items-center">
           {applyMessage}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
       )}
 
@@ -188,14 +215,11 @@ export default function TravelCommunityPage() {
         </section>
       </div>
 
-      {/* 懸浮撰寫按鈕 */}
-      <Link
-        href="/travel-community/write"
-        className="fixed right-5 bottom-5 lg:right-10 lg:bottom-10 z-40 w-14 h-14 rounded-full bg-[var(--sw-accent)] text-white flex items-center justify-center shadow-[0_15px_35px_rgba(31,46,60,0.15)] hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(31,46,60,0.25)] transition"
-        aria-label="撰寫新的旅遊分享"
-      >
-        <PenSquare size={22} />
-      </Link>
+      {loading && (
+        <div className="text-center text-sm text-gray-400">載入中...</div>
+      )}
+
+      <FloatingWriteButton />
     </main>
   );
 }

@@ -349,8 +349,8 @@ model MediaItem {
   postId          BigInt    @map("post_id")
   post            TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
   mediaType       MediaType @map("media_type")
-  mediaUrl        String    @map("media_url") @db.VarChar(500)
-  thumbnailUrl    String?   @map("thumbnail_url") @db.VarChar(500)
+  mediaUrl        String @map("media_url") @db.LongText
+  thumbnailUrl    String? @map("thumbnail_url") @db.LongText
   mimeType        String?   @map("mime_type") @db.VarChar(100)
   fileSizeMb      Float     @default(0) @map("file_size_mb")
   durationSeconds Int?      @map("duration_seconds")

@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "seed:travel": "tsx prisma/seedTravelCommunity.ts",
     "dev": "nodemon --exec tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
@@ -48,6 +49,7 @@
     "typescript": "^5.9.2"
   },
    "prisma": {
-    "seed": "tsx prisma/seedAvatars.ts"
+    "seed": "tsx prisma/seedAvatars.ts",
+    "seed:travel": "tsx prisma/seedTravelCommunity.ts"
   }
 }

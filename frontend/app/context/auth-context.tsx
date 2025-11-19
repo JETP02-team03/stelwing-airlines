@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (token: string) => {
     localStorage.setItem("token", token); // ← 儲存 token
 
+    setIsLoggedIn(true);
     // ✅ 登入後立刻同步會員資料（更新 Header 頭像 & 狀態）
     loadMember();
   };

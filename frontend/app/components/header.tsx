@@ -214,9 +214,22 @@ export default function Header({
               <div
                 className="relative"
                 onMouseEnter={() => setProfileOpen(true)}
+                // onMouseLeave={(e) => {
+                //   const nextTarget = e.relatedTarget as Node | null;
+                //   if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+                //   setProfileOpen(false);
+                // }}
                 onMouseLeave={(e) => {
-                  const nextTarget = e.relatedTarget as Node | null;
-                  if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+                  const nextTarget = e.relatedTarget;
+
+                  try {
+                    if (nextTarget && nextTarget instanceof Node && e.currentTarget.contains(nextTarget)) {
+                      return;
+                    }
+                  } catch (_) {
+                    // 如果 contains 出錯就忽略，直接關閉
+                  }
+
                   setProfileOpen(false);
                 }}
                 onFocus={() => setProfileOpen(true)}

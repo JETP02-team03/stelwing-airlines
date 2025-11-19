@@ -1,10 +1,9 @@
 // app/travel-community/[postId]/page.tsx
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Breadcrumb from "@/app/components/Breadcrumb";
 import {
-  ArrowLeft,
   Bookmark,
   Check,
   Heart,
@@ -12,9 +11,16 @@ import {
   MoreHorizontal,
   Share2,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Masonry from "../components/Masonry";
-import { mockPosts } from "../data/posts";
+import FloatingWriteButton from "../components/FloatingWriteButton";
+import type { Post } from "../data/posts";
+import { apiFetch } from "@/app/travel-planner/utils/apiFetch";
+
+interface TravelPostDetail extends Post {
+  content: string;
+  galleryImages: string[];
+}
 
 interface Reply {
   id: number;
@@ -44,10 +50,11 @@ const commentAvatars = [
 
 export default function TravelDetailPage() {
   const { postId } = useParams();
-  const router = useRouter();
 
-  const post = mockPosts.find((p) => String(p.id) === String(postId));
-
+  const [post, setPost] = useState<TravelPostDetail | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTarget, setReplyTarget] = useState<number | null>(null);
@@ -55,29 +62,24 @@ export default function TravelDetailPage() {
   const [replyAsAuthor, setReplyAsAuthor] = useState(false);
   const seededRef = useRef(false);
   const [activeImage, setActiveImage] = useState(0);
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3007/api";
 
-  if (!post) {
-    return (
-      <main className="space-y-6">
-        <Breadcrumb
-          items={[
-            { label: "首頁", href: "/" },
-            { label: "旅遊分享", href: "/travel-community" },
-            { label: "文章不存在" },
-          ]}
-        />
-        <div className="p-10 text-center text-gray-500">找不到這篇文章</div>
-      </main>
-    );
-  }
-
-  const rawGallery = (post as any)?.galleryImages;
-  const galleryImages =
-    Array.isArray(rawGallery) && rawGallery.length
-      ? rawGallery
-      : post.cover
-      ? [post.cover]
-      : [];
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setLoading(true);
+        const data = await apiFetch<TravelPostDetail>(`${API_BASE}/travel-community/${postId}`);
+        setPost(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message ?? "無法載入分享內容");
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (postId) fetchPost();
+  }, [postId, API_BASE]);
 
   useEffect(() => {
     if (!post || seededRef.current) return;
@@ -103,23 +105,75 @@ export default function TravelDetailPage() {
       {
         id: 2,
         author: "Charlie",
-        content: "照片太美了，明年也想安排巴黎行程！",
+        content: "照片太美了，明年也想安排行程！",
         createdAt: "昨天 22:35",
         avatar: commentAvatars[3],
       },
     ]);
   }, [post]);
 
-  const relatedPosts = useMemo(() => {
-    return mockPosts
-      .filter(
-        (p) =>
-          p.id !== post.id &&
-          (p.type === post.type ||
-            p.tags.some((tag) => post.tags.includes(tag)))
-      )
-      .slice(0, 6);
-  }, [post]);
+  useEffect(() => {
+    if (!post) return;
+    const fetchRelated = async () => {
+      try {
+        const data = await apiFetch<Post[]>(
+          `${API_BASE}/travel-community?limit=6&type=${encodeURIComponent(post.type)}&exclude=${post.id}`
+        );
+        setRelatedPosts(data);
+      } catch (err) {
+        console.error("相關分享載入失敗", err);
+      }
+    };
+    fetchRelated();
+  }, [post, API_BASE]);
+
+  useEffect(() => {
+    setActiveImage(0);
+  }, [post?.id]);
+
+  if (loading) {
+    return (
+      <main className="space-y-6">
+        <Breadcrumb
+          items={[
+            { label: "首頁", href: "/" },
+            { label: "旅遊分享", href: "/travel-community" },
+            { label: "載入中..." },
+          ]}
+        />
+        <div className="p-10 text-center text-gray-400">載入中...</div>
+      </main>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <main className="space-y-6">
+        <Breadcrumb
+          items={[
+            { label: "首頁", href: "/" },
+            { label: "旅遊分享", href: "/travel-community" },
+            { label: "文章不存在" },
+          ]}
+        />
+        <div className="p-10 text-center text-gray-500">
+          {error ?? "找不到這篇文章"}
+        </div>
+      </main>
+    );
+  }
+
+  const galleryImages =
+    post.galleryImages && post.galleryImages.length
+      ? post.galleryImages
+      : post.cover
+      ? [post.cover]
+      : [];
+  const publishedAt = new Date(post.createdAt).toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -183,7 +237,7 @@ export default function TravelDetailPage() {
     setActiveImage((prev) => (prev + 1) % galleryImages.length);
   };
 
-  const isAuthorName = (name: string) => name === post.author;
+  const isAuthorName = (name: string) => (post ? name === post.author : false);
 
   return (
     <main className="mx-auto w-full max-w-[1312px] space-y-6 px-4 lg:px-0">
@@ -195,18 +249,10 @@ export default function TravelDetailPage() {
         ]}
       />
 
-      <button
-        onClick={() => router.push("/travel-community")}
-        className="flex items-center gap-2 text-sm text-[#1F2E3C]/70 hover:text-[#DCBB87]"
-      >
-        <ArrowLeft size={16} />
-        返回分享列表
-      </button>
-
       <section className="space-y-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="flex flex-col rounded-[32px] border border-[#CDA870] bg-white shadow-sm">
-            <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-[32px] border border-[#CDA870]/40 bg-[#F4F1EC] p-1">
+            <div className="relative h-[360px] sm:h-[420px] flex-1 overflow-hidden rounded-[32px] border border-[#CDA870]/40 bg-[#F4F1EC] p-1">
               {galleryImages.length > 0 && (
                 <img
                   src={galleryImages[activeImage]}
@@ -275,18 +321,16 @@ export default function TravelDetailPage() {
                 <span>
                   作者：<span className="font-semibold">{post.author}</span>
                 </span>
-                <span>時間：2025 年 10 月 14 日</span>
+                <span>時間：{publishedAt}</span>
               </div>
 
               <article className="space-y-5 text-[15px] leading-7 text-[#1F2E3C]/85">
-                <p>{post.summary}</p>
-                <p>
-                  這裡可放置完整內容，等串接後端 API 時改為顯示實際文章。假資料示範
-                  {post.tags.slice(0, 2).join("、")} 等熱門標籤，並提供旅人交流空間。
-                </p>
-                <p>
-                  也可以補充交通方式、花費明細、建議行程或注意事項，讓讀者能直接依照文章安排旅程。
-                </p>
+                {post.content
+                  .split("\n")
+                  .filter((paragraph) => paragraph.trim().length > 0)
+                  .map((paragraph, idx) => (
+                    <p key={idx}>{paragraph}</p>
+                  ))}
               </article>
 
               <div className="flex flex-wrap gap-2 pt-2">
@@ -477,6 +521,7 @@ export default function TravelDetailPage() {
           </div>
         )}
       </section>
+      <FloatingWriteButton />
     </main>
   );
 }

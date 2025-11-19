@@ -14,6 +14,7 @@ export default function PostCard({ post }: { post: Post }) {
   const badge = post.type;
   const isVideo = post.type === "影片";
   const createdLabel = dateFormatter.format(new Date(post.createdAt));
+  const avatarSrc = post.authorAvatar || "/avatars/default.png";
 
   return (
     <Link href={`/travel-community/${post.id}`}>
@@ -90,7 +91,14 @@ export default function PostCard({ post }: { post: Post }) {
           </div>
 
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <div>👤 {post.author}</div>
+            <div className="flex items-center gap-2">
+              <img
+                src={avatarSrc}
+                alt={post.author}
+                className="h-6 w-6 rounded-full object-cover"
+              />
+              <span>{post.author}</span>
+            </div>
             <div className="flex items-center gap-2">
               <span>{createdLabel}</span>
               <span className="text-[#DCBB87] font-semibold">

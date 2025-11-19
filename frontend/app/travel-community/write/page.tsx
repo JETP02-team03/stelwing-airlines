@@ -1,7 +1,7 @@
 // app/travel-community/write/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Book,
   Video,
@@ -14,9 +14,17 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/app/components/Breadcrumb";
+import { apiFetch } from "@/app/travel-community/utils/apiFetch";
+import { useToast } from "@/app/context/toast-context";
+
+type ImageItem = {
+  file: File;
+  preview: string;
+};
 
 export default function TravelWritePage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [tab, setTab] = useState<"travelogue" | "video" | "photo">(
     "travelogue",
   );
@@ -30,8 +38,34 @@ export default function TravelWritePage() {
   const [content, setContent] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [photoCaption, setPhotoCaption] = useState("");
-  const [images, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3007/api";
+
+  console.log("API_BASE =", API_BASE);//測試
+
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      showToast({
+        type: "info",
+        title: "請先登入",
+        message: "登入後即可撰寫旅遊分享。",
+      });
+      router.replace("/member-center/login");
+      return;
+    }
+    setCanEdit(true);
+  }, [router, showToast]);
+
+  useEffect(() => {
+    return () => {
+      images.forEach((img) => URL.revokeObjectURL(img.preview));
+    };
+  }, [images]);
 
   const handleAddTag = () => {
     if (newTag && !tags.includes(newTag)) {
@@ -41,31 +75,85 @@ export default function TravelWritePage() {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages([...images, ...Array.from(e.target.files)]);
-    }
+    if (!e.target.files) return;
+    const selected = Array.from(e.target.files).map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setImages((prev) => [...prev, ...selected]);
   };
 
-  // 🔹 送出：仍為 demo，但預留 API 串接骨架
+  const fileToDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
   const handleSubmit = async () => {
+    if (!title.trim()) {
+      alert("請輸入標題");
+      return;
+    }
+
+    const articleContent =
+      tab === "photo" ? photoCaption.trim() : content.trim() || photoCaption.trim();
+
+    if (!articleContent) {
+      alert("請輸入內容");
+      return;
+    }
+
+    const media =
+      tab === "video"
+        ? videoUrl
+          ? [
+              {
+                mediaType: "video" as const,
+                mediaUrl: videoUrl,
+                orderIndex: 0,
+              },
+            ]
+          : []
+        : await Promise.all(
+            images.map(async (img, index) => ({
+              mediaType: "image" as const,
+              mediaUrl: await fileToDataUrl(img.file),
+              mimeType: img.file.type,
+              fileSizeMb: +(img.file.size / (1024 * 1024)).toFixed(4),
+              orderIndex: index,
+            }))
+          );
+
+    if (!media.length) {
+      alert("請至少上傳一張圖片或提供影片連結");
+      return;
+    }
+
     const payload = {
-      type: tab,
-      title,
-      content,
+      title: title.trim(),
+      content: articleContent,
       tags,
-      videoUrl,
-      photoCaption,
-      imagesCount: images.length,
+      postType: tab,
+      location: title.trim(),
+      media,
+      videoUrl: tab === "video" ? videoUrl : undefined,
     };
 
     try {
-      // TODO: 將下列 console 替換成實際 API 呼叫
-      console.info("預備送出的旅遊分享內容", payload);
-      alert("已送出！目前為 Demo，尚未串接後端。");
+      setSubmitting(true);
+      await apiFetch(`${API_BASE}/travel-community`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      alert("已送出旅遊分享！");
       router.push("/travel-community");
-    } catch (error) {
+    } catch (error: any) {
       console.error("送出旅遊分享失敗", error);
-      alert("送出失敗，請稍後再試。");
+      alert(error.message ?? "送出失敗，請稍後再試。");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -73,18 +161,24 @@ export default function TravelWritePage() {
     tab === "travelogue" ? "遊記" : tab === "video" ? "影片" : "隨手拍";
   const previewBody =
     tab === "photo"
-      ? photoCaption || "還沒寫下照片故事。"
-      : content || "還沒撰寫內容。";
+      ? photoCaption.trim() || "還沒寫下照片故事。"
+      : content.trim() || "還沒撰寫內容。";
   const previewMediaHint =
     tab === "video"
-      ? videoUrl || "尚未貼上影片連結"
+      ? videoUrl
+        ? "影片連結已貼上"
+        : "尚未貼上影片連結"
       : images.length
       ? `已選擇 ${images.length} 張圖片`
       : "尚未上傳圖片";
 
+  if (!canEdit) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1F2E3C]">
-      <main className="mx-auto w-full max-w-[1312px] space-y-6 px-4 lg:px-0 py-10">
+    <>
+      <main className="mx-auto w-full max-w-[1312px] space-y-6 px-4 lg:px-0 text-[#1F2E3C]">
         <Breadcrumb
           items={[
             { label: "首頁", href: "/" },
@@ -227,10 +321,14 @@ export default function TravelWritePage() {
                     <div className="mt-4 grid grid-cols-3 gap-3">
                       {images.map((img, i) => (
                         <div
-                          key={i}
-                          className="border border-[#DCBB87] rounded-md h-[120px] flex items-center justify-center text-sm text-[#1F2E3C]/50"
+                          key={`${img.file.name}-${i}`}
+                          className="flex h-[120px] items-center justify-center overflow-hidden rounded-md border border-[#DCBB87]"
                         >
-                          {img.name}
+                          <img
+                            src={img.preview}
+                            alt={img.file.name}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
                       ))}
                     </div>
@@ -297,10 +395,14 @@ export default function TravelWritePage() {
                     <div className="mt-4 grid grid-cols-3 gap-3">
                       {images.map((img, i) => (
                         <div
-                          key={i}
-                          className="border border-[#DCBB87] rounded-md h-[120px] flex items-center justify-center text-sm text-[#1F2E3C]/50"
+                          key={`${img.file.name}-${i}`}
+                          className="flex h-[120px] items-center justify-center overflow-hidden rounded-md border border-[#DCBB87]"
                         >
-                          {img.name}
+                          <img
+                            src={img.preview}
+                            alt={img.file.name}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
                       ))}
                     </div>
@@ -320,9 +422,10 @@ export default function TravelWritePage() {
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex items-center gap-2 bg-[#DCBB87] text-white px-6 py-2 rounded-md hover:bg-[#BA9A60]"
+                disabled={submitting}
+                className="flex items-center gap-2 rounded-md bg-[#DCBB87] px-6 py-2 text-white hover:bg-[#BA9A60] disabled:cursor-not-allowed disabled:bg-[#E2CDA1]"
               >
-                <Send size={16} /> 送出
+                <Send size={16} /> {submitting ? "送出中..." : "送出"}
               </button>
             </div>
           </section>
@@ -340,7 +443,7 @@ export default function TravelWritePage() {
         videoUrl={videoUrl}
         images={images}
       />
-    </div>
+    </>
   );
 }
 
@@ -354,7 +457,7 @@ interface PreviewModalProps {
   tags: string[];
   mediaHint: string;
   videoUrl: string;
-  images: File[];
+  images: ImageItem[];
 }
 
 function PreviewModal({
@@ -402,9 +505,17 @@ function PreviewModal({
                 <iframe src={embedUrl} className="h-full w-full" allowFullScreen />
               </div>
             ) : firstImage ? (
-              <div className="flex h-[320px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[#DCBB87]/70 bg-white text-sm text-[#1F2E3C]/70">
-                <span className="font-semibold">{firstImage.name}</span>
-                {moreCount > 0 && <span>+{moreCount} 張</span>}
+              <div className="relative flex h-[320px] items-center justify-center overflow-hidden rounded-[20px] border border-[#DCBB87]/70 bg-white">
+                <img
+                  src={firstImage.preview}
+                  alt={firstImage.file.name}
+                  className="h-full w-full object-cover"
+                />
+                {moreCount > 0 && (
+                  <span className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
+                    +{moreCount}
+                  </span>
+                )}
               </div>
             ) : (
               <div className="flex h-[320px] items-center justify-center rounded-[20px] border border-dashed border-[#DCBB87]/70 bg-white text-sm text-[#1F2E3C]/60">
