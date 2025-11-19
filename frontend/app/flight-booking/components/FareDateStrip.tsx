@@ -47,7 +47,7 @@ export default function FareDateStrip({
         </button>
 
         <div className="flex-1 overflow-x-auto">
-          <div className="grid auto-cols-[160px] grid-flow-col gap-3">
+          <div className="grid auto-cols-[160px] grid-flow-col gap-3 justify-center lg:justify-center">
             {items.map((d, i) => {
               const active = i === selectedIndex;
               return (

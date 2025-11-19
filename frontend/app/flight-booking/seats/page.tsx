@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useBookingStore } from '../../../src/store/bookingStore';
 import { FareDetailsFromStore } from '../components/FareDetailsModal';
-import FlightInfoBar from '../components/FlightInfoBar';
 import StepActions from '../components/StepActions';
 
 /* ====================== Types ====================== */
@@ -216,6 +215,8 @@ export default function SeatSelectionPage() {
   const router = useRouter();
   const sp = useSearchParams();
 
+  const [outbound, setOutbound] = useState<FareStore | null>(null);
+  const [inbound, setInbound] = useState<FareStore | null>(null);
   // 從 store 取金額 / 已選座位 / setter
   const baseFare = useBookingStore((s) => s.baseFare);
   const extrasTotal = useBookingStore((s) => s.extrasTotal);
@@ -251,26 +252,25 @@ export default function SeatSelectionPage() {
     return out.toString();
   }, [sp]);
 
-  /* === 讀取 sessionStorage 的 fare_outbound / fare_inbound（與 extras 同步） === */
-  const outbound: FareStore | null = useMemo(() => {
-    try {
-      const s = sessionStorage.getItem('fare_outbound');
-      return s ? JSON.parse(s) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-  const inbound: FareStore | null = useMemo(() => {
-    try {
-      const s = sessionStorage.getItem('fare_inbound');
-      return s ? JSON.parse(s) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
   const obIata = (sp.get('origin') || '').toUpperCase();
   const ibIata = (sp.get('destination') || '').toUpperCase();
+
+  // 只在 client mount 完成後，才去讀 sessionStorage
+  useEffect(() => {
+    try {
+      const s = sessionStorage.getItem('fare_outbound');
+      setOutbound(s ? JSON.parse(s) : null);
+    } catch {
+      setOutbound(null);
+    }
+
+    try {
+      const s = sessionStorage.getItem('fare_inbound');
+      setInbound(s ? JSON.parse(s) : null);
+    } catch {
+      setInbound(null);
+    }
+  }, []);
 
   const obFixed: FareStore | null = useMemo(() => {
     if (!outbound) return null;
@@ -397,7 +397,7 @@ export default function SeatSelectionPage() {
     }
 
     // 3) 從 passenger / fare / query 組出後端要的欄位
-    const pax = passengerForm.pax || {};
+    const paxForm = passengerForm.pax || {};
     const cabinRaw =
       sp.get('cabinClass') || outbound?.cabin || inbound?.cabin || 'ECONOMY';
     const cabinClassFromQuery =
@@ -411,21 +411,20 @@ export default function SeatSelectionPage() {
     const outboundSeats = picked.ob.map((id) => ({ seatId: id }));
     const inboundSeats = picked.ib.map((id) => ({ seatId: id }));
 
-    // 4) 組成要送到 /bookings 的 payload
     const payload = {
       tripType,
       currency,
       cabinClass: cabinClassFromQuery,
-      firstName: pax.firstName || '',
-      lastName: pax.lastName || '',
+      firstName: paxForm.firstName || '',
+      lastName: paxForm.lastName || '',
       totalAmount,
 
-      passenger: pax,
+      passenger: paxForm,
       contact: passengerForm.contact || {},
 
       outbound: {
         flightId: obFixed?.flightId ?? null,
-        seats: outboundSeats, // ✅ 符合後端 CreateBookingSchema
+        seats: outboundSeats,
         baggageId: extrasOb.baggageId || null,
         mealId: extrasOb.mealId || null,
       },
@@ -433,37 +432,56 @@ export default function SeatSelectionPage() {
         tripType === 'roundtrip' && ibFixed?.flightId && inboundSeats.length > 0
           ? {
               flightId: ibFixed.flightId ?? null,
-              seats: inboundSeats, // ✅ 同樣用 seats
+              seats: inboundSeats,
               baggageId: extrasIb.baggageId || null,
               mealId: extrasIb.mealId || null,
             }
           : null,
     };
 
-    // 看一下前端實際送什麼（除錯用）
     console.log('booking payload = ', payload);
 
-    // 5) 備份一份在 sessionStorage（checkout 若還要用得到）
     try {
       sessionStorage.setItem('stelwing.checkout.data', JSON.stringify(payload));
     } catch {
       /* ignore */
     }
 
-    // 6) 呼叫建立訂單 API，取得 PNR
+    // 4) 先拿 token
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('stelwing_token')
+        : null;
+
+    if (!token) {
+      alert('請先登入會員再建立訂單');
+      router.push('/member-center/login');
+      return;
+    }
+
+    // 5) 呼叫建立訂單 API（帶 Authorization）
     try {
       const res = await fetch(
         'http://localhost:3007/api/flight-booking/bookings',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
         }
       );
 
+      if (res.status === 401) {
+        alert('登入逾時，請重新登入後再試一次');
+        router.push('/member-center/login');
+        return;
+      }
+
       const json = await res.json();
 
-      if (!res.ok) {
+      if (!res.ok || !json.success) {
         console.error('建立訂單失敗：', json);
         alert(json?.message || '建立訂單失敗，請稍後再試');
         return;
@@ -485,7 +503,6 @@ export default function SeatSelectionPage() {
         /* ignore */
       }
 
-      // 7) 帶 PNR 進 checkout（這樣就不會缺少 pnr 了）
       router.push(`/flight-booking/checkout?pnr=${encodeURIComponent(pnr)}`);
     } catch (e) {
       console.error('呼叫 /bookings 失敗：', e);
@@ -495,9 +512,7 @@ export default function SeatSelectionPage() {
 
   return (
     <div>
-      <FlightInfoBar />
-
-      <div className="mx-auto w-full max-w-6xl px-4 md:px-6 py-6 md:py-8">
+      <div className="mx-auto w-full px-4 md:px-6 py-6 md:py-8">
         <h2 className="text-xl md:text-2xl font-bold text-[color:var(--sw-primary)] mb-2">
           艙等說明與座位選擇
         </h2>

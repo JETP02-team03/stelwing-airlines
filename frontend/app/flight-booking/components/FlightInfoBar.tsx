@@ -48,7 +48,8 @@ export default function FlightInfoBar({
   return (
     <div className="sw-section--light border-b border-[var(--sw-grey)] bg-white">
       <div className="h-[2px] w-full bg-[var(--sw-accent)]" />
-      <div className="mx-auto max-w-[1140px] px-4 h-12 flex items-center justify-between">
+
+      <div className="w-full px-32 h-12 flex items-center justify-between">
         {/* 左側資訊列 */}
         <div className="flex flex-wrap items-center gap-3 sw-p1 text-[var(--sw-primary)]">
           <div className="flex items-center gap-2">

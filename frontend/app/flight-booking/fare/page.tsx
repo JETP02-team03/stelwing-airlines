@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { FareDetailsFromStore } from '../components/FareDetailsModal';
-import FlightInfoBar from '../components/FlightInfoBar';
 import FareBundleCard, { FareBundle } from './components/FareBundleCard';
 
 function buildBundles(currency = 'TWD'): FareBundle[] {
@@ -101,8 +100,7 @@ export default function FarePage() {
 
   return (
     <div>
-      <FlightInfoBar />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <main className="mx-auto w-full px-4 py-8">
         <h2 className="text-xl font-extrabold mb-6">
           {dir === 'inbound' ? '回程 票價組合' : '去程 票價組合'}
         </h2>

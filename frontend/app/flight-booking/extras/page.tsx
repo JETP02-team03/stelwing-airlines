@@ -16,7 +16,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useBookingStore } from '../../../src/store/bookingStore';
 import { FareDetailsFromStore } from '../components/FareDetailsModal';
-import FlightInfoBar from '../components/FlightInfoBar';
 import StepActions from '../components/StepActions';
 
 /* ====================== Types ====================== */
@@ -508,9 +507,7 @@ export default function ExtrasPage() {
 
   return (
     <div>
-      <FlightInfoBar />
-
-      <div className="mx-auto w-full max-w-6xl px-4 md:px-6 py-6 md:py-8">
+      <div className="mx-auto w-full px-4 md:px-6 py-6 md:py-8 sw-container">
         <h2 className="text-xl md:text-2xl font-bold text-[color:var(--sw-primary)] mb-2">
           行李與餐點
         </h2>
@@ -721,7 +718,7 @@ export default function ExtrasPage() {
             </section>
 
             <StepActions
-              onPrev={() => router.back()}
+              onPrev={() => router.push(`/flight-booking/passenger?${qsKeep}`)}
               onNext={() => router.push(`/flight-booking/seats?${qsKeep}`)}
               nextDisabled={!canNext}
             />

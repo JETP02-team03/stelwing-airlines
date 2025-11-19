@@ -7,7 +7,6 @@ import FareDateStrip, { FareCell } from './components/FareDateStrip';
 import type { Segment } from './components/FareDetailsModal';
 import { FareDetailsFromStore } from './components/FareDetailsModal';
 import FlightCard, { FlightItem } from './components/FlightCard';
-import FlightInfoBar from './components/FlightInfoBar';
 import StepActions from './components/StepActions';
 
 /* ================= utils ================= */
@@ -332,9 +331,7 @@ export default function FlightBookingPage() {
 
   return (
     <div>
-      <FlightInfoBar />
-
-      <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-8 space-y-10">
+      <main className="sw-container pb-12 pt-8 space-y-10">
         {/* 去程 日期列 */}
         <FareDateStrip
           title="去程　台北(桃園) → 東京成田"

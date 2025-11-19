@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { FareDetailsFromStore } from '../components/FareDetailsModal';
-import FlightInfoBar from '../components/FlightInfoBar';
 import StepActions from '../components/StepActions';
 
 /* ===================== Types ===================== */
@@ -71,16 +70,48 @@ export default function CheckoutPage() {
       setError('缺少 PNR');
       return;
     }
+
     (async () => {
       try {
+        // 1) 拿 token
+        const token =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('stelwing_token')
+            : null;
+
+        if (!token) {
+          setError('未登入，無法查看訂單');
+          // 也可以直接導回登入頁
+          // router.push('/member-center/login');
+          return;
+        }
+
+        // 2) 帶 Authorization header 去拿這一筆訂單
         const res = await fetch(
           `http://localhost:3007/api/flight-booking/bookings/${encodeURIComponent(
             pnr
           )}`,
-          { cache: 'no-store' }
+          {
+            cache: 'no-store',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
         const json = await res.json();
-        if (!res.ok) throw new Error(json?.message || `HTTP ${res.status}`);
+
+        if (res.status === 401) {
+          // 後端說未登入 / token 過期
+          setError(json?.message || '登入逾時，請重新登入');
+          // router.push('/member-center/login');
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(json?.message || `HTTP ${res.status}`);
+        }
+
         setData(json.data ?? json);
       } catch (e: any) {
         console.error(e);
@@ -260,10 +291,8 @@ export default function CheckoutPage() {
   if (!data) return <div className="p-6">載入中...</div>;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
-      <FlightInfoBar />
-
-      <div className="mx-auto w-full max-w-6xl px-4 md:px-6 py-8">
+    <div className="min-h-screen">
+      <div className="mx-auto w-full px-4 md:px-6 py-8">
         <h2 className="text-2xl font-bold text-[color:var(--sw-primary)] mb-6">
           確認與付款
         </h2>
