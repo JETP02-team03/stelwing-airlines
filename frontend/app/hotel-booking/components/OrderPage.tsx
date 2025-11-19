@@ -353,7 +353,7 @@ export default function OrderPage({
             <span className="font-medium">{detail.hotelName}</span>
           </div>
           <div className="flex justify-between">
-            <span>床型</span>
+            <span>床型需求</span>
             <span>{detail.roomType}</span>
           </div>
           <div className="flex justify-between">

@@ -79,7 +79,7 @@ export default function PaymentSuccessPage() {
             <span className="font-medium">{hotel?.name || '未知飯店'}</span>
           </div>
           <div className="flex justify-between">
-            <span>房型</span>
+            <span>床型需求</span>
             <span>{hotel?.roomType || '標準房'}</span>
           </div>
           <div className="flex justify-between">

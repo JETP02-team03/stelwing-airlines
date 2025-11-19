@@ -33,7 +33,7 @@ export const allMockHotels: Hotel[] = [
       'luggageStorage',
     ],
     busFree: true,
-    roomType: '經典商務房',
+    roomType: 'King Size Bed',
   },
   {
     id: 2,
@@ -53,7 +53,7 @@ export const allMockHotels: Hotel[] = [
       'shuttleService',
     ],
     busFree: true,
-    roomType: '經典商務房',
+    roomType: 'King Size Bed',
   },
   {
     id: 3,
@@ -73,7 +73,7 @@ export const allMockHotels: Hotel[] = [
       'shuttleService',
     ],
     busFree: true,
-    roomType: '經典商務房',
+    roomType: 'King Size Bed',
   },
   {
     id: 4,
@@ -93,7 +93,7 @@ export const allMockHotels: Hotel[] = [
       'shuttleService',
     ],
     busFree: true,
-    roomType: '經典商務房',
+    roomType: 'King Size Bed',
   },
   {
     id: 5,
@@ -113,6 +113,6 @@ export const allMockHotels: Hotel[] = [
       'shuttleService',
     ],
     busFree: true,
-    roomType: '經典商務房',
+    roomType: 'King Size Bed',
   },
 ];

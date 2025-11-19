@@ -55,7 +55,7 @@ export default function HotelDetailBookingCard({
 
   return (
     <aside className="lg:w-80 flex-shrink-0">
-      <div className="sticky top-10 bg-[#F7F7F7] p-6 rounded-lg shadow-xl border border-gray-200">
+      <div className="sticky top-10 p-6 rounded-lg shadow-xl border border-gray-200">
         <h2 className="text-xl font-bold text-gray-800 mb-4">立即預訂</h2>
 
         <div className="flex justify-between items-end mb-4 border-b pb-4">
@@ -157,7 +157,7 @@ export default function HotelDetailBookingCard({
           </div>
 
           <div className="flex justify-between">
-            <span>房型</span>
+            <span>床型需求</span>
             <span>{formData.roomType}</span>
           </div>
 

@@ -31,7 +31,7 @@ export default function HotelDetailPage() {
     name: '',
     phone: '',
     email: '',
-    roomType: 'King Size Bed',
+    roomType: '',
     smokingPreference: '禁菸房',
   });
 

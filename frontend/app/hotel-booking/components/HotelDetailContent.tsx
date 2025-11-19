@@ -199,7 +199,7 @@ export default function HotelDetailContent({
           </p>
 
           <div className="grid grid-cols-2 gap-12">
-            {/* 吸煙需求 */}
+            {/* 吸煙偏好 */}
             <div>
               <label className="text-base font-semibold block mb-4">
                 吸煙偏好（需視現場狀況安排）
