@@ -54,7 +54,7 @@ export const mockDutyFreeOrders: Order[] = [
   {
     id: 'DF2025-5082',
     date: '2025/11/10',
-    status: 'refunded',
+    status: 'success',
     total: 1980,
     items: 1,
     paymentMethod: '信用卡付款',
