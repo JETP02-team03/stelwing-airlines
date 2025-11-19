@@ -108,14 +108,15 @@ export default function HotelResultCard({
       </div>
 
       <div className="flex flex-col flex-1 p-3 gap-2 relative">
+        {/* ❤️ 收藏按鈕（未收藏：金色外框 / 已收藏：金色實心） */}
         <button
           onClick={toggleFavorite}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white border border-gray-200 flex justify-center items-center text-gray-400 hover:text-red-500 transition"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white border border-gray-300 flex justify-center items-center transition"
         >
           <Heart
             size={16}
-            fill={isFavorite ? 'currentColor' : 'none'}
-            stroke={isFavorite ? 'none' : undefined}
+            fill={isFavorite ? '#DCBB87' : 'none'}
+            stroke={isFavorite ? '#DCBB87' : '#999999'}
           />
         </button>
 

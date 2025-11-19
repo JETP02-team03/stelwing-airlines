@@ -357,13 +357,10 @@ export default function OrderPage({
             <span>{detail.roomType}</span>
           </div>
           <div className="flex justify-between">
-            <span>房間數</span>
-            <span>{detail.rooms} 間</span>
-          </div>
-          <div className="flex justify-between">
             <span>吸煙偏好</span>
             <span>{detail.smokingPreference}</span>
           </div>
+
           <div className="flex justify-between">
             <span className="flex items-center gap-1">
               <Calendar size={14} />
@@ -391,6 +388,10 @@ export default function OrderPage({
               人數
             </span>
             <span>{detail.guests} 人</span>
+          </div>
+          <div className="flex justify-between">
+            <span>房間數</span>
+            <span>{detail.rooms} 間</span>
           </div>
           <div className="border-t border-gray-300 mt-4 pt-4 flex justify-between text-lg font-bold text-gray-900">
             <span>總金額</span>

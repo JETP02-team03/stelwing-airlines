@@ -28,28 +28,19 @@ export default function HotelDetailBookingCard({
   isSubmitting,
 }: HotelDetailBookingCardProps) {
   const [mounted, setMounted] = useState(false);
-  // 在組件掛載後設置 mounted 為 true
   useEffect(() => setMounted(true), []);
 
-  // totalPrice 僅根據傳入的 props (來自 URL 參數或上層元件的穩定狀態) 計算
   const totalPrice = hotel.price * formData.nights * formData.rooms;
 
-  // 格式化價格的輔助函式，解決水合作用問題
   const renderFormattedPrice = () => {
-    // 伺服器渲染 (SSR) 階段: 渲染原始價格字串 (例如 $10500)，不進行地區格式化
     const rawPriceString = `$${totalPrice.toString()}`;
-
-    // 客戶端渲染 (CSR) 階段 (mounted = true): 使用明確的 Intl.NumberFormat 格式化，確保輸出固定且美觀
     if (mounted) {
-      // 使用明確的 'en-US' locale 和 'USD' 貨幣，確保無論客戶端地區設定如何，輸出格式一致
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-        minimumFractionDigits: 0, // 移除小數點
+        minimumFractionDigits: 0,
       }).format(totalPrice);
     }
-
-    // SSR 階段 (mounted = false): 渲染不變的原始價格，避免水合作用不一致
     return rawPriceString;
   };
 
@@ -60,7 +51,6 @@ export default function HotelDetailBookingCard({
 
         <div className="flex justify-between items-end mb-4 border-b pb-4">
           <span className="text-sm text-gray-600">總金額 (含稅)</span>
-          {/* 使用 renderFormattedPrice */}
           <span className="text-4xl font-extrabold text-[#303D49]">
             {renderFormattedPrice()}
           </span>
@@ -96,13 +86,12 @@ export default function HotelDetailBookingCard({
             />
           </div>
 
-          {/* 住宿晚數 (僅顯示，不可修改) */}
+          {/* 住宿晚數 */}
           <div>
             <label className="text-sm font-medium block mb-1 flex items-center gap-2">
               <Moon size={16} className="text-gray-500" />
               住宿晚數
             </label>
-            {/* 這裡使用 div 顯示，確保它是只讀的 */}
             <div className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
               {formData.nights} 晚
             </div>
@@ -161,6 +150,12 @@ export default function HotelDetailBookingCard({
             <span>{formData.roomType}</span>
           </div>
 
+          {/* 吸菸偏好（新增） */}
+          <div className="flex justify-between">
+            <span>吸煙偏好</span>
+            <span>{formData.smokingPreference || '無'}</span>
+          </div>
+
           <div className="flex justify-between">
             <span>入住</span>
             <span>{formData.checkIn}</span>
@@ -190,7 +185,6 @@ export default function HotelDetailBookingCard({
 
           <div className="border-t pt-2 flex justify-between font-bold text-lg">
             <span>總金額</span>
-            {/* 使用 renderFormattedPrice 處理水合作用問題 */}
             <span className="text-[#DCBB87]">{renderFormattedPrice()}</span>
           </div>
         </div>
