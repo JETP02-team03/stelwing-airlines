@@ -1,22 +1,19 @@
 // 匯⼊套件及類型定義 (類別、介⾯)
 import express from "express";
 // *** verbatimModuleSyntax 為 true 時，標⽰匯⼊類型
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 // 截⼊環境變數設定檔
 import "dotenv/config";
 // 載入各種路由
-import { requireAuth } from "./middleware/jwt.js";
 import apiRouter from "./routes/index.js";
 // //若晴測試會員
 // import authRoutes from "./routes/auth.routes.js";
 // import memberRoutes from "./routes/member.routes.js"; 
 // 周邊工具安裝：zod 驗證、session 們
-import { z } from "zod";
-import session from "express-session";
-import sessionFileStore from "session-file-store";
 import cors from "cors";
-import { log } from "console";
+import session from "express-session";
 import path from "path";
+import sessionFileStore from "session-file-store";
 
 const FileStore = sessionFileStore(session);
 

@@ -1,9 +1,26 @@
 import { Router } from "express";
 import { prisma } from "../../utils/prisma-only.js";
 import moment from "moment-timezone";
-import { z } from "zod";
+import { success, z } from "zod";
+import jwt from "jsonwebtoken";
+import { authMiddleware, type AuthRequest } from '../../middleware/authMiddleware.js';
 
 const router = Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+
+function getMemberIdFromToken(req: any): number | null {
+  const auth = req.headers?.authorization;
+  if (!auth || !auth.startsWith("Bearer ")) return null;
+
+  try {
+    const token = auth.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { memberId: number };
+    return decoded.memberId;
+  } catch {
+    return null;
+  }
+}
 
 /* ===================== 小工具 ===================== */
 function safeTz(tz: string, fallback: string) {
@@ -30,8 +47,6 @@ const SeatQuery = z.object({
     .transform((v) => (v === "1" || v === 1 || v === true)),
 });
 
-/* ===================== 固定路由（放前面） ===================== */
-/** 列表：GET /list?originZone=Asia/Taipei&destZone=Asia/Tokyo */
 router.get("/list", async (req, res) => {
   const originZone = safeTz(String(req.query.originZone ?? "Asia/Taipei"), "Asia/Taipei");
   const destZone = safeTz(String(req.query.destZone ?? "Asia/Tokyo"), "Asia/Tokyo");
@@ -271,11 +286,15 @@ const CreateBookingSchema = z.object({
     .nullable(),
 });
 
-
-/* ============================================
- * 🔥 建立訂單
- * ============================================ */
+// 建立訂單：POST /bookings
 router.post("/bookings", async (req, res) => {
+    const memberId = getMemberIdFromToken(req);
+    if(!memberId){
+        return res.status(401).json({
+            success: false,
+            message: "未登入，請先登入會員再建立訂單",
+        });
+    }
   const parsed = CreateBookingSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json(parsed.error.flatten());
@@ -286,7 +305,7 @@ router.post("/bookings", async (req, res) => {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      /* ① 建 booking */
+      /* 1 建 booking */
       const booking = await tx.booking.create({
         data: {
           pnr,
@@ -300,12 +319,13 @@ router.post("/bookings", async (req, res) => {
           totalAmount: data.totalAmount,
           paymentStatus: "pending",
           paymentMethod: "ecpay",
+          memberId: BigInt(memberId),
         },
       });
 
       const bookingId = booking.bookingId;
 
-      /* ② 建 BookingDetail：去程 */
+      /* 2 建 BookingDetail：去程 */
       for (const seat of data.outbound.seats) {
         await tx.bookingDetail.create({
           data: {
@@ -325,7 +345,7 @@ router.post("/bookings", async (req, res) => {
         });
       }
 
-      /* ③ 回程（如果有） */
+      /* 3 回程（如果有） */
       if (data.inbound) {
         for (const seat of data.inbound.seats) {
           await tx.bookingDetail.create({
@@ -365,58 +385,73 @@ router.post("/bookings", async (req, res) => {
   }
 });
 
-/* ===================== 查詢訂單明細 GET /bookings/:pnr ===================== */
+//查詢訂單明細 GET /bookings/:pnr
+// 讀取訂單：GET /bookings/:pnr
 router.get("/bookings/:pnr", async (req, res) => {
-  try {
-    const pnr = req.params.pnr;
-    const tz = safeTz(String(req.query.tz ?? "Asia/Taipei"), "Asia/Taipei");
+  const { pnr } = req.params;
 
-    const booking = await prisma.booking.findUnique({
-      where: { pnr },
+  // 1) 一樣從 token 取出 memberId
+  const memberId = getMemberIdFromToken(req);
+  if (!memberId) {
+    return res.status(401).json({
+      success: false,
+      message: "未登入，無法查看訂單",
+    });
+  }
+
+  try {
+    // 2) 只查「這個會員」的這張訂單，避免看到別人資料
+    const booking = await prisma.booking.findFirst({
+      where: {
+        pnr,
+        memberId: BigInt(memberId),
+      },
       include: {
         details: {
           include: {
             flight: true,
-            seat: true,
-            meal: true,
-            baggage: true,
           },
         },
       },
     });
 
     if (!booking) {
-      return res.status(404).json({ success: false, message: "找不到訂單" });
+      return res.status(404).json({
+        success: false,
+        message: "找不到訂單",
+      });
     }
-
-    const createdAtLocal = booking.createdAt
-      ? moment(booking.createdAt).tz(tz).format("YYYY-MM-DD HH:mm:ss")
-      : null;
 
     return res.json({
       success: true,
-      data: {
-        ...booking,
-        bookingId: String(booking.bookingId),
-        createdAt: createdAtLocal,
-        // 如果還有 BigInt 欄位記得一併轉字串
-      },
+      data: booking,
     });
-  } catch (e) {
+  } catch (err) {
+    console.error("查詢訂單失敗：", err);
     return res.status(500).json({
       success: false,
       message: "查詢訂單失敗",
-      error: String(e),
     });
   }
 });
 
-/* ===================== 查詢訂單列表 GET /bookings ===================== */
+
+// 查詢訂單列表 GET /bookings
 router.get("/bookings", async (req, res) => {
   try {
+    // 1) 先從 token 拿 memberId
+    const memberId = getMemberIdFromToken(req);
+    if (!memberId) {
+      return res.status(401).json({
+        success: false,
+        message: "未登入，無法查看訂單列表",
+      });
+    }
+
     const tz = safeTz(String(req.query.tz ?? "Asia/Taipei"), "Asia/Taipei");
 
-    const rows = await prisma.$queryRawUnsafe<any[]>(`
+    // 2) 用 $queryRaw（安全綁參數）＋ 加上 WHERE b.member_id = ${...}
+    const rows = await prisma.$queryRaw<any[]>`
       SELECT
         b.booking_id       AS bookingId,
         b.pnr              AS pnr,
@@ -453,10 +488,12 @@ router.get("/bookings", async (req, res) => {
       FROM bookings b
       LEFT JOIN booking_details bd ON bd.booking_id = b.booking_id
       LEFT JOIN flights f ON f.flight_id = bd.flight_id
+      WHERE b.member_id = ${BigInt(memberId)}   -- ⭐ 只撈這個會員的訂單
       GROUP BY b.booking_id
       ORDER BY b.booking_id DESC;
-    `);
+    `;
 
+    // 3) 把時間轉換成前端要的 createdAt
     const data = rows.map((row) => {
       const createdAtLocal = row.createdAtUtc
         ? moment.tz(row.createdAtUtc, "UTC").tz(tz).format("YYYY-MM-DD HH:mm:ss")
@@ -464,13 +501,13 @@ router.get("/bookings", async (req, res) => {
 
       return {
         ...row,
-        createdAt: createdAtLocal, // 給前端用這個欄位
+        createdAt: createdAtLocal,
       };
     });
 
     return res.json({
       success: true,
-      data, // 這裡要用 data，不是 rows
+      data,
     });
   } catch (e) {
     console.error("查詢訂單列表失敗（raw）：", e);
@@ -482,9 +519,18 @@ router.get("/bookings", async (req, res) => {
   }
 });
 
-/* ===================== 改票 PATCH /bookings/:pnr/change ===================== */
+
+// 改票 PATCH /bookings/:pnr/change
 router.patch("/bookings/:pnr/change", async (req, res) => {
-  try {
+    try {
+    const memberId = getMemberIdFromToken(req);
+    if (!memberId) {
+      return res.status(401).json({
+        success: false,
+        message: "未登入，無法改票",
+      });
+    }
+
     const { pnr } = req.params;
 
     // 前端傳的資料
@@ -492,7 +538,7 @@ router.patch("/bookings/:pnr/change", async (req, res) => {
 
     // 查詢是否存在
     const booking = await prisma.booking.findUnique({
-      where: { pnr },
+      where: { pnr, memberId: BigInt(memberId), },
     });
 
     if (!booking) {
@@ -545,14 +591,25 @@ router.patch("/bookings/:pnr/change", async (req, res) => {
   }
 });
 
-/* ===================== 退票 POST /bookings/:pnr/refund ===================== */
+//退票 POST /bookings/:pnr/refund
 router.post('/bookings/:pnr/refund', async (req, res) => {
+    const memberId = getMemberIdFromToken(req);
+  if (!memberId) {
+    return res.status(401).json({
+      success: false,
+      message: "未登入，無法退票",
+    });
+  }
+
   const pnr = req.params.pnr;
   const tripType = req.body?.tripType as 'OB' | 'IB' | undefined; // 可選：去程 / 回程
 
   try {
-    const booking = await prisma.booking.findUnique({
-      where: { pnr },
+    const booking = await prisma.booking.findFirst({
+      where: {
+        pnr,
+        memberId: BigInt(memberId),
+      },
       include: {
         details: true,
       },
@@ -561,7 +618,7 @@ router.post('/bookings/:pnr/refund', async (req, res) => {
     if (!booking) {
       return res
         .status(404)
-        .json({ success: false, message: '找不到訂單，無法退票' });
+        .json({ success: false, message: "找不到訂單或無權限" });
     }
 
     // 如果已經是 refunded，就直接回傳
