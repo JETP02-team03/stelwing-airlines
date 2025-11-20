@@ -1,6 +1,6 @@
 'use client';
-import { MouseEvent } from 'react';
 import { ShoppingCart } from 'lucide-react';
+import { MouseEvent } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface DFProductCardProps {
@@ -62,7 +62,7 @@ export function DFProductCard({
               fontWeight: 'bold',
             }}
           >
-            NTD {price.toLocaleString()}
+            TWD {price.toLocaleString()}
           </span>
           {onAddToCart && (
             <button
