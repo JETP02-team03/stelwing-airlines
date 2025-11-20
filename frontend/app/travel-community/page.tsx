@@ -13,7 +13,7 @@ import {
   PostType,
 } from "./data/posts";
 import type { Post } from "./data/posts";
-import { apiFetch } from "@/app/travel-planner/utils/apiFetch";
+import { apiFetch } from "@/app/travel-community/utils/apiFetch";
 
 const filterByTimeRange = (createdAt: string, range: FilterState["timeRange"]) => {
   if (range === "all") return true;

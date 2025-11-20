@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import FlightSearchCard from './components/FlightSearchCard';
 import HomeMain from './components/HomeMain';
+import { apiFetch } from "@/app/travel-community/utils/apiFetch";
+
 
 export default function AppPage() {
   return (
