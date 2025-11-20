@@ -34,6 +34,26 @@ type Seat = {
   seatFee?: number | null;
 };
 
+/** 旅客資料存在 sessionStorage 的型別（從 passenger page 存進來的） */
+type PassengerFormStorage = {
+  pax?: {
+    gender?: 'M' | 'F';
+    firstName?: string;
+    lastName?: string;
+    birthday?: string;
+    nationality?: string;
+    passportNo?: string;
+    passportExpiry?: string;
+  };
+  contact?: {
+    firstName?: string;
+    lastName?: string;
+    phoneCountry?: string;
+    phone?: string;
+    email?: string;
+  };
+};
+
 const COLS: Seat['col'][] = ['A', 'B', 'C', 'D'];
 
 const GOLD = 'var(--sw-accent)';
@@ -370,14 +390,14 @@ export default function SeatSelectionPage() {
       console.warn('寫入 bookingStore.selectedSeats 失敗：', e);
     }
 
-    // 2) 把 Passenger / Extras 從 sessionStorage 撈出來
-    let passengerForm: any = {};
+    // 2) 從 sessionStorage 撈出 Passenger / Contact / Extras
+    let passengerForm: PassengerFormStorage = {};
     let extrasOb: any = {};
     let extrasIb: any = {};
 
     try {
       const raw = sessionStorage.getItem('stelwing.passenger.form') || '{}';
-      passengerForm = JSON.parse(raw);
+      passengerForm = JSON.parse(raw) as PassengerFormStorage;
     } catch {
       passengerForm = {};
     }
@@ -396,8 +416,22 @@ export default function SeatSelectionPage() {
       extrasIb = {};
     }
 
-    // 3) 從 passenger / fare / query 組出後端要的欄位
     const paxForm = passengerForm.pax || {};
+    const contact = passengerForm.contact || {};
+
+    // 基本防呆：沒有旅客資料就不送
+    if (!paxForm.firstName || !paxForm.lastName) {
+      alert('找不到旅客資料，請回上一頁重新填寫。');
+      router.push(`/flight-booking/passenger?${qsKeep}`);
+      return;
+    }
+
+    if (!obFixed?.flightId) {
+      alert('找不到去程航班資訊，請回上一頁重新選擇。');
+      router.push(`/flight-booking`);
+      return;
+    }
+
     const cabinRaw =
       sp.get('cabinClass') || outbound?.cabin || inbound?.cabin || 'ECONOMY';
     const cabinClassFromQuery =
@@ -407,34 +441,46 @@ export default function SeatSelectionPage() {
     const tripType = (sp.get('tripType') as 'oneway' | 'roundtrip') || 'oneway';
     const currency = outbound?.currency || inbound?.currency || 'TWD';
 
-    // ✅ 把 picked.ob / picked.ib 轉成 [{ seatId }]
-    const outboundSeats = picked.ob.map((id) => ({ seatId: id }));
-    const inboundSeats = picked.ib.map((id) => ({ seatId: id }));
+    // 把 picked.ob / picked.ib 轉成 [{ seatId: number }]
+    const outboundSeats = picked.ob.map((id) => ({
+      seatId: Number(id),
+    }));
+    const inboundSeats = picked.ib.map((id) => ({
+      seatId: Number(id),
+    }));
 
     const payload = {
       tripType,
       currency,
       cabinClass: cabinClassFromQuery,
-      firstName: paxForm.firstName || '',
-      lastName: paxForm.lastName || '',
       totalAmount,
 
+      // 旅客基本資料（後端 Zod 會驗證）
+      firstName: (paxForm.firstName || '').toUpperCase(),
+      lastName: (paxForm.lastName || '').toUpperCase(),
+      gender: paxForm.gender ?? null,
+      birthday: paxForm.birthday || null,
+      nationality: paxForm.nationality || '',
+      passportNo: (paxForm.passportNo || '').toUpperCase(),
+      passportExpiry: paxForm.passportExpiry || '',
+
+      // 目前後端 schema 沒用到，但先帶著以後可以擴充
       passenger: paxForm,
-      contact: passengerForm.contact || {},
+      contact,
 
       outbound: {
-        flightId: obFixed?.flightId ?? null,
+        flightId: Number(obFixed.flightId),
         seats: outboundSeats,
-        baggageId: extrasOb.baggageId || null,
-        mealId: extrasOb.mealId || null,
+        baggageId: extrasOb.baggageId ? Number(extrasOb.baggageId) : null,
+        mealId: extrasOb.mealId ? Number(extrasOb.mealId) : null,
       },
       inbound:
         tripType === 'roundtrip' && ibFixed?.flightId && inboundSeats.length > 0
           ? {
-              flightId: ibFixed.flightId ?? null,
+              flightId: Number(ibFixed.flightId),
               seats: inboundSeats,
-              baggageId: extrasIb.baggageId || null,
-              mealId: extrasIb.mealId || null,
+              baggageId: extrasIb.baggageId ? Number(extrasIb.baggageId) : null,
+              mealId: extrasIb.mealId ? Number(extrasIb.mealId) : null,
             }
           : null,
     };
@@ -473,16 +519,17 @@ export default function SeatSelectionPage() {
         }
       );
 
+      const json = await res.json();
+
       if (res.status === 401) {
         alert('登入逾時，請重新登入後再試一次');
         router.push('/member-center/login');
         return;
       }
 
-      const json = await res.json();
-
       if (!res.ok || !json.success) {
         console.error('建立訂單失敗：', json);
+        // 如果後端有回欄位錯誤，可以在這裡 console.log json.errors 看
         alert(json?.message || '建立訂單失敗，請稍後再試');
         return;
       }
@@ -517,7 +564,7 @@ export default function SeatSelectionPage() {
           艙等說明與座位選擇
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.3fr)_minmax(400px,1fr)] gap-6">
           {/* 左：座位圖 */}
           <div className="bg白 rounded-2xl p-4 md:p-5 shadow-sm">
             {loading ? (
@@ -635,7 +682,7 @@ export default function SeatSelectionPage() {
           </div>
 
           {/* 右：艙等說明 + 座位選擇卡 */}
-          <aside className="space-y-4">
+          <aside className="space-y-4 lg:max-w-[440px] w-full">
             {/* 艙等說明 */}
             <section
               className="rounded-2xl border border-[color:var(--sw-grey)]/30

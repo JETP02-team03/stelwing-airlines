@@ -51,6 +51,8 @@ const STORAGE_KEY = 'stelwing.passenger.form';
 type PassengerErrors = Partial<Record<keyof Passenger, string>>;
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+// 其他國籍：6–9 碼英數，至少一個字母 + 一個數字
+const genericPassportRegex = /^(?=.*[A-Z])(?=.*\d)[A-Z0-9]{6,9}$/;
 
 function validatePassenger(pax: Passenger): PassengerErrors {
   const errors: PassengerErrors = {};
@@ -96,10 +98,10 @@ function validatePassenger(pax: Passenger): PassengerErrors {
           '台灣護照格式為 1 碼英文大寫 + 8 碼數字，請勿輸入空格或符號';
       }
     } else {
-      // 一般通用：6–9 碼英文大寫或數字
-      if (!/^[A-Z0-9]{6,9}$/.test(passport)) {
+      // 其他國籍：6–9 碼英文大寫或數字，且需同時包含字母與數字
+      if (!genericPassportRegex.test(passport)) {
         errors.passportNo =
-          '護照號碼僅能填寫 6–9 碼英文大寫與數字，請勿輸入空格或符號';
+          '護照號碼需為 6–9 碼英文大寫與數字，且需同時包含至少 1 個英文字與 1 個數字';
       }
     }
   }
@@ -139,7 +141,7 @@ export default function PassengerPage() {
     return out.toString();
   }, [sp]);
 
-  // ====== 票價合計與「查看明細」彈窗 ======
+  // ====== 票價合計與「查看明細」彈窗（目前只保留型別，不特別使用） ======
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [obSeg, setObSeg] = useState<Segment | null>(null);
   const [ibSeg, setIbSeg] = useState<Segment | null>(null);
@@ -220,10 +222,10 @@ export default function PassengerPage() {
 
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  // 依目前 pax 即時計算錯誤（像 Zod parse）
+  // 即時計算錯誤（像 Zod parse）
   const paxErrorsLive = useMemo(() => validatePassenger(pax), [pax]);
 
-  // 真正要顯示在畫面上的錯誤（只有按過下一步才顯示）
+  // 只有按過下一步才顯示錯誤
   const paxErrors: PassengerErrors = hasSubmitted ? paxErrorsLive : {};
 
   // 載入暫存
@@ -276,11 +278,16 @@ export default function PassengerPage() {
   const goPrev = () => router.push(`/flight-booking?${qs}`);
 
   const goNext = () => {
+    // 按下一步當下再驗證一次，確保最新值一定有被檢查到
     setHasSubmitted(true);
-    if (!canNext) {
+    const errorsNow = validatePassenger(pax);
+    const isPassengerOkNow = Object.keys(errorsNow).length === 0;
+
+    if (!isPassengerOkNow || !isContactValid) {
       // 不符合規則就不導頁，錯誤訊息會自動顯示
       return;
     }
+
     router.push(`/flight-booking/extras?${qs}`);
   };
 
@@ -358,7 +365,7 @@ export default function PassengerPage() {
                       onChange={(e) =>
                         setContact({ ...contact, phoneCountry: e.target.value })
                       }
-                      className="w-28 bg白/10 bg-white/10 border border-white/20 rounded-lg px-2 py-2 outline-none"
+                      className="w-28 bg-white/10 border border-white/20 rounded-lg px-2 py-2 outline-none"
                     >
                       {PHONE_CODES.map((c) => (
                         <option key={c.code} value={c.code}>
@@ -594,12 +601,32 @@ export default function PassengerPage() {
                       }`}
                       placeholder="Passport No."
                     />
+
+                    {/* 後端 / 前端驗證錯誤訊息（紅色） */}
                     {paxErrors.passportNo && (
                       <p className="mt-1 text-xs text-red-300">
                         {paxErrors.passportNo}
                       </p>
                     )}
+
+                    {/* 動態提示（依國籍） */}
+                    {!paxErrors.passportNo && (
+                      <>
+                        {pax.nationality === 'TW' ? (
+                          <p className="text-xs text-white/70 mt-1">
+                            台灣護照格式：1 碼英文大寫 + 8
+                            碼數字，例如：E12345678
+                          </p>
+                        ) : (
+                          <p className="text-xs text-white/70 mt-1">
+                            護照格式：6–9 碼英文大寫與數字組合，且需同時包含至少
+                            1 個英文字母與 1 個數字
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
+
                   <div className="md:col-span-4">
                     <label className="text-xs opacity-90 block mb-1">
                       護照到期日
