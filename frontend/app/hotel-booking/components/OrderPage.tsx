@@ -467,80 +467,89 @@ export default function OrderPage({
           </div>
         )}
 
-        {/* ✅ 聯絡資訊區塊 */}
-        <div className="space-y-4 mb-6">
-          <h3 className="text-xl font-semibold text-gray-700">聯絡資訊</h3>
+        {/* ✅ 聯絡資訊區塊（只在信用卡付款時顯示） */}
+        {paymentMethod === 'creditCard' && (
+          <div className="space-y-4 mb-6">
+            <h3 className="text-xl font-semibold text-gray-700">聯絡資訊</h3>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              電子郵件 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              onBlur={() => handleBlur('email')}
-              placeholder="example@email.com"
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none transition ${
-                errors.email && touched.email
-                  ? 'border-red-500'
-                  : 'border-gray-300'
-              }`}
-            />
-            {errors.email && touched.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* 手機號碼 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              手機號碼 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              onBlur={() => handleBlur('phone')}
-              placeholder="0912345678"
-              className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none transition ${
-                errors.phone && touched.phone
-                  ? 'border-red-500'
-                  : 'border-gray-300'
-              }`}
-            />
-            {errors.phone && touched.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-            )}
-          </div>
-        </div>
-
-        {formData.lastName !== undefined && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                姓
-              </label>
-              <input
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none"
-              />
+            {/* 姓名（並排） */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  姓
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={(e) =>
+                    handleInputChange('lastName', e.target.value)
+                  }
+                  placeholder="王"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  名
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={(e) =>
+                    handleInputChange('firstName', e.target.value)
+                  }
+                  placeholder="小明"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none"
+                />
+              </div>
             </div>
+
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                名
+                電子郵件 <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
+                placeholder="example@email.com"
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none transition ${
+                  errors.email && touched.email
+                    ? 'border-red-500'
+                    : 'border-gray-300'
+                }`}
               />
+              {errors.email && touched.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            {/* 手機號碼 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                手機號碼 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                onBlur={() => handleBlur('phone')}
+                placeholder="0912345678"
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#DCBB87] focus:outline-none transition ${
+                  errors.phone && touched.phone
+                    ? 'border-red-500'
+                    : 'border-gray-300'
+                }`}
+              />
+              {errors.phone && touched.phone && (
+                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+              )}
             </div>
           </div>
         )}
