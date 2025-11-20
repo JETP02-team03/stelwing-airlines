@@ -52,7 +52,14 @@ export default function Header({
   const [profileOpen, setProfileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
-  const { isLoggedIn, avatar, logout, member } = useAuth();
+  // 🔼 新增：使用登入狀態
+  // const { isLoggedIn, avatar, logout, member } = useAuth();
+  const { isLoggedIn, logout, member } = useAuth();
+
+  const avatarSrc = member?.avatar?.imagePath
+    ? member.avatar.imagePath
+    : '/avatars/default.png';
+
   const { showToast } = useToast();
 
   const pathname = usePathname();
@@ -261,10 +268,26 @@ export default function Header({
               <div
                 className="relative"
                 onMouseEnter={() => setProfileOpen(true)}
+                // onMouseLeave={(e) => {
+                //   const nextTarget = e.relatedTarget as Node | null;
+                //   if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+                //   setProfileOpen(false);
+                // }}
                 onMouseLeave={(e) => {
-                  const nextTarget = e.relatedTarget as Node | null;
-                  if (nextTarget && e.currentTarget.contains(nextTarget))
-                    return;
+                  const nextTarget = e.relatedTarget;
+
+                  try {
+                    if (
+                      nextTarget &&
+                      nextTarget instanceof Node &&
+                      e.currentTarget.contains(nextTarget)
+                    ) {
+                      return;
+                    }
+                  } catch (_) {
+                    // 如果 contains 出錯就忽略，直接關閉
+                  }
+
                   setProfileOpen(false);
                 }}
                 onFocus={() => setProfileOpen(true)}
@@ -282,7 +305,7 @@ export default function Header({
                   aria-expanded={profileOpen}
                 >
                   <img
-                    src={avatar}
+                    src={avatarSrc}
                     alt="avatar"
                     className="w-full h-full object-cover"
                   />

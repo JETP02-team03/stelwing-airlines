@@ -9,15 +9,23 @@ interface MasonryProps {
   className?: string;
 }
 
-// 🔹 瀑布流：用 columns-* 做多欄
+// 🔹 改用 grid，確保卡片先橫向排列再換行
 export default function Masonry({ posts, className = "" }: MasonryProps) {
-  const baseClassName =
-    "columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-5";
+  const baseClassName = `
+    grid
+    grid-cols-1
+    sm:grid-cols-2
+    lg:grid-cols-3
+    2xl:grid-cols-4
+    gap-5
+  `;
 
   return (
     <div className={`${baseClassName} ${className}`.trim()}>
       {posts.map((p) => (
-        <PostCard key={p.id} post={p} />
+        <div key={p.id} className="h-full">
+          <PostCard post={p} />
+        </div>
       ))}
     </div>
   );

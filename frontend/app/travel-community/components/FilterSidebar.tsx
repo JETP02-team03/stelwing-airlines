@@ -5,7 +5,6 @@ import {
   FilterState,
   mileageOptions,
   timeRangeOptions,
-  tagOptions,
   categoryOptions,
 } from "../data/posts";
 
@@ -14,6 +13,7 @@ interface FilterSidebarProps {
   onChange: (state: Partial<FilterState>) => void;
   onApply: () => void;
   appliedMessage?: string | null;
+  popularTags: string[];
 }
 
 export default function FilterSidebar({
@@ -21,6 +21,7 @@ export default function FilterSidebar({
   onChange,
   onApply,
   appliedMessage,
+  popularTags,
 }: FilterSidebarProps) {
   const toggleValue = (list: string[], value: string) =>
     list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -67,7 +68,7 @@ export default function FilterSidebar({
 
       <Field label="熱門標籤">
         <TagGroup
-          tags={tagOptions}
+          tags={popularTags}
           selected={filters.selectedTags}
           onToggle={(tag) =>
             onChange({ selectedTags: toggleValue(filters.selectedTags, tag) })

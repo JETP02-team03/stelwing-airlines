@@ -7,6 +7,7 @@ export interface Post {
   title: string;
   summary: string;
   author: string;
+  nickname?: string | null;
   authorAvatar?: string;
   miles: number;
   type: "遊記" | "影片" | "隨手拍";
@@ -225,6 +226,12 @@ export const countryOptions = [
   { value: "JP", label: "日本" },
   { value: "KR", label: "韓國" },
   { value: "ES", label: "西班牙" },
+  { value: "TH", label: "泰國" },
+  { value: "FR", label: "法國" },
+  { value: "IT", label: "義大利" },
+  { value: "MV", label: "馬爾地夫" },
+  { value: "CA", label: "加拿大" },
+  { value: "NZ", label: "紐西蘭" },
 ];
 
 export const timeRangeOptions = [

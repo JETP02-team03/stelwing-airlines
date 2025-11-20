@@ -6,9 +6,10 @@ import type { Request, Response } from "express";
 import "dotenv/config";
 // 載入各種路由
 import apiRouter from "./routes/index.js";
-// //若晴測試會員
+// 11/19rosa新增旅遊分享
 // import authRoutes from "./routes/auth.routes.js";
 // import memberRoutes from "./routes/member.routes.js"; 
+import travelPostRoutes from "./routes/travel-posts.routes.js";
 // 周邊工具安裝：zod 驗證、session 們
 import cors from "cors";
 import session from "express-session";
@@ -22,12 +23,14 @@ const app = express();
 // 設定靜態內容資料夾
 app.use(express.static(path.join(process.cwd(), "public")));
 // 解析 JSON body 的中間件
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 // 解析 URL-encoded body 的中間件
-app.use(express.urlencoded({ extended: true }));
-// 11/11若晴新增 會員頭像圖庫
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// 11/11rosa新增 會員頭像圖庫
 app.use("/avatars", express.static(path.join(process.cwd(), "public/avatars")));
 app.use('/planner/cover', express.static(path.join(process.cwd(), 'public/planner/cover')));
+// 11/19rosa新增旅遊分享
+app.use("/api/travel-posts", travelPostRoutes);
 // 允許所有來源訪問
 app.use(
   cors({
@@ -60,7 +63,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("歡迎來到 Express + TS !");
 });
 
-// //若晴測試中
+// //rosa測試中
 // // 登入／註冊／驗證 路由
 // app.use("/api/auth", authRoutes);
 // app.use("/api/member", memberRoutes);

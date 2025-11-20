@@ -358,14 +358,14 @@ model MediaItem {
   mediaId         BigInt     @id @default(autoincrement()) @map("media_id")
   postId          BigInt     @map("post_id")
   post            TravelPost @relation(fields: [postId], references: [postId], onDelete: Cascade)
-  mediaType       MediaType  @map("media_type")
-  mediaUrl        String     @map("media_url") @db.VarChar(500)
-  thumbnailUrl    String?    @map("thumbnail_url") @db.VarChar(500)
-  mimeType        String?    @map("mime_type") @db.VarChar(100)
-  fileSizeMb      Float      @default(0) @map("file_size_mb")
-  durationSeconds Int?       @map("duration_seconds")
-  orderIndex      Int        @default(0) @map("order_index")
-  createdAt       DateTime   @default(now()) @map("created_at")
+  mediaType       MediaType @map("media_type")
+  mediaUrl        String @map("media_url") @db.LongText
+  thumbnailUrl    String? @map("thumbnail_url") @db.LongText
+  mimeType        String?   @map("mime_type") @db.VarChar(100)
+  fileSizeMb      Float     @default(0) @map("file_size_mb")
+  durationSeconds Int?      @map("duration_seconds")
+  orderIndex      Int       @default(0) @map("order_index")
+  createdAt       DateTime  @default(now()) @map("created_at")
 
   @@index([postId])
   @@map("media_items")

@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@/app/context/auth-context';
 import { Award, Calendar, Camera, TrendingUp } from 'lucide-react'; // ✅【新增】Camera
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -37,6 +38,7 @@ const formatDate = (value?: string) => {
 
 export default function MemberInfoPage() {
   const router = useRouter();
+  const { refresh: refreshAuth } = useAuth();
 
   // ✅【保留】會員資料（動態）
   const [member, setMember] = useState<any>(null);
@@ -153,6 +155,7 @@ export default function MemberInfoPage() {
             ? { imagePath: newly.imagePath, label: newly.label }
             : prev.avatar,
         }));
+        refreshAuth();
         setIsAvatarModalOpen(false);
       } else {
         alert(data?.message || '更新頭像失敗');
@@ -266,9 +269,27 @@ export default function MemberInfoPage() {
               <div className="flex items-center gap-3">
                 <TrendingUp className="text-[#DCBB87]" size={16} />
                 <div className="flex-1">
-                  <div className="text-[10px] text-[#999]">哩程數</div>
+                  <div className="text-[10px] lg:text-xs text-[#999]">
+                    哩程數
+                  </div>
                   <div className="text-xs">
                     {member.mileage?.toLocaleString() || 0} 哩
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Calendar className="text-[#DCBB87]" size={16} />
+                <div className="flex-1">
+                  <div className="text-[10px] lg:text-xs text-[#999]">
+                    註冊日期
+                  </div>
+                  <div className="text-xs lg:text-sm">
+                    {member.registerDate
+                      ? new Date(member.registerDate).toLocaleDateString(
+                          'zh-TW'
+                        )
+                      : '—'}
                   </div>
                 </div>
               </div>
@@ -355,10 +376,10 @@ export default function MemberInfoPage() {
 
       <div className="mt-4 min-h-[420px]">
         {activeTab === 'rule' ? (
-          <div className="p-6 border border-[#BA9A60] rounded-xl h-full">
+          <div className="p-6 border bg-white border-[#BA9A60] rounded-xl h-full">
             <h3 className="font-semibold text-[#1F2E3C] mb-3">哩程說明</h3>
             <ul className="text-sm text-[#444] space-y-2">
-              <li>．每消費 NT$30 可累積 1 哩程</li>
+              <li>．每消費 NT$20 可累積 1 哩程</li>
               <li>．哩程可用於兌換機票、升等、免稅商品等優惠</li>
               <li>．哩程有效期限為 2 年，請於期限內使用</li>
             </ul>

@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, PenSquare } from "lucide-react";
+import { Bell, PenSquare, Search } from "lucide-react";
 import { countryOptions, PostType } from "../data/posts";
 
 const TABS: PostType[] = ["全部", "遊記", "影片", "隨手拍"];
@@ -51,27 +51,27 @@ export default function PageTabs({
             e.preventDefault();
             onSearchSubmit();
           }}
-          className="flex items-center gap-2 flex-1 min-w-[220px] max-w-[360px]"
+          className="flex items-center flex-1 min-w-[220px] max-w-[360px]"
         >
-          <div className="relative flex-1">
+          <div className="relative flex w-full">
             <input
               className="w-full h-10 pl-10 pr-4 rounded-full border text-sm"
               placeholder="搜尋旅遊內容..."
               value={keyword}
               onChange={(e) => onKeywordChange(e.target.value)}
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#DCBB87]">🔍</span>
+            <button
+              type="submit"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--sw-primary)]"
+              aria-label="搜尋"
+            >
+              <Search size={18} />
+            </button>
           </div>
-          <button
-            type="submit"
-            className="h-10 px-4 rounded-full bg-[var(--sw-accent)] text-black text-sm font-medium shadow-[0_8px_20px_rgba(220,187,135,0.3)] hover:bg-[var(--sw-accent)]/90 transition"
-          >
-            搜尋
-          </button>
         </form>
 
         {/* 分類 Tabs + 右側動作 */}
-        <div className="flex flex-1 min-w-[280px] items-center gap-35">
+        <div className="flex flex-1 min-w-[280px] items-center gap-4">
           <div className="flex items-center gap-2 overflow-x-auto">
             {TABS.map((t) => (
               <button
@@ -85,7 +85,7 @@ export default function PageTabs({
             ))}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
             <button
               type="button"
               className="relative w-12 h-12 rounded-full border border-[var(--sw-accent)] bg-white flex items-center justify-center text-[var(--sw-accent)] hover:bg-[var(--sw-accent)]/10 transition"

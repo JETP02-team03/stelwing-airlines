@@ -48,6 +48,7 @@
     "typescript": "^5.9.2"
   },
    "prisma": {
-    "seed": "tsx prisma/seedAvatars.ts"
+    "seed": "tsx prisma/seedAvatars.ts",
+    "seed:travel": "tsx prisma/seedTravelCommunity.ts"
   }
 }

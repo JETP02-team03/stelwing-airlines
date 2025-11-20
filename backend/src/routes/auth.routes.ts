@@ -106,7 +106,7 @@ router.post("/login", async (req: Request, res: Response) => {
     const token = jwt.sign(
       { memberId: Number(user.memberId), email: user.email },
       JWT_SECRET,
-      { expiresIn: "3h" }
+      { expiresIn: "3h" } 
     );
 
     res.json({ message: "登入成功", token });
