@@ -34,12 +34,12 @@ export interface Order {
 // ===============================
 const STORAGE_KEYS = {
   CART: 'stelwing_cart',
-  IS_LOGGED_IN: 'stelwing_is_logged_in',
+  IS_LOGGED_IN: 'dutyfree_shop_is_logged_in',
   PROMO_CODE: 'stelwing_promo_code',
   DISCOUNT: 'stelwing_discount',
   DISCOUNT_PERCENT: 'stelwing_discount_percent',
   ORDERS: 'stelwing_orders',
-  USER_INFO: 'stelwing_user_info',
+  USER_INFO: 'dutyfree_shop_user_info',
 } as const;
 
 // ===============================
