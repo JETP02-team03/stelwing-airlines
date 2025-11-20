@@ -38,7 +38,7 @@ export const allMockHotels: Hotel[] = [
   {
     id: 2,
     name: '成田日航酒店',
-    engName: 'Hotel Nikko Narita | Hotel',
+    engName: 'Hotel Nikko Narita',
     location: '距離機場約 0.3公里',
     rating: 4.9,
     price: 5500,
@@ -58,7 +58,7 @@ export const allMockHotels: Hotel[] = [
   {
     id: 3,
     name: '普雷米爾飯店',
-    engName: 'Premier Narita | Hotel',
+    engName: 'Premier Narita |',
     location: '距離機場約 0.2公里',
     rating: 4.7,
     price: 10000,
@@ -78,7 +78,7 @@ export const allMockHotels: Hotel[] = [
   {
     id: 4,
     name: 'Grand Hotel Narita',
-    engName: 'Grand Hotel Narita | Hotel',
+    engName: 'Grand Hotel Narita',
     location: '距離機場約 0.2公里',
     rating: 4.8,
     price: 12000,
@@ -98,7 +98,7 @@ export const allMockHotels: Hotel[] = [
   {
     id: 5,
     name: '成田東武酒店',
-    engName: 'Narita Tobu Hotel | Hotel',
+    engName: 'Narita Tobu Hotel',
     location: '距離機場約 0.3公里',
     rating: 4.7,
     price: 18000,

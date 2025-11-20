@@ -76,7 +76,7 @@ export default function HotelResultCard({
   };
 
   return (
-    <div className="flex w-full max-w-4xl items-center px-4 bg-white transition">
+    <div className="flex w-full max-w-4xl items-center px-4 bg-white transition rounded">
       <div
         className="relative w-50 h-40 flex-shrink-0 cursor-pointer"
         onClick={(e) => {

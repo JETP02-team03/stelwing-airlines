@@ -71,6 +71,15 @@ const amenityList: {
   icon: amenityIconMap[key as AmenityKey],
 }));
 
+// 五個飯店資料，position 明確指定 [lat, lng] 型別
+const hotels: { name: string; position: [number, number] }[] = [
+  { name: 'Toyoko Inn Narita Airport', position: [35.7816224, 140.3839713] },
+  { name: 'Hotel Nikko Narita', position: [35.7842417, 140.3799583] },
+  { name: 'Premier Narita', position: [35.7842634, 140.3515176] },
+  { name: 'Grand Hotel Narita', position: [35.7972366, 140.391444] },
+  { name: 'Narita Tobu Hotel', position: [35.7799868, 140.380852] },
+];
+
 export default function FilterSidebar({
   priceMin,
   onPriceMinChange,
@@ -144,17 +153,19 @@ export default function FilterSidebar({
         <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-full h-64 relative">
           {isClient ? (
             <MapContainer
-              center={[25.033, 121.5654]}
-              zoom={15}
+              center={[35.784, 140.38]}
+              zoom={14}
               style={{ height: '100%', width: '100%' }}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
-              <Marker position={[25.033, 121.5654]}>
-                <Popup>酒店位置：這裡是您的酒店</Popup>
-              </Marker>
+              {hotels.map((hotel, idx) => (
+                <Marker key={idx} position={hotel.position}>
+                  <Popup>{hotel.name}</Popup>
+                </Marker>
+              ))}
             </MapContainer>
           ) : (
             <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 text-sm">
@@ -221,13 +232,13 @@ export default function FilterSidebar({
                   className="absolute bg-[#DCBB87] text-white text-xs px-2 py-1 rounded-lg"
                   style={{ left: `${minPercent}%`, bottom: '100%' }}
                 >
-                  ¥{priceMin.toLocaleString()}
+                  TWD {priceMin.toLocaleString()}
                 </div>
                 <div
-                  className="absolute bg-[#DCBB87] text-white text-xs px-2 py-1 rounded-lg -translate-x-3/3"
+                  className="absolute bg-[#DCBB87] text-white text-xs px-4 py-1 rounded-lg -translate-x-3/3 whitespace-nowrap"
                   style={{ left: `${maxPercent}%`, bottom: '100%' }}
                 >
-                  ¥{priceMax.toLocaleString()}
+                  TWD {priceMax.toLocaleString()}
                 </div>
               </div>
             </div>

@@ -116,7 +116,7 @@ export default function HotelCard({
             <div className="flex items-end justify-between pt-2">
               <div>
                 <div className="text-l font-bold text-white drop-shadow-lg">
-                  NT {hotel.price.toLocaleString()}
+                  TWD {hotel.price.toLocaleString()}
                 </div>
                 <div className="text-xs text-white/80 drop-shadow-lg">每晚</div>
               </div>
