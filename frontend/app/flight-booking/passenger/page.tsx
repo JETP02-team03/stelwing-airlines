@@ -249,17 +249,11 @@ export default function PassengerPage() {
   const fillFromMember = () => {
     setContact((c) => ({
       ...c,
-      firstName: c.firstName || 'Zichen',
+      firstName: c.firstName || 'Baron',
       lastName: c.lastName || 'Lin',
       phoneCountry: c.phoneCountry || '886',
       phone: c.phone || '0912345678',
       email: c.email || 'baron@example.com',
-    }));
-    setPax((p) => ({
-      ...p,
-      firstName: p.firstName || 'ZICHEN',
-      lastName: p.lastName || 'LIN',
-      gender: p.gender || 'M',
     }));
   };
 
