@@ -319,9 +319,7 @@ router.post("/bookings", async (req, res) => {
   }
 });
 
-
-//查詢訂單明細 GET /bookings/:pnr
-// 讀取訂單：GET /bookings/:pnr
+// 查詢訂單明細 GET /bookings/:pnr
 router.get("/bookings/:pnr", async (req, res) => {
   const { pnr } = req.params;
 
@@ -335,7 +333,7 @@ router.get("/bookings/:pnr", async (req, res) => {
   }
 
   try {
-    // 2) 只查「這個會員」的這張訂單，避免看到別人資料
+    // 2) 只查「這個會員」的這張訂單
     const booking = await prisma.booking.findFirst({
       where: {
         pnr,
@@ -345,6 +343,12 @@ router.get("/bookings/:pnr", async (req, res) => {
         details: {
           include: {
             flight: true,
+            seat: true,     
+            baggage: true,  
+            meal: true,     
+          },
+          orderBy: {
+            tripType: "asc",
           },
         },
       },
@@ -357,9 +361,57 @@ router.get("/bookings/:pnr", async (req, res) => {
       });
     }
 
+    // 3) 整理成前端 page.tsx 期望的結構 (Booking / BookingDetail)
+    const data = {
+      bookingId: Number(booking.bookingId),
+      pnr: booking.pnr,
+      currency: booking.currency ?? "TWD",
+      totalAmount: Number(booking.totalAmount ?? 0),
+      paymentMethod: booking.paymentMethod,
+      paymentStatus: booking.paymentStatus,
+      createdAt:
+        booking.createdAt instanceof Date
+          ? booking.createdAt.toISOString()
+          : String(booking.createdAt),
+      details: booking.details.map((d) => ({
+        // 這裡欄位名稱請依照你的 Prisma 實際欄位調整
+        detailId: Number(d.bookingDetailId ?? d.detailId ?? 0),
+        tripType: d.tripType as "OB" | "IB",
+
+        seat: d.seat
+          ? {
+              seatNumber: d.seat.seatNumber,
+            }
+          : null,
+
+        baggage: d.baggage
+          ? {
+              weightKg: Number(d.baggage.weightKg ?? 0),
+              price: Number(d.baggage.price ?? 0),
+            }
+          : null,
+
+        meal: d.meal
+          ? {
+              mealName: d.meal.mealName,
+              price: Number(d.meal.price ?? 0),
+            }
+          : null,
+
+        flight: {
+          flightNumber: d.flight.flightNumber,
+          flightDate: d.flight.flightDate, // 'YYYY-MM-DD'
+          originIata: d.flight.originIata,
+          destinationIata: d.flight.destinationIata,
+          depTimeUtc: d.flight.depTimeUtc, // ISO 字串
+          arrTimeUtc: d.flight.arrTimeUtc,
+        },
+      })),
+    };
+
     return res.json({
       success: true,
-      data: booking,
+      data,
     });
   } catch (err) {
     console.error("查詢訂單失敗：", err);
@@ -369,6 +421,7 @@ router.get("/bookings/:pnr", async (req, res) => {
     });
   }
 });
+
 
 
 // 查詢訂單列表 GET /bookings
