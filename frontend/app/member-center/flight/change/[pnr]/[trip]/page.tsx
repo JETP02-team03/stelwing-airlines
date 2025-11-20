@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 type BookingDetail = {
   tripType: 'OB' | 'IB';
   flight: {
-    flightId: number;
+    flightId: number | string; // 這裡我放寬成 number | string，方便 runtime 轉型
     flightDate: string;
     originIata: string;
     destinationIata: string;
@@ -96,6 +96,7 @@ function ChangeFlightCard({
   const arrTime = formatTimeHM(flight.arrTimeUtc);
   const period = getPeriodLabel(flight.depTimeUtc);
 
+  // 只要是原始航班，或被鎖且不是已選中，就不能操作
   const reallyDisabled = isOriginal || (isDisabled && !isSelected);
 
   const containerBase =
@@ -132,7 +133,7 @@ function ChangeFlightCard({
       <div className="flex flex-col items-stretch gap-6 md:flex-row md:items-center md:justify-between">
         {/* 出發 */}
         <div className="flex-1">
-          <div className="text-[11px] text-white/70 mb-1">出發</div>
+          <div className="mb-1 text-[11px] text-white/70">出發</div>
           <div className="text-lg font-semibold leading-tight">{depTime}</div>
           <div className="mt-1 text-xs text-white/80">{flight.originIata}</div>
         </div>
@@ -146,7 +147,7 @@ function ChangeFlightCard({
 
         {/* 抵達 */}
         <div className="flex-1 text-right md:text-left">
-          <div className="text-[11px] text-white/70 mb-1">抵達</div>
+          <div className="mb-1 text-[11px] text-white/70">抵達</div>
           <div className="text-lg font-semibold leading-tight">{arrTime}</div>
           <div className="mt-1 text-xs text-white/80">
             {flight.destinationIata}
@@ -208,7 +209,11 @@ function ChangeFlightCard({
 
 export default function ChangeFlightPage() {
   const router = useRouter();
-  const { pnr, trip } = useParams<{ pnr: string; trip: 'OB' | 'IB' }>();
+  const params = useParams<{ pnr: string; trip: string }>();
+
+  const pnr = params.pnr;
+  // 統一轉成 OB / IB，大寫避免未來 route 寫 ob / ib 也能吃
+  const trip = (params.trip || 'OB').toUpperCase() as 'OB' | 'IB';
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [flights, setFlights] = useState<FlightItem[]>([]);
@@ -220,6 +225,17 @@ export default function ChangeFlightPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // 這張訂單中，當前 trip (OB/IB) 的「原本航班」全部鎖起來
+  const originalFlightIds = useMemo(() => {
+    if (!booking) return new Set<number>();
+
+    const ids = booking.details
+      .filter((d) => d.tripType === trip) // 只看這一段（去程 / 回程）
+      .map((d) => Number(d.flight.flightId)); // 一律轉成 number
+
+    return new Set(ids);
+  }, [booking, trip]);
 
   /* Step 1：載入訂單 */
   useEffect(() => {
@@ -262,7 +278,7 @@ export default function ChangeFlightPage() {
         setLoadingBooking(false);
       }
     })();
-  }, [pnr]);
+  }, [pnr, router]);
 
   /* Step 2：載入全部航班 → 篩同航線 */
   useEffect(() => {
@@ -285,15 +301,17 @@ export default function ChangeFlightPage() {
             : null;
 
         const res = await fetch('http://localhost:3007/api/flight', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : undefined,
         });
 
         const raw = await res.json();
 
         const all: FlightItem[] = (raw || []).map((f: any) => ({
-          flightId: f.flightId,
+          flightId: Number(f.flightId), // 一律轉 number
           flightNo: f.flightNumber,
           flightDate:
             typeof f.flightDate === 'string'
@@ -312,6 +330,7 @@ export default function ChangeFlightPage() {
           price: (f as any).price ?? 0,
         }));
 
+        // 只挑與原航段「同一條航線」的航班
         const sameRoute = all.filter(
           (f) =>
             f.originIata === seg.flight.originIata &&
@@ -385,10 +404,13 @@ export default function ChangeFlightPage() {
 
   const seg = booking?.details.find((d) => d.tripType === trip);
   const currency = booking?.currency || 'TWD';
+  const originalDep = seg ? formatTimeHM(seg.flight.depTimeUtc) : '';
+  const originalArr = seg ? formatTimeHM(seg.flight.arrTimeUtc) : '';
+  const hasSelected = !!selected;
 
   if (loadingBooking) {
     return (
-      <div className="w-full py-10 flex items-center justify-center text-[#666]">
+      <div className="flex w-full items-center justify-center py-10 text-[#666]">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
         訂單載入中…
       </div>
@@ -414,14 +436,10 @@ export default function ChangeFlightPage() {
     );
   }
 
-  const originalDep = formatTimeHM(seg.flight.depTimeUtc);
-  const originalArr = formatTimeHM(seg.flight.arrTimeUtc);
-  const hasSelected = !!selected;
-
   return (
     <>
       {/* 主要內容：寬度跟上方 tab 對齊 */}
-      <div className="w-full mx-auto py-6 space-y-6">
+      <div className="mx-auto w-full space-y-6 py-6">
         {/* 上方標題列 */}
         <div className="flex items-center justify-between">
           <button
@@ -434,12 +452,12 @@ export default function ChangeFlightPage() {
           </button>
 
           <div className="text-right text-sm">
-            <div className="text-xs text-[#888] mb-1">正在改票</div>
+            <div className="mb-1 text-xs text-[#888]">正在改票</div>
             <div className="font-semibold text-[color:var(--sw-primary)]">
               {trip === 'OB' ? '去程' : '回程'}｜{seg.flight.originIata} →{' '}
               {seg.flight.destinationIata}
             </div>
-            <div className="text-xs text-[#666] mt-1">
+            <div className="mt-1 text-xs text-[#666]">
               原航班：{formatDateLabel(seg.flight.flightDate)}　{originalDep} →{' '}
               {originalArr}
             </div>
@@ -453,7 +471,7 @@ export default function ChangeFlightPage() {
           </h2>
 
           {loadingFlights && (
-            <div className="py-6 text-sm text-[#666] flex items-center">
+            <div className="flex items-center py-6 text-sm text-[#666]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               載入可更換航班中…
             </div>
@@ -481,9 +499,17 @@ export default function ChangeFlightPage() {
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {groupedByDate.groups[dateKey].map((f) => {
                     const isSelected = selected?.flightId === f.flightId;
-                    const isOriginal = f.flightId === seg.flight.flightId;
+
+                    // 用 originalFlightIds 判斷「這張訂單原本就有的機票」
+                    const isOriginal = originalFlightIds.has(
+                      Number(f.flightId)
+                    );
+
+                    // 原本訂單裡的航班一律鎖住，
+                    // 另外保留「已選一航班時，其他不能再選」的規則
                     const isDisabled =
                       isOriginal || (hasSelected && !isSelected);
+
                     return (
                       <ChangeFlightCard
                         key={f.flightId}
@@ -504,12 +530,12 @@ export default function ChangeFlightPage() {
         </section>
 
         {/* 底部確認改票按鈕：金色 */}
-        <div className="sticky bottom-0 bg-[#F7F7F7]/80 backdrop-blur pt-3 pb-4">
+        <div className="sticky bottom-0 bg-[#F7F7F7]/80 pt-3 pb-4 backdrop-blur">
           <button
             type="button"
             disabled={!selected || submitting}
             onClick={handleConfirm}
-            className="w-full inline-flex items-center justify-center rounded-full bg-[color:var(--sw-accent)] px-4 py-3 text-sm font-semibold text-[color:var(--sw-primary)] disabled:opacity-60 hover:bg-[#e3c28f]"
+            className="inline-flex w-full items-center justify-center rounded-full bg-[color:var(--sw-accent)] px-4 py-3 text-sm font-semibold text-[color:var(--sw-primary)] disabled:opacity-60 hover:bg-[#e3c28f]"
           >
             {submitting ? (
               <>
@@ -528,7 +554,7 @@ export default function ChangeFlightPage() {
       {/* 改票成功 modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="w-[90%] max-w-md rounded-3xl bg-white p-6 shadow-xl relative">
+          <div className="relative w-[90%] max-w-md rounded-3xl bg-white p-6 shadow-xl">
             <button
               type="button"
               onClick={() => {
@@ -555,7 +581,7 @@ export default function ChangeFlightPage() {
               type="button"
               onClick={() => {
                 setShowSuccessModal(false);
-                router.push(`/member-center/flight/`);
+                router.push(`/member-center/flight/${pnr}`);
               }}
               className="w-full rounded-full bg-[color:var(--sw-primary)] px-4 py-2.5 text-sm font-semibold text-white"
             >
