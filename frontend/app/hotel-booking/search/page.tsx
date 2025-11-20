@@ -281,6 +281,14 @@ export default function Page() {
             )}
           </main>
         </div>
+        <div className="text-start mt-4">
+          <button
+            onClick={() => router.back()}
+            className="border-2 border-[#DCBB87] hover:bg-[#DCBB87] text-white font-semibold px-8 py-1 rounded-full transition-all hover:shadow-lg active:scale-95"
+          >
+            上一步
+          </button>
+        </div>
       </div>
     </div>
   );
