@@ -10,9 +10,9 @@ const mockHotelOrders = [
     id: '1',
     orderId: '#0123_45678',
     hotel: '普雷米爾飯店',
-    paymentMethod: '信用卡',
+    paymentMethod: 'Line Pay',
     status: 'success',
-    createdAt: '2025-11-24\n12:24:22 AM',
+    createdAt: '2025-11-24\n',
   },
 ];
 

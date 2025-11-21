@@ -51,7 +51,7 @@ export default function HotelCard({
   return (
     <div
       onClick={goToDetail}
-      className="relative flex-shrink-0 w-[200px] h-[384px] rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+      className="relative flex-shrink-0 w-full h-[384px] rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
     >
       <div className="absolute inset-0">
         {hotel.image ? (

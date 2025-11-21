@@ -196,7 +196,7 @@ export default function Page() {
       />
 
       <div className="flex justify-center px-4 mb-10">
-        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+        <div className="w-auto max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
           <Calendar selected={selectedRange} onSelect={handleDateChange} />
         </div>
       </div>
