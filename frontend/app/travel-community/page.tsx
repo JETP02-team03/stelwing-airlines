@@ -45,6 +45,7 @@ const filterByMileage = (miles: number, tier: FilterState['mileageTier']) => {
 export default function TravelCommunityPage() {
   const [activeTab, setActiveTab] = useState<PostType>('全部');
   const [keyword, setKeyword] = useState('');
+  const [keywordDraft, setKeywordDraft] = useState('');
   const [country, setCountry] = useState('');
   const [filters, setFilters] = useState<FilterState>(defaultFilterState);
   const [appliedFilters, setAppliedFilters] =
@@ -100,6 +101,10 @@ export default function TravelCommunityPage() {
     setAppliedFilters(filters);
     setApplyMessage('已套用最新篩選條件');
     setTimeout(() => setApplyMessage(null), 2200);
+  };
+
+  const handleSearchSubmit = () => {
+    setKeyword(keywordDraft.trim());
   };
 
   const visiblePosts = useMemo(() => {
@@ -185,11 +190,11 @@ export default function TravelCommunityPage() {
         <PageTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          keyword={keyword}
-          onKeywordChange={setKeyword}
+          keyword={keywordDraft}
+          onKeywordChange={setKeywordDraft}
           country={country}
           onCountryChange={setCountry}
-          onSearchSubmit={handleApplyFilters}
+          onSearchSubmit={handleSearchSubmit}
         />
 
         {applyMessage && (
