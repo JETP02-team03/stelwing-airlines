@@ -275,21 +275,20 @@ export default function TravelWritePage() {
                 </button>
               ))}
             </div>
-            {/* ===== 標題 & 標籤（遊記／影片用） ===== */}
-            {(tab === 'travelogue' || tab === 'video') && (
-              <div className="mb-6">
-                <label className="block text-sm mb-2 text-[#1F2E3C]/80">
-                  標題
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={`請輸入${tab === 'video' ? '影片' : '文章'}標題`}
-                  className="w-full border border-[#DCBB87] rounded-md p-3 text-sm focus:ring-1 focus:ring-[#DCBB87] outline-none"
-                />
-              </div>
-            )}
+            <div className="mb-6">
+              <label className="block text-sm mb-2 text-[#1F2E3C]/80">
+                標題
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={`請輸入${
+                  tab === 'video' ? '影片' : tab === 'photo' ? '分享' : '文章'
+                }標題`}
+                className="w-full border border-[#DCBB87] rounded-md p-3 text-sm focus:ring-1 focus:ring-[#DCBB87] outline-none"
+              />
+            </div>
 
             {/* 旅遊地點 */}
             <div className="mb-6">
