@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:render": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -47,7 +48,7 @@
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"
   },
-   "prisma": {
+  "prisma": {
     "seed": "tsx prisma/seedAvatars.ts",
     "seed:travel": "tsx prisma/seedTravelCommunity.ts"
   }
