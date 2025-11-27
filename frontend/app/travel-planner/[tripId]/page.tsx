@@ -1,6 +1,7 @@
 'use client';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -12,7 +13,6 @@ import { timezones } from '../src/data/timezone';
 import { Trip, TripItem } from '../types';
 import { apiFetch } from '../utils/apiFetch';
 // import { toOffsetISO } from '../utils/timezone';
-import momentTimezonePlugin from '@fullcalendar/moment-timezone';
 import ChangeCoverButton from '../components/ChangeCoverButton';
 import CreatePlanItemForm from '../components/createPlanItemForm';
 import EditDialog from '../components/editDialog';
@@ -319,7 +319,7 @@ export default function TripDetailPage() {
                 dayGridPlugin,
                 timeGridPlugin,
                 listPlugin,
-                momentTimezonePlugin,
+                interactionPlugin,
               ]}
               // plugins={[dayGridPlugin, timeGridPlugin, listPlugin, luxonPlugin]}
               initialView="dayGridMonth"
